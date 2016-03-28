@@ -690,8 +690,13 @@ public class Unit {
 	private boolean isWorking;
 	
 	
-	public void attack(Unit defender) {
+	public void attack(Unit defender) throws IllegalPositionException {
 		this.isAttacking = true;
+		
+		// Orientation update
+		this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
+				));
+		
 		double elapsedTime = 0.0;
 		Random random = new Random();
 		while (elapsedTime < 1.0 /*&&*/ ) {
@@ -699,26 +704,41 @@ public class Unit {
 			advanceTime(dt);
 			elapsedTime += dt;
 		}
-		boolean dodged = defender.dodge(this);
-		if (!dodged) {
-			boolean blocked = defender.block(this);
-			if (!blocked) {
-				defender.takeDamage();
-			}
-		}
+		
+		defender.defend(this);
 		this.isAttacking = false;
 	}
 	
-	public boolean dodge(Unit attacker) {
+	private void defend(Unit attacker) throws IllegalPositionException {
+		boolean dodged = this.dodge(attacker);
+		if (!dodged) {
+			boolean blocked = this.block(attacker);
+			if (!blocked) {
+				this.takeDamage(attacker);
+			}
+		}
+	}
+	
+	private boolean dodge(Unit attacker) throws IllegalPositionException {
 		Random random = new Random();
 		if ( random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
-			// JUMP TO RANDOM ADJACENT CUBE
+			this.jumpToRandomAdjacent();
 			return true;
 		}
 		return false;
 	}
 	
-	public boolean block(Unit attacker) {
+	private void jumpToRandomAdjacent() throws IllegalPositionException {
+		Random random = new Random();
+		double[] newPosition = this.getPosition();
+		newPosition[0] += 2*random.nextDouble() - 1.0;
+		newPosition[1] += 2*random.nextDouble() - 1.0;
+		if (!canHaveAsPosition(newPosition)) throw new 
+					IllegalPositionException(newPosition, this);
+		this.setPosition(newPosition);
+	}
+	
+	private boolean block(Unit attacker) {
 		Random random = new Random();
 		double probability = 0.25*((this.getAgility() + this.getStrength())
 				/(attacker.getAgility() + attacker.getStrength()));
@@ -728,8 +748,9 @@ public class Unit {
 		return false;
 	}
 	
-	public void takeDamage() {
-		
+	private void takeDamage(Unit attacker) {
+		this.updateCurrentHitPoints(this.getCurrentHitPoints() - 
+				(attacker.getStrength()/10));
 	}
 	
 	public boolean isAttacking() {
@@ -737,6 +758,9 @@ public class Unit {
 	}
 	private boolean isAttacking;
 	
+	/* can private methods be invoked by public methods? */
+	/* fighting and other act interrupting other act */
+	/* IllegalArgumentExceptions toevoegen */
 	/* Verbetering: Random object in field zetten en hergebruiken*/
 }
 
