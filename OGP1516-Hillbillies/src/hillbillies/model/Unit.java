@@ -699,11 +699,36 @@ public class Unit {
 			advanceTime(dt);
 			elapsedTime += dt;
 		}
-		defender.dodge();
+		boolean dodged = defender.dodge(this);
+		if (!dodged) {
+			boolean blocked = defender.block(this);
+			if (!blocked) {
+				defender.takeDamage();
+			}
+		}
 		this.isAttacking = false;
 	}
 	
-	public void dodge() {
+	public boolean dodge(Unit attacker) {
+		Random random = new Random();
+		if ( random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
+			// JUMP TO RANDOM ADJACENT CUBE
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean block(Unit attacker) {
+		Random random = new Random();
+		double probability = 0.25*((this.getAgility() + this.getStrength())
+				/(attacker.getAgility() + attacker.getStrength()));
+		if ( random.nextDouble() <= probability ) {
+			return true;
+		}
+		return false;
+	}
+	
+	public void takeDamage() {
 		
 	}
 	
@@ -711,5 +736,7 @@ public class Unit {
 		return this.isAttacking;
 	}
 	private boolean isAttacking;
+	
+	/* Verbetering: Random object in field zetten en hergebruiken*/
 }
 
