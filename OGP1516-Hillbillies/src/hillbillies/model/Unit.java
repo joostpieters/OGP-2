@@ -511,7 +511,7 @@ public class Unit {
 	/* DEFENSIVE PROGR --> ADD DOCUMENTATION + EXCEPTIONS!!!! */
 	public void advanceTime(double dt) throws IllegalPositionException, 
 													IllegalArgumentException {
-		if (dt > 0.2) {
+		if (dt > 0.2 || dt < 0.0) {
 			throw new IllegalArgumentException();
 		}
 		
@@ -535,20 +535,6 @@ public class Unit {
 	
 	private void startMoving() {
 		setState(State.MOVING);
-	}
-	
-	
-	private void startResting() {
-		if (this.getCurrentHitPoints() == this.getMaxHitPoints()) {
-			setState(State.RESTING_STAM);
-		}
-		else {
-			setState(State.RESTING_HP);
-		}
-	}
-	
-	private void startAttacking() {
-		setState(State.ATTACKING);
 	}
 	
 	private void controlWaiting(double dt) {
@@ -760,24 +746,39 @@ public class Unit {
 	
 	private void startWorking() {
 		setState(State.WORKING);
+		this.timeToCompletion = 500.0f/getStrength();
 	}
 	
 	private void controlWorking(double dt) {
-		
-		this.timeToCompletion = (float) 500.0/getStrength();
-		this.state = State.EMPTY;
+		this.timeToCompletion -= dt;
+		if (this.timeToCompletion < 0.0) {
+			setState(State.EMPTY);
+		}
 	}
 	
 	public void work() throws IllegalStateException {
 		startWorking();
-		
-		
 	}
 	
 	private float timeToCompletion;
 	
+
+	private void startAttacking() {
+		setState(State.ATTACKING);
+		this.timeToCompletion = 1.0f;
+	}
+	
+	private void controlAttacking(double dt) {
+		this.timeToCompletion -= dt;
+		if (this.timeToCompletion < 0.0) {
+			
+			getDefender().defend(this);
+			setState(State.EMPTY);
+		}
+	}
+	
 	public void attack(Unit defender) throws IllegalPositionException {
-		this.state = State.ATTACKING;
+		startAttacking();
 		
 		// Orientation update
 		this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
@@ -786,17 +787,15 @@ public class Unit {
 		defender.setOrientation(Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
 				this.getPosition()[0]-defender.getPosition()[0]));
 		
-		double elapsedTime = 0.0;
-		Random random = new Random();
-		while (elapsedTime < 1.0 /*&&*/ ) {
-			double dt = random.nextDouble()/5.0;
-			advanceTime(dt);
-			elapsedTime += dt;
-		}
 		
-		defender.defend(this);
-		this.state = State.EMPTY;
+		this.defender = defender;
 	}
+	
+	private Unit getDefender() {
+		return this.defender;
+	}
+	
+	private Unit defender;
 	
 	private void defend(Unit attacker) throws IllegalPositionException {
 		boolean dodged = this.dodge(attacker);
@@ -844,15 +843,51 @@ public class Unit {
 	
 	public boolean isAttacking() {
 		return (this.state == State.ATTACKING);
-	}	
+	}
+	
+	
+	
+	
+	
+	private void startResting() {
+		if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
+			setState(State.RESTING_HP);
+		}
+		else if (this.getCurrentStaminaPoints() < this.getMaxStaminaPoints()) {
+			setState(State.RESTING_STAM);
+		}
+	}
+	
+	private void controlResting(double dt) {
+		this.timeResting += dt;
+		if (getState() == State.RESTING_HP) {
+			if (this.timeResting - 0.2 > 0.0) {
+				updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
+				this.timeResting -= 0.2;
+			}
+		}
+		else {
+			if (this.timeResting - 0.2 > 0.0) {
+				updateCurrentStaminaPoints(getCurrentStaminaPoints() + (getToughness()/100));
+				this.timeResting -= 0.2;
+			}
+		}
+		if (getCurrentHitPoints() == getMaxHitPoints() &&
+				getCurrentStaminaPoints() == getMaxStaminaPoints()) {
+			setState(State.EMPTY);
+		}
+	}
 	
 	public void rest() {
-		
+		startResting();
 	}
 	
 	public boolean isResting() {
 		return (this.state == State.RESTING_HP || this.state == State.RESTING_STAM);
 	}
+	
+	private double timeResting = 0.0;
+	
 	
 	public void setDefaultBehaviorEnabled(boolean value) {
 		if (value == true && isDefaultBehaviorEnabled() == false) {
@@ -886,8 +921,10 @@ public class Unit {
 	private State state;
 	private boolean defaultBehavior;
 	
+	
+	/* getState ipv this.state */
 	/* advance time veranderen */
-	/* can private methods be invoked by public methods? */
+	/* can private methods be invoked by public methods? + nakijken! */
 	/* fighting and other act interrupting other act */
 	/* IllegalArgumentExceptions toevoegen */
 	/* Verbetering: Random object in field zetten en hergebruiken*/
