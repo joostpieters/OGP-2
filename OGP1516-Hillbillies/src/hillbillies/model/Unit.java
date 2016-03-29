@@ -1,6 +1,9 @@
 package hillbillies.model;
 
 import java.util.regex.*;
+
+import ogp.framework.util.ModelException;
+
 import java.util.Random;
 
 /**
@@ -643,7 +646,7 @@ public class Unit {
 	public double getOrientation() {
 		return orientation;
 	}
-	private void setOrientation(double newValue) {
+	public void setOrientation(double newValue) {
 		this.orientation = newValue;
 	}
 	private double orientation;
@@ -695,7 +698,10 @@ public class Unit {
 		
 		// Orientation update
 		this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
-				));
+				defender.getPosition()[0]-this.getPosition()[0]));
+		
+		defender.setOrientation(Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
+				this.getPosition()[0]-defender.getPosition()[0]));
 		
 		double elapsedTime = 0.0;
 		Random random = new Random();
@@ -758,6 +764,40 @@ public class Unit {
 	}
 	private boolean isAttacking;
 	
+	
+	public void rest() {
+		
+	}
+	
+	public boolean isResting() {
+		// !!!!!!!!!!!!!!!!!!
+		return true;
+	}
+	
+	public void setDefaultBehaviorEnabled(boolean value) {
+		if (value == true && isDefaultBehaviorEnabled() == false) {
+			startDefaultBehavior();
+		}
+		else if (value == false && isDefaultBehaviorEnabled() == true) {
+			stopDefaultBehavior();
+		}
+	}
+	
+	public void startDefaultBehavior() {
+		this.defaultBehavior = true;
+	}
+	
+	public void stopDefaultBehavior() {
+		this.defaultBehavior = false;
+	}
+	
+	public boolean isDefaultBehaviorEnabled() {
+		return this.defaultBehavior;
+	}
+	
+	private boolean defaultBehavior;
+	
+	/* advance time veranderen */
 	/* can private methods be invoked by public methods? */
 	/* fighting and other act interrupting other act */
 	/* IllegalArgumentExceptions toevoegen */
