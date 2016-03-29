@@ -1,6 +1,9 @@
 package hillbillies.model;
 
 import java.util.regex.*;
+
+import ogp.framework.util.ModelException;
+
 import java.util.Random;
 
 /**
@@ -643,7 +646,7 @@ public class Unit {
 	public double getOrientation() {
 		return orientation;
 	}
-	private void setOrientation(double newValue) {
+	public void setOrientation(double newValue) {
 		this.orientation = newValue;
 	}
 	private double orientation;
@@ -690,8 +693,16 @@ public class Unit {
 	private boolean isWorking;
 	
 	
-	public void attack(Unit defender) {
+	public void attack(Unit defender) throws IllegalPositionException {
 		this.isAttacking = true;
+		
+		// Orientation update
+		this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
+				defender.getPosition()[0]-this.getPosition()[0]));
+		
+		defender.setOrientation(Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
+				this.getPosition()[0]-defender.getPosition()[0]));
+		
 		double elapsedTime = 0.0;
 		Random random = new Random();
 		while (elapsedTime < 1.0 /*&&*/ ) {
@@ -699,17 +710,97 @@ public class Unit {
 			advanceTime(dt);
 			elapsedTime += dt;
 		}
-		defender.dodge();
+		
+		defender.defend(this);
 		this.isAttacking = false;
 	}
 	
-	public void dodge() {
-		
+	private void defend(Unit attacker) throws IllegalPositionException {
+		boolean dodged = this.dodge(attacker);
+		if (!dodged) {
+			boolean blocked = this.block(attacker);
+			if (!blocked) {
+				this.takeDamage(attacker);
+			}
+		}
+	}
+	
+	private boolean dodge(Unit attacker) throws IllegalPositionException {
+		Random random = new Random();
+		if ( random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
+			this.jumpToRandomAdjacent();
+			return true;
+		}
+		return false;
+	}
+	
+	private void jumpToRandomAdjacent() throws IllegalPositionException {
+		Random random = new Random();
+		double[] newPosition = this.getPosition();
+		newPosition[0] += 2*random.nextDouble() - 1.0;
+		newPosition[1] += 2*random.nextDouble() - 1.0;
+		if (!canHaveAsPosition(newPosition)) throw new 
+					IllegalPositionException(newPosition, this);
+		this.setPosition(newPosition);
+	}
+	
+	private boolean block(Unit attacker) {
+		Random random = new Random();
+		double probability = 0.25*((this.getAgility() + this.getStrength())
+				/(attacker.getAgility() + attacker.getStrength()));
+		if ( random.nextDouble() <= probability ) {
+			return true;
+		}
+		return false;
+	}
+	
+	private void takeDamage(Unit attacker) {
+		this.updateCurrentHitPoints(this.getCurrentHitPoints() - 
+				(attacker.getStrength()/10));
 	}
 	
 	public boolean isAttacking() {
 		return this.isAttacking;
 	}
 	private boolean isAttacking;
+	
+	
+	public void rest() {
+		
+	}
+	
+	public boolean isResting() {
+		// !!!!!!!!!!!!!!!!!!
+		return true;
+	}
+	
+	public void setDefaultBehaviorEnabled(boolean value) {
+		if (value == true && isDefaultBehaviorEnabled() == false) {
+			startDefaultBehavior();
+		}
+		else if (value == false && isDefaultBehaviorEnabled() == true) {
+			stopDefaultBehavior();
+		}
+	}
+	
+	public void startDefaultBehavior() {
+		this.defaultBehavior = true;
+	}
+	
+	public void stopDefaultBehavior() {
+		this.defaultBehavior = false;
+	}
+	
+	public boolean isDefaultBehaviorEnabled() {
+		return this.defaultBehavior;
+	}
+	
+	private boolean defaultBehavior;
+	
+	/* advance time veranderen */
+	/* can private methods be invoked by public methods? */
+	/* fighting and other act interrupting other act */
+	/* IllegalArgumentExceptions toevoegen */
+	/* Verbetering: Random object in field zetten en hergebruiken*/
 }
 
