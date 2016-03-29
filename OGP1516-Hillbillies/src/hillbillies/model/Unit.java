@@ -514,8 +514,17 @@ public class Unit {
 		if (dt > 0.2 || dt < 0.0) {
 			throw new IllegalArgumentException();
 		}
+		if (!isResting()) {
+			this.timeAfterResting += dt;
+		}
+		if (this.timeAfterResting >= 180.0) {
+			startResting();
+		}
 		
-		if (this.state == State.EMPTY) {
+		if (isResting()) {
+			controlResting(dt);
+		}
+		else if (getState() == State.EMPTY) {
 			controlWaiting(dt);
 		}
 		else if (isMoving()) {
@@ -524,7 +533,7 @@ public class Unit {
 		else if (isAttacking()) {
 			controlAttacking(dt);
 		}
-		else if (isResting()) {
+		else if (isResting() || this.timeAfterResting >= 180.0) {
 			controlResting(dt);
 		}
 		else if (isWorking()) {
@@ -533,9 +542,7 @@ public class Unit {
 		
 	}
 	
-	private void startMoving() {
-		setState(State.MOVING);
-	}
+	private double timeAfterResting = 0.0;
 	
 	private void controlWaiting(double dt) {
 		if (isDefaultBehaviorEnabled()) {
@@ -558,24 +565,32 @@ public class Unit {
 		}
 	}
 	
+	private void startMoving() {
+		setState(State.MOVING);
+	}
+	
 	private void controlMoving(double dt) {
 	
-		// IF NOT ATTACKED
+		if (!isAttacked()) {
 		
-		if (! reached(dt)) {
-			if (isSprinting()) {
-				updateCurrentStaminaPoints( (int) (((getCurrentStaminaPoints() - 1)/0.1)*dt) );
-				if (getCurrentStaminaPoints() <= 0) {
-					stopSprinting();
-					updateCurrentStaminaPoints(0);
+			if (! reached(dt)) {
+				if (isSprinting()) {
+					updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
+					if (getCurrentStaminaPoints() <= 0) {
+						stopSprinting();
+						updateCurrentStaminaPoints(0);
+					}
 				}
+				updatePosition(dt);
 			}
-			updatePosition(dt);
+			else if (reached(dt)) {
+				
+				setPosition(this.destination);
+				if (isSprinting()) stopSprinting();
+				setState(State.EMPTY);
+			}
 		}
-		else if (reached(dt)) {
-			
-			setPosition(this.destination);
-			if (isSprinting()) stopSprinting();
+		else {
 			setState(State.EMPTY);
 		}
 		
@@ -586,7 +601,7 @@ public class Unit {
 	
 	public void moveToAdjacent(int... cubeDirection) 
 			throws IllegalArgumentException, IllegalPositionException {
-		if (!isMoving()) {
+		if (!isMoving() && !isAttacked()) {
 			startMoving();
 			
 			double[] newPosition = new double[3];
@@ -687,7 +702,7 @@ public class Unit {
 	}
 	
 	public boolean isMoving() {
-		return (this.state == State.MOVING);
+		return (getState() == State.MOVING);
 	}
 	
 	public boolean isSprinting() {
@@ -718,7 +733,7 @@ public class Unit {
 	/* DEFENSIVE PROGR*/
 	public void moveTo(int[] destCube) {
 		int[] startCube;
-		while (getCubeCoordinate() != destCube) {
+		while ((getCubeCoordinate() != destCube)) {
 			int x, y, z;
 			startCube = getCubeCoordinate();
 			
@@ -740,7 +755,7 @@ public class Unit {
 	
 	
 	public boolean isWorking() {
-		return (this.state == State.WORKING);
+		return (getState() == State.WORKING);
 	}
 	
 	
@@ -772,7 +787,9 @@ public class Unit {
 		this.timeToCompletion -= dt;
 		if (this.timeToCompletion < 0.0) {
 			
+			getDefender().setAttacked(true);
 			getDefender().defend(this);
+			getDefender().setAttacked(false);
 			setState(State.EMPTY);
 		}
 	}
@@ -842,11 +859,18 @@ public class Unit {
 	}
 	
 	public boolean isAttacking() {
-		return (this.state == State.ATTACKING);
+		return (getState() == State.ATTACKING);
 	}
 	
+	private boolean isAttacked() {
+		return this.isAttacked;
+	}
 	
+	private void setAttacked(boolean isAttacked) {
+		this.isAttacked = isAttacked;
+	}
 	
+	private boolean isAttacked;
 	
 	
 	private void startResting() {
@@ -859,6 +883,7 @@ public class Unit {
 	}
 	
 	private void controlResting(double dt) {
+		this.timeAfterResting = 0.0;
 		this.timeResting += dt;
 		if (getState() == State.RESTING_HP) {
 			if (this.timeResting - 0.2 > 0.0) {
@@ -883,7 +908,7 @@ public class Unit {
 	}
 	
 	public boolean isResting() {
-		return (this.state == State.RESTING_HP || this.state == State.RESTING_STAM);
+		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM);
 	}
 	
 	private double timeResting = 0.0;
@@ -922,8 +947,7 @@ public class Unit {
 	private boolean defaultBehavior;
 	
 	
-	/* getState ipv this.state */
-	/* advance time veranderen */
+	/* XXXX     advance time veranderen */
 	/* can private methods be invoked by public methods? + nakijken! */
 	/* fighting and other act interrupting other act */
 	/* IllegalArgumentExceptions toevoegen */
