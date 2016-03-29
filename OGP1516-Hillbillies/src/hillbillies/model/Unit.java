@@ -2,7 +2,9 @@ package hillbillies.model;
 
 import java.util.regex.*;
 
-import ogp.framework.util.ModelException;
+import be.kuleuven.cs.som.annotate.Basic;
+import be.kuleuven.cs.som.annotate.Immutable;
+import be.kuleuven.cs.som.annotate.Raw;
 
 import java.util.Random;
 
