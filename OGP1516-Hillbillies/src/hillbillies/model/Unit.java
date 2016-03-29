@@ -509,22 +509,100 @@ public class Unit {
 	
 	
 	/* DEFENSIVE PROGR --> ADD DOCUMENTATION + EXCEPTIONS!!!! */
-	public void advanceTime(double dt) throws IllegalPositionException {
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!
-		//this.time += dt;
-		if (isMoving()) updatePosition(dt);
+	public void advanceTime(double dt) throws IllegalPositionException, 
+													IllegalArgumentException {
+		if (dt > 0.2) {
+			throw new IllegalArgumentException();
+		}
+		
+		if (this.state == State.EMPTY) {
+			controlWaiting(dt);
+		}
+		else if (isMoving()) {
+			controlMoving(dt);
+		}
+		else if (isAttacking()) {
+			controlAttacking(dt);
+		}
+		else if (isResting()) {
+			controlResting(dt);
+		}
+		else if (isWorking()) {
+			controlWorking(dt);
+		}
 		
 	}
 	
-	//private double time;
+	private void startMoving() {
+		setState(State.MOVING);
+	}
+	
+	
+	private void startResting() {
+		if (this.getCurrentHitPoints() == this.getMaxHitPoints()) {
+			setState(State.RESTING_STAM);
+		}
+		else {
+			setState(State.RESTING_HP);
+		}
+	}
+	
+	private void startAttacking() {
+		setState(State.ATTACKING);
+	}
+	
+	private void controlWaiting(double dt) {
+		if (isDefaultBehaviorEnabled()) {
+			Random random = new Random();
+			double dice = random.nextDouble();
+			if (dice < 1.0/3.0) {
+				startMoving();
+			}
+			if (dice >1.0/3.0 && dice < 2.0/3.0) {
+				startWorking();
+			}
+			else {
+				startResting();
+			}
+			if (isMoving()) {
+				if (dice < 0.5) {
+					startSprinting();
+				}
+			}
+		}
+	}
+	
+	private void controlMoving(double dt) {
+	
+		// IF NOT ATTACKED
+		
+		if (! reached(dt)) {
+			if (isSprinting()) {
+				updateCurrentStaminaPoints( (int) (((getCurrentStaminaPoints() - 1)/0.1)*dt) );
+				if (getCurrentStaminaPoints() <= 0) {
+					stopSprinting();
+					updateCurrentStaminaPoints(0);
+				}
+			}
+			updatePosition(dt);
+		}
+		else if (reached(dt)) {
+			
+			setPosition(this.destination);
+			if (isSprinting()) stopSprinting();
+			setState(State.EMPTY);
+		}
+		
+	}
+	
 	private final static double cubeLength = 1.0;
 	
 	
 	public void moveToAdjacent(int... cubeDirection) 
 			throws IllegalArgumentException, IllegalPositionException {
 		if (!isMoving()) {
-			/* INIT */
+			startMoving();
+			
 			double[] newPosition = new double[3];
 			double[] doubleCubeDirection = convertPositionToDouble(cubeDirection.clone());
 			double[] direction = new double[3];
@@ -537,32 +615,29 @@ public class Unit {
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
-			if (!canHaveAsPosition(newPosition)) throw new IllegalPositionException(newPosition, this);
+			setDestination(newPosition);
 			this.movingDirection = direction;
 			setOrientation(Math.atan2(getVelocity()[0], getVelocity()[2] ));
-			
-			/* MOVING */
-			this.state = State.MOVING;
-			Random random = new Random();
-			double dt;
-			do {
-				dt = random.nextDouble()/5.0;
-				advanceTime(dt);
-				if (isSprinting()) {
-					updateCurrentStaminaPoints( (int) (((getCurrentStaminaPoints() - 1)/0.1)*dt) );
-					if (getCurrentStaminaPoints() <= 0) {
-						stopSprinting();
-						updateCurrentStaminaPoints(0);
-					}
-				}
-			} while (! reached(newPosition, dt));
-			
-			/* ARRIVING */
-			setPosition(newPosition);
-			if (isSprinting()) stopSprinting();
-			this.state = State.EMPTY;
 		}
 	}
+	
+	private double[] getDestination() {
+		return this.destination;
+	}
+	
+	private void setDestination(double[] newDestination) throws IllegalArgumentException,
+						IllegalPositionException {
+		if ( !(newDestination instanceof double[]) || newDestination.length != 3)
+			throw new IllegalArgumentException();
+		if (!canHaveAsPosition(newDestination)) {
+			throw new IllegalPositionException(newDestination, this);
+		}
+		for (int i=0; i<3; i++) {
+			this.destination[i] = newDestination[i];
+		}
+	}
+	
+	private double[] destination = new double[3];
 	
 	private void updatePosition(double dt) throws IllegalPositionException {
 		double[] newPosition = new double[3];
@@ -572,21 +647,21 @@ public class Unit {
 		setPosition(newPosition);
 	}
 	
-	private boolean reached(double[] newPosition, double dt) {
-		double d = Math.sqrt(Math.pow(getPosition()[0]-newPosition[0],2)
-				+ Math.pow(getPosition()[1]-newPosition[1],2) 
-				+ Math.pow(getPosition()[2]-newPosition[2],2));
-		if (d<0.1) return true;
+	private boolean reached(double dt) {
+		double d = Math.sqrt(Math.pow(getPosition()[0]-getDestination()[0],2)
+				+ Math.pow(getPosition()[1]-getDestination()[1],2) 
+				+ Math.pow(getPosition()[2]-getDestination()[2],2));
+		if (d<0.2) return true;
 		while (dt > 0.01) {
 			dt -= 0.01;
 			double[] tempPosition = new double[3];
 			for (int i=0; i<3; ++i) {
 				tempPosition[i] = getPosition()[i] - getVelocity()[i]*dt;
 			}
-			double d2 = Math.sqrt(Math.pow(tempPosition[0]-newPosition[0],2)
-					+ Math.pow(tempPosition[1]-newPosition[1],2) 
-					+ Math.pow(tempPosition[2]-newPosition[2],2));
-			if (d2<0.1) return true;
+			double d2 = Math.sqrt(Math.pow(tempPosition[0]-getDestination()[0],2)
+					+ Math.pow(tempPosition[1]-getDestination()[1],2) 
+					+ Math.pow(tempPosition[2]-getDestination()[2],2));
+			if (d2<0.2) return true;
 		}
 		return false;
 	}
@@ -682,18 +757,24 @@ public class Unit {
 		return (this.state == State.WORKING);
 	}
 	
-	public void work() {
-		this.state = State.WORKING;
-		double elapsedTime = 0.0;
-		Random random = new Random();
-		while (elapsedTime < (500.0/getStrength()) /*&&*/ ) {
-			double dt = random.nextDouble()/5.0;
-			advanceTime(dt);
-			elapsedTime += dt;
-		}
+	
+	private void startWorking() {
+		setState(State.WORKING);
+	}
+	
+	private void controlWorking(double dt) {
+		
+		this.timeToCompletion = (float) 500.0/getStrength();
 		this.state = State.EMPTY;
 	}
 	
+	public void work() throws IllegalStateException {
+		startWorking();
+		
+		
+	}
+	
+	private float timeToCompletion;
 	
 	public void attack(Unit defender) throws IllegalPositionException {
 		this.state = State.ATTACKING;
@@ -792,6 +873,14 @@ public class Unit {
 	
 	public boolean isDefaultBehaviorEnabled() {
 		return this.defaultBehavior;
+	}
+	
+	private void setState(State state) {
+		this.state = state;
+	}
+	
+	private State getState() {
+		return this.state;
 	}
 	
 	private State state;
