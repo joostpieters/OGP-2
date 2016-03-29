@@ -510,6 +510,8 @@ public class Unit {
 	
 	/* DEFENSIVE PROGR --> ADD DOCUMENTATION + EXCEPTIONS!!!! */
 	public void advanceTime(double dt) throws IllegalPositionException {
+		// !!!!!!!!!!!!!!!!!!!!!!!!!!
+		// !!!!!!!!!!!!!!!!!!!!!!!!!!
 		//this.time += dt;
 		if (isMoving()) updatePosition(dt);
 		
@@ -540,7 +542,7 @@ public class Unit {
 			setOrientation(Math.atan2(getVelocity()[0], getVelocity()[2] ));
 			
 			/* MOVING */
-			this.isMoving = true;
+			this.state = State.MOVING;
 			Random random = new Random();
 			double dt;
 			do {
@@ -558,7 +560,7 @@ public class Unit {
 			/* ARRIVING */
 			setPosition(newPosition);
 			if (isSprinting()) stopSprinting();
-			this.isMoving = false;
+			this.state = State.EMPTY;
 		}
 	}
 	
@@ -624,9 +626,8 @@ public class Unit {
 	}
 	
 	public boolean isMoving() {
-		return this.isMoving;
+		return (this.state == State.MOVING);
 	}
-	private boolean isMoving;
 	
 	public boolean isSprinting() {
 		return this.isSprinting;
@@ -678,11 +679,11 @@ public class Unit {
 	
 	
 	public boolean isWorking() {
-		return isWorking;
+		return (this.state == State.WORKING);
 	}
 	
 	public void work() {
-		this.isWorking = true;
+		this.state = State.WORKING;
 		double elapsedTime = 0.0;
 		Random random = new Random();
 		while (elapsedTime < (500.0/getStrength()) /*&&*/ ) {
@@ -690,13 +691,12 @@ public class Unit {
 			advanceTime(dt);
 			elapsedTime += dt;
 		}
-		this.isWorking = false;
+		this.state = State.EMPTY;
 	}
-	private boolean isWorking;
 	
 	
 	public void attack(Unit defender) throws IllegalPositionException {
-		this.isAttacking = true;
+		this.state = State.ATTACKING;
 		
 		// Orientation update
 		this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
@@ -714,7 +714,7 @@ public class Unit {
 		}
 		
 		defender.defend(this);
-		this.isAttacking = false;
+		this.state = State.EMPTY;
 	}
 	
 	private void defend(Unit attacker) throws IllegalPositionException {
@@ -762,18 +762,15 @@ public class Unit {
 	}
 	
 	public boolean isAttacking() {
-		return this.isAttacking;
-	}
-	private boolean isAttacking;
-	
+		return (this.state == State.ATTACKING);
+	}	
 	
 	public void rest() {
 		
 	}
 	
 	public boolean isResting() {
-		// !!!!!!!!!!!!!!!!!!
-		return true;
+		return (this.state == State.RESTING_HP || this.state == State.RESTING_STAM);
 	}
 	
 	public void setDefaultBehaviorEnabled(boolean value) {
@@ -797,6 +794,7 @@ public class Unit {
 		return this.defaultBehavior;
 	}
 	
+	private State state;
 	private boolean defaultBehavior;
 	
 	/* advance time veranderen */

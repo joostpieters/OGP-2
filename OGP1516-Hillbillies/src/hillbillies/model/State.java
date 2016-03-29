@@ -1,5 +1,8 @@
 package hillbillies.model;
 
+import be.kuleuven.cs.som.annotate.Value;
+
+@Value
 public enum State {
-	WORKING, RESTING_HP, RESTING_STAM, ATTACKING, MOVING
+	EMPTY, WORKING, RESTING_HP, RESTING_STAM, ATTACKING, MOVING
 }
