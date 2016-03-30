@@ -557,7 +557,13 @@ public class Unit {
 			Random random = new Random();
 			double dice = random.nextDouble();
 			if (dice < 1.0/3.0) {
-				startMoving();
+				
+				int[] destCube = new int[3];
+				for (int i=0; i<3; i++) {
+					destCube[i] = random.nextInt(49);
+				}
+				moveTo(destCube);
+				
 			}
 			if (dice >1.0/3.0 && dice < 2.0/3.0) {
 				startWorking();
@@ -985,6 +991,7 @@ public class Unit {
 	private boolean defaultBehavior;
 	
 	
+	/* Move to random position in game world default behavior */
 	/* resume extended movement after interruptions */
 	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
