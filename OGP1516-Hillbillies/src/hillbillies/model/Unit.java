@@ -609,7 +609,7 @@ public class Unit {
 	
 	public void moveToAdjacent(int... cubeDirection) 
 			throws IllegalArgumentException, IllegalPositionException {
-		if (!isMoving() && !isAttacked()) {
+		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1) {
 			startMoving();
 			
 			double[] newPosition = new double[3];
@@ -632,24 +632,26 @@ public class Unit {
 	
 	/* DEFENSIVE PROGR*/
 	public void moveTo(int[] destCube) {
-		int[] startCube;
-		while ((getCubeCoordinate() != destCube)) {
-			int x, y, z;
-			startCube = getCubeCoordinate();
-			
-			if (startCube[0] == destCube[0])  x = 0;
-			else if (startCube[0] < destCube[0]) x = 1;
-			else x = -1;
-			
-			if (startCube[1] == destCube[1])  y = 0;
-			else if (startCube[1] < destCube[1]) y = 1;
-			else y = -1;
-			
-			if (startCube[2] == destCube[2])  z = 0;
-			else if (startCube[2] < destCube[2]) z = 1;
-			else z = -1;
-			
-			moveToAdjacent(x, y, z);
+		if (getState() != State.RESTING_1) {
+			int[] startCube;
+			while ((getCubeCoordinate() != destCube)) {
+				int x, y, z;
+				startCube = getCubeCoordinate();
+				
+				if (startCube[0] == destCube[0])  x = 0;
+				else if (startCube[0] < destCube[0]) x = 1;
+				else x = -1;
+				
+				if (startCube[1] == destCube[1])  y = 0;
+				else if (startCube[1] < destCube[1]) y = 1;
+				else y = -1;
+				
+				if (startCube[2] == destCube[2])  z = 0;
+				else if (startCube[2] < destCube[2]) z = 1;
+				else z = -1;
+				
+				moveToAdjacent(x, y, z);
+			}
 		}
 	}
 	//////////////////////////////////////////////
@@ -784,7 +786,7 @@ public class Unit {
 	}
 	
 	public void work() throws IllegalStateException {
-		if (!isMoving()) {
+		if (!isMoving() && getState() != State.RESTING_1) {
 			startWorking();
 		}
 	}
@@ -890,32 +892,49 @@ public class Unit {
 	
 	
 	private void startResting() {
-		if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
-			setState(State.RESTING_HP);
-		}
-		else if (this.getCurrentStaminaPoints() < this.getMaxStaminaPoints()) {
-			setState(State.RESTING_STAM);
-		}
+		setState(State.RESTING_1);
+		this.timeResting = 0.0;
 	}
 	
 	private void controlResting(double dt) {
-		this.timeAfterResting = 0.0;
-		this.timeResting += dt;
-		if (getState() == State.RESTING_HP) {
-			if (this.timeResting - 0.2 > 0.0) {
-				updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-				this.timeResting -= 0.2;
+		
+		if (!isAttacked()) {
+			this.timeAfterResting = 0.0;
+			this.timeResting += dt;
+			
+			if (getState() == State.RESTING_1) {
+				if ((this.timeResting * getToughness())/(0.2*200) > 1) {
+						
+					while (this.timeResting - 0.2 > 0.0) {
+						updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
+						this.timeResting -= 0.2;
+					}
+					
+					if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
+						setState(State.RESTING_HP);
+					}
+					else if (this.getCurrentStaminaPoints() < this.getMaxStaminaPoints()) {
+						setState(State.RESTING_STAM);
+					}
+				}
 			}
-		}
-		else {
-			if (this.timeResting - 0.2 > 0.0) {
-				updateCurrentStaminaPoints(getCurrentStaminaPoints() + (getToughness()/100));
-				this.timeResting -= 0.2;
+			
+			if (getState() == State.RESTING_HP) {
+				if (this.timeResting - 0.2 > 0.0) {
+					updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
+					this.timeResting -= 0.2;
+				}
 			}
-		}
-		if (getCurrentHitPoints() == getMaxHitPoints() &&
-				getCurrentStaminaPoints() == getMaxStaminaPoints()) {
-			setState(State.EMPTY);
+			else {
+				if (this.timeResting - 0.2 > 0.0) {
+					updateCurrentStaminaPoints(getCurrentStaminaPoints() + (getToughness()/100));
+					this.timeResting -= 0.2;
+				}
+			}
+			if (getCurrentHitPoints() == getMaxHitPoints() &&
+					getCurrentStaminaPoints() == getMaxStaminaPoints()) {
+				setState(State.EMPTY);
+			}
 		}
 	}
 	
@@ -926,7 +945,8 @@ public class Unit {
 	}
 	
 	public boolean isResting() {
-		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM);
+		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
+				|| getState() == State.RESTING_1);
 	}
 	
 	private double timeResting = 0.0;
@@ -965,7 +985,6 @@ public class Unit {
 	private boolean defaultBehavior;
 	
 	
-	/* Rest at least till 1 HP recovered */
 	/* resume extended movement after interruptions */
 	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
