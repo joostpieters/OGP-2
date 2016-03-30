@@ -1,10 +1,13 @@
 package hillbillies.model;
 
+
 import java.util.regex.*;
 
 import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Raw;
+
+import be.kuleuven.cs.som.taglet.PostTaglet;
 
 import java.util.Random;
 
@@ -517,7 +520,12 @@ public class Unit {
 		if (!isResting()) {
 			this.timeAfterResting += dt;
 		}
-		if (this.timeAfterResting >= 180.0) {
+		if (this.timeAfterResting >= 180.0 /*|| this.getCurrentStaminaPoints() <= 0*/) {
+			
+			// CONTINUE MOVING???????????
+			if (isMoving()) {
+				//setContinueMovingAfter(true);
+			}
 			startResting();
 		}
 		
@@ -533,7 +541,7 @@ public class Unit {
 		else if (isAttacking()) {
 			controlAttacking(dt);
 		}
-		else if (isResting() || this.timeAfterResting >= 180.0) {
+		else if (isResting()) {
 			controlResting(dt);
 		}
 		else if (isWorking()) {
@@ -621,6 +629,31 @@ public class Unit {
 			setOrientation(Math.atan2(getVelocity()[0], getVelocity()[2] ));
 		}
 	}
+	
+	/* DEFENSIVE PROGR*/
+	public void moveTo(int[] destCube) {
+		int[] startCube;
+		while ((getCubeCoordinate() != destCube)) {
+			int x, y, z;
+			startCube = getCubeCoordinate();
+			
+			if (startCube[0] == destCube[0])  x = 0;
+			else if (startCube[0] < destCube[0]) x = 1;
+			else x = -1;
+			
+			if (startCube[1] == destCube[1])  y = 0;
+			else if (startCube[1] < destCube[1]) y = 1;
+			else y = -1;
+			
+			if (startCube[2] == destCube[2])  z = 0;
+			else if (startCube[2] < destCube[2]) z = 1;
+			else z = -1;
+			
+			moveToAdjacent(x, y, z);
+		}
+	}
+	//////////////////////////////////////////////
+	
 	
 	private double[] getDestination() {
 		return this.destination;
@@ -730,29 +763,8 @@ public class Unit {
 	}
 	private double orientation;
 	
-	/* DEFENSIVE PROGR*/
-	public void moveTo(int[] destCube) {
-		int[] startCube;
-		while ((getCubeCoordinate() != destCube)) {
-			int x, y, z;
-			startCube = getCubeCoordinate();
-			
-			if (startCube[0] == destCube[0])  x = 0;
-			else if (startCube[0] < destCube[0]) x = 1;
-			else x = -1;
-			
-			if (startCube[1] == destCube[1])  y = 0;
-			else if (startCube[1] < destCube[1]) y = 1;
-			else y = -1;
-			
-			if (startCube[2] == destCube[2])  z = 0;
-			else if (startCube[2] < destCube[2]) z = 1;
-			else z = -1;
-			
-			moveToAdjacent(x, y, z);
-		}
-	}
 	
+	/* DEFENSIVE PROGR*/
 	
 	public boolean isWorking() {
 		return (getState() == State.WORKING);
@@ -772,7 +784,9 @@ public class Unit {
 	}
 	
 	public void work() throws IllegalStateException {
-		startWorking();
+		if (!isMoving()) {
+			startWorking();
+		}
 	}
 	
 	private float timeToCompletion;
@@ -795,17 +809,19 @@ public class Unit {
 	}
 	
 	public void attack(Unit defender) throws IllegalPositionException {
-		startAttacking();
-		
-		// Orientation update
-		this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
-				defender.getPosition()[0]-this.getPosition()[0]));
-		
-		defender.setOrientation(Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
-				this.getPosition()[0]-defender.getPosition()[0]));
-		
-		
-		this.defender = defender;
+		if (!isMoving()) {
+			startAttacking();
+			
+			// Orientation update
+			this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
+					defender.getPosition()[0]-this.getPosition()[0]));
+			
+			defender.setOrientation(Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
+					this.getPosition()[0]-defender.getPosition()[0]));
+			
+			
+			this.defender = defender;
+		}
 	}
 	
 	private Unit getDefender() {
@@ -904,7 +920,9 @@ public class Unit {
 	}
 	
 	public void rest() {
-		startResting();
+		if (!isMoving()) {
+			startResting();
+		}
 	}
 	
 	public boolean isResting() {
