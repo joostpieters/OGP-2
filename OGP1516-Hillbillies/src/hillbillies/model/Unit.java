@@ -522,12 +522,7 @@ public class Unit {
 		if (!isResting()) {
 			this.timeAfterResting += dt;
 		}
-		if (this.timeAfterResting >= 180.0 /*|| this.getCurrentStaminaPoints() <= 0*/) {
-			
-			// CONTINUE MOVING???????????
-			if (isMoving()) {
-				//setContinueMovingAfter(true);
-			}
+		if (this.timeAfterResting >= 180.0) {
 			startResting();
 		}
 		
@@ -1004,8 +999,6 @@ public class Unit {
 	private boolean defaultBehavior;
 	
 	
-	/* Move to random position in game world default behavior */
-	/* resume extended movement after interruptions */
 	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
 	/* Verbetering: Random object in field zetten en hergebruiken*/
