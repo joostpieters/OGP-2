@@ -9,7 +9,9 @@ import be.kuleuven.cs.som.annotate.Raw;
 
 import be.kuleuven.cs.som.taglet.PostTaglet;
 
-import java.util.Random;
+import java.util.*;
+
+//import java.util.Random;
 
 /**
 * A class of units with a current position, a name, weight, strength, agility
@@ -533,6 +535,9 @@ public class Unit {
 			controlResting(dt);
 		}
 		else if (getState() == State.EMPTY) {
+			if (this.destCubeLT != null && this.getCubeCoordinate() != this.destCubeLT) {
+				moveTo(this.destCubeLT);
+			}
 			controlWaiting(dt);
 		}
 		else if (isMoving()) {
@@ -603,6 +608,12 @@ public class Unit {
 				if (isSprinting()) stopSprinting();
 				setState(State.EMPTY);
 			}
+			
+			
+			if (this.getCubeCoordinate() == this.destCubeLT) {
+				this.destCubeLT = null;
+			}
+			
 		}
 		else {
 			setState(State.EMPTY);
@@ -639,6 +650,7 @@ public class Unit {
 	/* DEFENSIVE PROGR*/
 	public void moveTo(int[] destCube) {
 		if (getState() != State.RESTING_1) {
+			this.destCubeLT = destCube;
 			int[] startCube;
 			while ((getCubeCoordinate() != destCube)) {
 				int x, y, z;
@@ -680,6 +692,7 @@ public class Unit {
 	}
 	
 	private double[] destination = new double[3];
+	private int[] destCubeLT = null;
 	
 	private void updatePosition(double dt) throws IllegalPositionException {
 		double[] newPosition = new double[3];
