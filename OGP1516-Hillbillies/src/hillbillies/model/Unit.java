@@ -107,7 +107,7 @@ public class Unit {
 				= this.maxStaminaPoints = (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 		
-		setOrientation(Math.PI/2.0);
+		setOrientation((float)(Math.PI/2.0));
 	}
 	
 	/**
@@ -656,7 +656,7 @@ public class Unit {
 			
 			setDestination(newPosition);
 			this.movingDirection = direction;
-			setOrientation(Math.atan2(getVelocity()[0], getVelocity()[2] ));
+			setOrientation((float) Math.atan2(getVelocity()[0], getVelocity()[2] ));
 		}
 	}
 	
@@ -791,17 +791,36 @@ public class Unit {
 	
 	
 	/* TOTAL PROGRAMMING*/
-	
+	/**
+	 * Return the units' orientation.
+	 */
 	@Basic
-	public double getOrientation() {
+	public float getOrientation() {
 		return orientation;
 	}
 	
-	private void setOrientation(double newValue) {
-		this.orientation = newValue;
+	/**
+	 * Set the orientation of the unit to the given new value.
+	 * 
+	 * @param newValue
+	 * 			The new orientation for this unit.
+	 * @post if the given orientation is a float number between
+	 * 			0.0 and 2*Pi, then the new orientation of the unit is
+	 * 			equal to the given orientation.
+	 * 		| if (isFloat(newValue) && newValue >= 0.0
+	 * 		| 	&& newValue < 2*Math.PI
+	 * 		| then new.getOrientation() == newValue
+	 */
+	private void setOrientation(float newValue) {
+		if (newValue == (float) newValue && newValue >= 0.0 && newValue < 2*Math.PI) {
+			this.orientation = newValue;
+		}
 	}
-	
-	private double orientation;
+
+	/**
+	 * Variable registering the orientation of the unit.
+	 */
+	private float orientation;
 	
 	
 	/* DEFENSIVE PROGR*/
@@ -867,10 +886,10 @@ public class Unit {
 			startAttacking();
 			
 			// Orientation update
-			this.setOrientation(Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
+			this.setOrientation((float)Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
 					defender.getPosition()[0]-this.getPosition()[0]));
 			
-			defender.setOrientation(Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
+			defender.setOrientation((float)Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
 					this.getPosition()[0]-defender.getPosition()[0]));
 			
 			
@@ -1060,6 +1079,7 @@ public class Unit {
 	private State state;
 	private boolean defaultBehavior;
 	
+	/* IETS MIS MET POSITIONERING */
 	/* LOOP INVARIANTS etc */
 	/* TAGS @Raw, @Imm,... */
 	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
