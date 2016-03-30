@@ -1,8 +1,6 @@
 package hillbillies.model;
 
 
-import java.util.regex.*;
-
 import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Raw;
@@ -25,7 +23,7 @@ import java.util.*;
 * 		| currentStaminaPoints >= 0 && currentStaminaPoints <= maxStaminaPoints
 * 
 *@author Ruben Cartuyvels
-*@version	1.0
+*@version	1.2
 */
 public class Unit {
 	/**
@@ -125,7 +123,7 @@ public class Unit {
 	 * 			| ! intPosition instanceof int[]
 	 * 			| || intPosition.length != 3
 	 */
-	public double[] convertPositionToDouble(int[] intPosition) 
+	private double[] convertPositionToDouble(int[] intPosition) 
 			throws IllegalArgumentException {
 		
 		if ( !(intPosition instanceof int[]) || intPosition.length != 3)
@@ -150,7 +148,7 @@ public class Unit {
 	 * 			| ! doublePosition instanceof double[]
 	 * 			| || doublePosition.length != 3
 	 */
-	public int[] convertPositionToInt(double[] doublePosition) 
+	private int[] convertPositionToInt(double[] doublePosition) 
 			throws IllegalArgumentException {
 		
 		if ( !(doublePosition instanceof double[]) || doublePosition.length != 3)
@@ -176,7 +174,7 @@ public class Unit {
 	 * 		| 		&& (for each coordinate in position:
 	 * 		|			coordinate > 0.0 && coordinate < 50.0)
 	 */
-	public boolean canHaveAsPosition(double[] position) {
+	private boolean canHaveAsPosition(double[] position) {
 		boolean valid = true;
 		if (!(position instanceof double[]) || position.length != 3 )
 			valid = false;
@@ -185,6 +183,22 @@ public class Unit {
 				valid = false;
 		}
 		return valid;
+	}
+	
+	/**
+	 * Return the position of the cube in the game world occupied by 
+	 * the unit.
+	 */
+	public int[] getCubeCoordinate() {
+		return convertPositionToInt(getPosition());
+	}
+	
+	/**
+	 * Return the exact position of the unit in the game world.
+	 */
+	@Basic
+	public double[] getPosition() {
+		return this.position;
 	}
 	
 	/**
@@ -210,21 +224,6 @@ public class Unit {
 	}
 	
 	/**
-	 * Return the position of the cube in the game world occupied by 
-	 * the unit.
-	 */
-	public int[] getCubeCoordinate() {
-		return convertPositionToInt(getPosition());
-	}
-	
-	/**
-	 * Return the exact position of the unit in the game world.
-	 */
-	public double[] getPosition() {
-		return this.position;
-	}
-	
-	/**
 	 * Variable registering the position of the unit in the game world.
 	 */
 	private double position[] = new double[3];
@@ -232,6 +231,7 @@ public class Unit {
 	/**
 	 * Return the current name of the unit.
 	 */
+	@Basic
 	public String getName() {
 		return name;
 	}
@@ -270,7 +270,7 @@ public class Unit {
 	 * 		|		&& (name.length() > 1)
 	 * 		| 		&& (name.matches("[a-zA-Z\\s\'\"]+"))
 	 */
-	public boolean canHaveAsName(String name) {
+	private boolean canHaveAsName(String name) {
 		return (name != null && name.length() > 1 
 				&& Character.isUpperCase(name.charAt(0)) 
 				&& name.matches("[a-zA-Z\\s\'\"]+"));
@@ -285,6 +285,7 @@ public class Unit {
 	/**
 	 * Return the units' weight.
 	 */
+	@Basic
 	public int getWeight() {
 		return this.weight;
 	}
@@ -316,6 +317,7 @@ public class Unit {
 	/**
 	 * Return the units' strength.
 	 */
+	@Basic
 	public int getStrength() {
 		return this.strength;
 	}
@@ -344,6 +346,7 @@ public class Unit {
 	/**
 	 * Return the units' agility.
 	 */
+	@Basic
 	public int getAgility() {
 		return this.agility;
 	}
@@ -372,6 +375,7 @@ public class Unit {
 	/**
 	 * Return the units' toughness.
 	 */
+	@Basic
 	public int getToughness() {
 		return this.toughness;
 	}
@@ -400,6 +404,7 @@ public class Unit {
 	/**
 	 * Return the units' maximum number of hitpoints.
 	 */
+	@Basic
 	public int getMaxHitPoints() {
 		return this.maxHitPoints;
 	}
@@ -414,7 +419,7 @@ public class Unit {
 	 * 		|	(getToughness()/100.0));
 	 * 
 	 */
-	public void updateMaxHitPoints() {
+	private void updateMaxHitPoints() {
 		this.maxHitPoints = (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 	}
@@ -428,6 +433,7 @@ public class Unit {
 	/**
 	 * Return the units' current number of hitpoints.
 	 */
+	@Basic
 	public int getCurrentHitPoints() {
 		return this.currentHitPoints;
 	}
@@ -438,7 +444,7 @@ public class Unit {
 	 * @param newValue
 	 * 			The new value for the current no. of hitpoints of the unit.
 	 * 
-	 * @pre the given new value must be larger than or equal to zero and 
+	 * @pre	the given new value must be larger than or equal to zero and 
 	 * 		less than or equal to the max no. of hitpoints
 	 * 		| newValue >= 0 && newValue <= getMaxHitPoints()
 	 * 
@@ -446,7 +452,7 @@ public class Unit {
 	 * 		the given new value.
 	 * 
 	 */
-	public void updateCurrentHitPoints(int newValue) {
+	private void updateCurrentHitPoints(int newValue) {
 		this.currentHitPoints = newValue;
 	}
 	
@@ -458,6 +464,7 @@ public class Unit {
 	/**
 	 * Return the units' maximum number of stamina points.
 	 */
+	@Basic
 	public int getMaxStaminaPoints() {
 		return this.maxStaminaPoints;
 	}
@@ -472,7 +479,7 @@ public class Unit {
 	 * 		|	(getToughness()/100.0));
 	 * 
 	 */
-	public void updateMaxStaminaPoints() {
+	private void updateMaxStaminaPoints() {
 		this.maxStaminaPoints = (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 	}
@@ -485,6 +492,7 @@ public class Unit {
 	/**
 	 * Return the units' current number of stamina points.
 	 */
+	@Basic
 	public int getCurrentStaminaPoints() {
 		return this.currentStaminaPoints;
 	}
@@ -503,7 +511,7 @@ public class Unit {
 	 * 		the given new value.
 	 * 
 	 */
-	public void updateCurrentStaminaPoints(int newValue) {
+	private void updateCurrentStaminaPoints(int newValue) {
 		this.currentStaminaPoints = newValue;
 	}
 	
@@ -520,9 +528,14 @@ public class Unit {
 			throw new IllegalArgumentException();
 		}
 		if (!isResting()) {
-			this.timeAfterResting += dt;
+			setTimeAfterResting(getTimeAfterResting() + dt);
 		}
-		if (this.timeAfterResting >= 180.0) {
+		
+		/* ????????????? of niet */
+		updateMaxStaminaPoints();
+		updateMaxHitPoints();
+		
+		if (getTimeAfterResting() >= 180.0) {
 			startResting();
 		}
 		
@@ -549,8 +562,6 @@ public class Unit {
 		}
 		
 	}
-	
-	private double timeAfterResting = 0.0;
 	
 	private void controlWaiting(double dt) {
 		if (isDefaultBehaviorEnabled()) {
@@ -579,6 +590,16 @@ public class Unit {
 		}
 	}
 	
+	@Basic
+	public boolean isMoving() {
+		return (getState() == State.MOVING);
+	}
+	
+	@Basic
+	private int[] getDestCubeLT() {
+		return this.destCubeLT;
+	}
+	
 	private void startMoving() {
 		setState(State.MOVING);
 	}
@@ -599,13 +620,13 @@ public class Unit {
 			}
 			else if (reached(dt)) {
 				
-				setPosition(this.destination);
+				setPosition(getDestination());
 				if (isSprinting()) stopSprinting();
 				setState(State.EMPTY);
 			}
 			
 			
-			if (this.getCubeCoordinate() == this.destCubeLT) {
+			if (getCubeCoordinate() == getDestCubeLT()) {
 				this.destCubeLT = null;
 			}
 			
@@ -615,9 +636,6 @@ public class Unit {
 		}
 		
 	}
-	
-	private final static double cubeLength = 1.0;
-	
 	
 	public void moveToAdjacent(int... cubeDirection) 
 			throws IllegalArgumentException, IllegalPositionException {
@@ -669,7 +687,7 @@ public class Unit {
 	}
 	//////////////////////////////////////////////
 	
-	
+	@Basic
 	private double[] getDestination() {
 		return this.destination;
 	}
@@ -689,13 +707,6 @@ public class Unit {
 	private double[] destination = new double[3];
 	private int[] destCubeLT = null;
 	
-	private void updatePosition(double dt) throws IllegalPositionException {
-		double[] newPosition = new double[3];
-		for (int i=0; i<3; ++i) {
-			newPosition[i] = getPosition()[i] + getVelocity()[i]*dt;
-		}
-		setPosition(newPosition);
-	}
 	
 	private boolean reached(double dt) {
 		double d = Math.sqrt(Math.pow(getPosition()[0]-getDestination()[0],2)
@@ -716,7 +727,17 @@ public class Unit {
 		return false;
 	}
 	
-	public double[] getMovingDirection() {
+	
+	private void updatePosition(double dt) throws IllegalPositionException {
+		double[] newPosition = new double[3];
+		for (int i=0; i<3; ++i) {
+			newPosition[i] = getPosition()[i] + getVelocity()[i]*dt;
+		}
+		setPosition(newPosition);
+	}
+	
+	@Basic
+	private double[] getMovingDirection() {
 		return this.movingDirection;
 	}
 	private double[] movingDirection;
@@ -750,10 +771,7 @@ public class Unit {
 		return 0.0;
 	}
 	
-	public boolean isMoving() {
-		return (getState() == State.MOVING);
-	}
-	
+	@Basic
 	public boolean isSprinting() {
 		return this.isSprinting;
 	}
@@ -769,32 +787,44 @@ public class Unit {
 	}
 	
 	private boolean isSprinting;
+	private final static double cubeLength = 1.0;
+	
 	
 	/* TOTAL PROGRAMMING*/
+	
+	@Basic
 	public double getOrientation() {
 		return orientation;
 	}
-	public void setOrientation(double newValue) {
+	
+	private void setOrientation(double newValue) {
 		this.orientation = newValue;
 	}
+	
 	private double orientation;
 	
 	
 	/* DEFENSIVE PROGR*/
 	
+	@Basic
 	public boolean isWorking() {
 		return (getState() == State.WORKING);
+	}
+	
+	@Basic
+	public float getTimeToCompletion() {
+		return this.timeToCompletion;
 	}
 	
 	
 	private void startWorking() {
 		setState(State.WORKING);
-		this.timeToCompletion = 500.0f/getStrength();
+		setTimeToCompletion(500.0f/getStrength());
 	}
 	
 	private void controlWorking(double dt) {
-		this.timeToCompletion -= dt;
-		if (this.timeToCompletion < 0.0) {
+		setTimeToCompletion((float) (getTimeToCompletion() - dt));
+		if (getTimeToCompletion() < 0.0) {
 			setState(State.EMPTY);
 		}
 	}
@@ -805,17 +835,25 @@ public class Unit {
 		}
 	}
 	
-	private float timeToCompletion;
 	
-
+	@Basic
+	public boolean isAttacking() {
+		return (getState() == State.ATTACKING);
+	}
+	
+	@Basic
+	private Unit getDefender() {
+		return this.defender;
+	}
+	
 	private void startAttacking() {
 		setState(State.ATTACKING);
-		this.timeToCompletion = 1.0f;
+		setTimeToCompletion(1.0f);
 	}
 	
 	private void controlAttacking(double dt) {
-		this.timeToCompletion -= dt;
-		if (this.timeToCompletion < 0.0) {
+		setTimeToCompletion((float) (getTimeToCompletion() - dt));
+		if (getTimeToCompletion() < 0.0) {
 			
 			getDefender().setAttacked(true);
 			getDefender().defend(this);
@@ -840,11 +878,13 @@ public class Unit {
 		}
 	}
 	
-	private Unit getDefender() {
-		return this.defender;
+	
+	public void setTimeToCompletion(float newValue) {
+		 this.timeToCompletion = newValue;
 	}
 	
-	private Unit defender;
+	private float timeToCompletion;
+	
 	
 	private void defend(Unit attacker) throws IllegalPositionException {
 		boolean dodged = this.dodge(attacker);
@@ -890,10 +930,10 @@ public class Unit {
 				(attacker.getStrength()/10));
 	}
 	
-	public boolean isAttacking() {
-		return (getState() == State.ATTACKING);
-	}
+	private Unit defender;
 	
+	
+	@Basic
 	private boolean isAttacked() {
 		return this.isAttacked;
 	}
@@ -904,24 +944,39 @@ public class Unit {
 	
 	private boolean isAttacked;
 	
+	@Basic 
+	private double getTimeResting() {
+		return this.timeResting;
+	}
+	
+	@Basic 
+	private double getTimeAfterResting() {
+		return this.timeAfterResting;
+	}
+	
+	@Basic
+	public boolean isResting() {
+		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
+				|| getState() == State.RESTING_1);
+	}
 	
 	private void startResting() {
 		setState(State.RESTING_1);
-		this.timeResting = 0.0;
+		setTimeResting(0.0);
 	}
 	
 	private void controlResting(double dt) {
+		setTimeAfterResting(0.0);
+		setTimeResting(getTimeResting() + dt);
 		
-		if (!isAttacked()) {
-			this.timeAfterResting = 0.0;
-			this.timeResting += dt;
+		while (!isAttacked() && !isAttacking()) {
 			
 			if (getState() == State.RESTING_1) {
-				if ((this.timeResting * getToughness())/(0.2*200) > 1) {
+				if ((getTimeResting() * getToughness())/(0.2*200) > 1) {
 						
-					while (this.timeResting - 0.2 > 0.0) {
+					while (getTimeResting() - 0.2 > 0.0) {
 						updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-						this.timeResting -= 0.2;
+						setTimeResting(getTimeResting() - 0.2);
 					}
 					
 					if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
@@ -934,15 +989,15 @@ public class Unit {
 			}
 			
 			if (getState() == State.RESTING_HP) {
-				if (this.timeResting - 0.2 > 0.0) {
+				if (getTimeResting() - 0.2 > 0.0) {
 					updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-					this.timeResting -= 0.2;
+					setTimeResting(getTimeResting() - 0.2);
 				}
 			}
 			else {
-				if (this.timeResting - 0.2 > 0.0) {
+				if (getTimeResting() - 0.2 > 0.0) {
 					updateCurrentStaminaPoints(getCurrentStaminaPoints() + (getToughness()/100));
-					this.timeResting -= 0.2;
+					setTimeResting(getTimeResting() - 0.2);
 				}
 			}
 			if (getCurrentHitPoints() == getMaxHitPoints() &&
@@ -958,13 +1013,22 @@ public class Unit {
 		}
 	}
 	
-	public boolean isResting() {
-		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
-				|| getState() == State.RESTING_1);
+	private void setTimeResting(double newValue) {
+		this.timeResting = newValue;
+	}
+	
+	private void setTimeAfterResting(double newValue) {
+		this.timeAfterResting = newValue;
 	}
 	
 	private double timeResting = 0.0;
+	private double timeAfterResting = 0.0;
 	
+	
+	@Basic
+	public boolean isDefaultBehaviorEnabled() {
+		return this.defaultBehavior;
+	}
 	
 	public void setDefaultBehaviorEnabled(boolean value) {
 		if (value == true && isDefaultBehaviorEnabled() == false) {
@@ -983,22 +1047,21 @@ public class Unit {
 		this.defaultBehavior = false;
 	}
 	
-	public boolean isDefaultBehaviorEnabled() {
-		return this.defaultBehavior;
+	
+	@Basic
+	private State getState() {
+		return this.state;
 	}
 	
 	private void setState(State state) {
 		this.state = state;
 	}
 	
-	private State getState() {
-		return this.state;
-	}
-	
 	private State state;
 	private boolean defaultBehavior;
 	
-	
+	/* LOOP INVARIANTS etc */
+	/* TAGS @Raw, @Imm,... */
 	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
 	/* Verbetering: Random object in field zetten en hergebruiken*/
