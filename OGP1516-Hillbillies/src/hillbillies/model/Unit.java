@@ -237,7 +237,7 @@ public class Unit {
 	/**
 	 * Set the name of the unit to the given name.
 	 * 
-	 * @param name
+	 * @param newName
 	 * 			The new name for this unit.
 	 * 
 	 * @post The new name of this unit is equal to the
@@ -965,10 +965,11 @@ public class Unit {
 	private boolean defaultBehavior;
 	
 	
-	/* XXXX     advance time veranderen */
-	/* can private methods be invoked by public methods? + nakijken! */
-	/* fighting and other act interrupting other act */
+	/* Rest at least till 1 HP recovered */
+	/* resume extended movement after interruptions */
+	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
 	/* Verbetering: Random object in field zetten en hergebruiken*/
+	/* Documentation toevoegen */
 }
 
