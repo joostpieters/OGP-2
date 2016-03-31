@@ -27,6 +27,13 @@ public class IllegalPositionException extends RuntimeException {
 	public IllegalPositionException(double[] position, Unit unit) {
 		this.position = position;
 		this.unit = unit;
+		this.positionInt = null;
+	}
+	
+	public IllegalPositionException(int[] position, Unit unit) {
+		this.positionInt = position;
+		this.unit = unit;
+		this.position = null;
 	}
 	
 	public double[] getPosition() {
@@ -34,6 +41,7 @@ public class IllegalPositionException extends RuntimeException {
 	}
 	
 	private final double[] position;
+	private final int[] positionInt;
 	
 	public Unit getUnit() {
 		return unit;

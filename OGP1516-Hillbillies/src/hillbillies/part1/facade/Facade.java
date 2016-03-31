@@ -110,7 +110,7 @@ public class Facade implements IFacade {
 			try {
 				unit.moveToAdjacent(dx, dy, dz);
 			}
-			catch (IllegalArgumentException exc) {
+			catch (RuntimeException exc) {
 				throw new ModelException();
 			}
 		}
@@ -140,7 +140,12 @@ public class Facade implements IFacade {
 		}
 		
 		public void moveTo(Unit unit, int[] cube) throws ModelException {
-			unit.moveTo(cube);
+			try {
+				unit.moveTo(cube);
+			}
+			catch (RuntimeException exc) {
+				throw new ModelException();
+			}
 		}
 		
 		public void work(Unit unit) throws ModelException {
@@ -152,7 +157,12 @@ public class Facade implements IFacade {
 		}
 
 		public void fight(Unit attacker, Unit defender) throws ModelException {
-			attacker.attack(defender);
+			try {
+				attacker.attack(defender);
+			}
+			catch (RuntimeException exc) {
+				throw new ModelException();
+			}
 		}
 
 		public boolean isAttacking(Unit unit) throws ModelException{

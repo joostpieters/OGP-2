@@ -4,8 +4,7 @@ package hillbillies.model;
 import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Raw;
-
-import be.kuleuven.cs.som.taglet.PostTaglet;
+import be.kuleuven.cs.som.annotate.Model;
 
 import java.util.*;
 
@@ -51,22 +50,17 @@ public class Unit {
 	 * @post the new position of the unit is equal to the given position.
 	 * 		| new.getPosition() == position
 	 * 
-	 * @post The new maximum no. of hitpoints and current no. of hitpoints 
-	 * 		of the unit is equal to
-	 * 		200 times the product of the weight divided by 100 and the toughness
-	 * 		divided by 100, rounded up to the next integer.
-	 * 		| new.getMaxHitPoints() = Math.ceil(200*(getWeight()/100.0)*
-	 * 		|	(getToughness()/100.0));
-	 * 
-	 * @post The new maximum no. of stamina points and current no. of stamina
-	 * 		points of the unit is equal to
-	 * 		200 times the product of the weight divided by 100 and the toughness
-	 * 		divided by 100, rounded up to the next integer.
-	 * 		| new.getMaxStaminaPoints() = Math.ceil(200*(getWeight()/100.0)*
-	 * 		|	(getToughness()/100.0));
-	 * 
-	 * @post The new orientation of the unit is equal to Pi/2
+	 * @post The new orientation of the unit is equal to Pi/2.
 	 * 		| new.getOrientation() = Math.PI/2
+	 * 
+	 * @post The new minimum number of hitpoints of the unit is equal to 0.
+	 * 		| new.getMinHitPoints() = 0
+	 * 
+	 * @post The new minimum number of stamina points of the unit is equal to 0.
+	 * 		| new.getMinStaminaPoints() = 0
+	 * 
+	 * @post The default behavior of the unit is equal to the given value for default behavior.
+	 * 		| new.isDefaultBehaviorEnabled() = enableDefaultBehavior
 	 * 
 	 * @throws IllegalPositionException(position, this)
 	 *             The unit cannot have the given position (out of bounds).
@@ -81,13 +75,9 @@ public class Unit {
 					throws IllegalPositionException, IllegalNameException {
 		
 		double[] doubleInitialPosition = convertPositionToDouble(initialPosition);
-		/*if (! canHaveAsPosition(doubleInitialPosition))
-			throw new IllegalPositionException(
-					doubleInitialPosition, this);*/
+		
 		setPosition(doubleInitialPosition);
 		
-		/*if (! canHaveAsName(name))
-			throw new IllegalNameException(name, this);*/
 		setName(name);
 		
 		if (weight > 24 && weight < 101) 
@@ -105,13 +95,12 @@ public class Unit {
 		
 		this.minHitPoints = 0;
 		this.minStaminaPoints = 0;
-		/*this.currentHitPoints = this.currentStaminaPoints = this.maxHitPoints 
-				= this.maxStaminaPoints = (int) Math.ceil(
-				200*(getWeight()/100.0)*(getToughness()/100.0));*/
 		
 		setOrientation((float)(Math.PI/2.0));
 		
 		this.random = new Random();
+		
+		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
 	}
 	
 	/**
@@ -178,6 +167,7 @@ public class Unit {
 	 * 		| 		&& (for each coordinate in position:
 	 * 		|			coordinate > 0.0 && coordinate < 50.0)
 	 */
+	@Model
 	private boolean canHaveAsPosition(double[] position) {
 		boolean valid = true;
 		if (!(position instanceof double[]) || position.length != 3 )
@@ -215,7 +205,7 @@ public class Unit {
 	 * 		given position.
 	 * 		| new.getPosition() == position
 	 * 
-	 * @throws IllegalPositionException
+	 * @throws IllegalPositionException(position, this)
 	 * 			The given position is not valid.
 	 * 		| !canHaveAsPosition(position)
 	 */
@@ -250,8 +240,8 @@ public class Unit {
 	 * 		given name.
 	 * 		| new.getName() == newName
 	 * 
-	 * @throws IllegalNameException
-	 * 			The given position is not valid.
+	 * @throws IllegalNameException(newName, this)
+	 * 			The given name is not valid.
 	 * 		| !canHaveAsName(newName)
 	 */
 	public void setName(String newName) throws IllegalNameException {
@@ -274,6 +264,7 @@ public class Unit {
 	 * 		|		&& (name.length() > 1)
 	 * 		| 		&& (name.matches("[a-zA-Z\\s\'\"]+"))
 	 */
+	@Model
 	private boolean canHaveAsName(String name) {
 		return (name != null && name.length() > 1 
 				&& Character.isUpperCase(name.charAt(0)) 
@@ -424,7 +415,7 @@ public class Unit {
 	/**
 	 * Return the units' minimum number of hitpoints.
 	 */
-	@Basic @Immutable
+	@Basic @Immutable @Model
 	private int getMinHitPoints() {
 		return this.minHitPoints;
 	}
@@ -442,8 +433,8 @@ public class Unit {
 	 * 
 	 * @param value
 	 * 			The value to be checked.
-	 * @return true if and only if the value is larger than or equal to
-	 * 			zero and smaller than or equal to the maximum amount of
+	 * @return true if and only if the value is larger than or equal to the
+	 * 			minimum and smaller than or equal to the maximum amount of
 	 * 			hitpoints for this unit.
 	 * 		| result =  (value >= getMinHitPoints() && value <= getMaxHitPoints() )
 	 */
@@ -499,7 +490,7 @@ public class Unit {
 	/**
 	 * Return the units' minimum number of stamina points.
 	 */
-	@Basic @Immutable
+	@Basic @Immutable @Model
 	private int getMinStaminaPoints() {
 		return this.minStaminaPoints;
 	}
@@ -519,7 +510,7 @@ public class Unit {
 	 * @param value
 	 * 			The value to be checked.
 	 * @return true if and only if the value is larger than or equal to
-	 * 			zero and smaller than or equal to the maximum amount of
+	 * 			the minimum and smaller than or equal to the maximum amount of
 	 * 			stamina points for this unit.
 	 * 		| result =  (value >= getMinStaminaPoints && 
 	 * 		|		value <= getMaxStaminaPoints() )
@@ -558,10 +549,34 @@ public class Unit {
 	private final int minStaminaPoints;
 	
 	
-	/* DEFENSIVE PROGR --> ADD DOCUMENTATION + EXCEPTIONS!!!! */
+	
+	/**
+	 * Check if a given value is a valid game time dt value.
+	 * 
+	 * @param dt
+	 * 			The value to be checked.
+	 * @return true if and only if the value is larger than or equal to
+	 * 			zero and smaller than 0.2.
+	 * 		| result =  (dt >= 0 && dt < 0.2 )
+	 */
+	@Model
+	private boolean isValidDT(double dt) {
+		return (dt < 0.2 && dt >= 0.0);
+	}
+	
+	/**
+	 * Advance the game time and manage activities of the unit.
+	 * 
+	 * @param dt
+	 * 			The amount by which the game time has to be advanced
+	 * 
+	 * @throws IllegalArgumentException
+	 * 			The value for dt is not valid.
+	 * 			| ! isValidDT(dt)
+	 */
 	public void advanceTime(double dt) throws IllegalPositionException, 
 													IllegalArgumentException {
-		if (dt > 0.2 || dt < 0.0) {
+		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
 		if (!isResting()) {
@@ -596,7 +611,13 @@ public class Unit {
 		
 	}
 	
-	private void controlWaiting(double dt) {
+	/**
+	 * Manage the waiting of the unit, i.e. when the state of the unit is equal to empty.
+	 * 
+	 * @param dt
+	 */
+	private void controlWaiting(double dt) throws IllegalPositionException {
+		
 		if (isDefaultBehaviorEnabled()) {
 			double dice = this.random.nextDouble();
 			if (dice < 1.0/3.0) {
@@ -622,21 +643,32 @@ public class Unit {
 		}
 	}
 	
-	@Basic
+	/**
+	 * Returns true if the unit is moving.
+	 * 
+	 * @return	True if and only if the unit is moving.
+	 * 			| result = (getState() == State.MOVING)
+	 */
 	public boolean isMoving() {
 		return (getState() == State.MOVING);
 	}
 	
-	@Basic
-	private int[] getDestCubeLT() {
-		return this.destCubeLT;
-	}
-	
+	/**
+	 * Makes the unit start moving, i.e. sets its state to moving.
+	 * 
+	 * @post	The units state is equal to moving
+	 * 			| new.getState() == State.MOVING
+	 */
 	private void startMoving() {
 		setState(State.MOVING);
 	}
 	
-	private void controlMoving(double dt) {
+	/**
+	 * Manage the moving of the unit, i.e. when the state of the unit is equal to moving.
+	 * 
+	 * @param dt
+	 */
+	private void controlMoving(double dt) throws IllegalPositionException {
 	
 		if (!isAttacked()) {
 		
@@ -659,7 +691,7 @@ public class Unit {
 			
 			
 			if (getCubeCoordinate() == getDestCubeLT()) {
-				this.destCubeLT = null;
+				setDestCubeLT(null);
 			}
 			
 		}
@@ -669,8 +701,32 @@ public class Unit {
 		
 	}
 	
+	/**
+	 * Move to an adjacent cube.
+	 * 
+	 * @param cubeDirection
+	 * 			The relative directions of the cube to which the unit has to move.
+	 * 
+	 * @post	The destination of the unit is set to the right adjacent cube.
+	 * 			| new.getDestination() == determineCube(cubeDirection)
+	 * 
+	 * @post	The moving direction of the unit is set towards the destination.
+	 * 			cube.
+	 * 			| new.movingDirection == new.getDestination() - this.getPosition()
+	 * 
+	 * @post	The orientation of the unit is set towards the destination.
+	 * 			| new.getOrientation() == Math.atan2(getVelocity()[0], getVelocity()[2] )
+	 * 
+	 * @throws IllegalArgumentException
+	 * 			The given direction is not a valid direction.
+	 * 			| !(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
+	 */
 	public void moveToAdjacent(int... cubeDirection) 
-			throws IllegalArgumentException, IllegalPositionException {
+			throws IllegalPositionException, IllegalArgumentException {
+		
+		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
+			throw new IllegalArgumentException();
+		
 		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1) {
 			startMoving();
 			
@@ -692,10 +748,29 @@ public class Unit {
 		}
 	}
 	
-	/* DEFENSIVE PROGR*/
-	public void moveTo(int[] destCube) {
+	/**
+	 * Move to a target cube.
+	 * 
+	 * @param destCube
+	 * 			The coordinates of the destination cube.
+	 * 
+	 * @post	The long term destination of the unit will be equal to
+	 * 			the destination cube.
+	 * 			| new.destCubeLT == destCube
+	 * 
+	 * @throws IllegalPositionException
+	 * 			The given destination cube is not valid.
+	 * 			| !canHaveAsPosition(convertPositionToDouble(destCube))
+	 */
+	public void moveTo(int[] destCube) throws IllegalPositionException,
+						IllegalArgumentException {
+		
+		if (!canHaveAsPosition(convertPositionToDouble(destCube))) {
+			throw new IllegalPositionException(destCube, this);
+		}
+		
 		if (getState() != State.RESTING_1) {
-			this.destCubeLT = destCube;
+			setDestCubeLT(destCube);
 			int[] startCube;
 			while ((getCubeCoordinate() != destCube)) {
 				int x, y, z;
@@ -717,17 +792,30 @@ public class Unit {
 			}
 		}
 	}
-	//////////////////////////////////////////////
-	
-	@Basic
+
+	/**
+	 * Returns the destination of the unit.
+	 */
+	@Basic @Model
 	private double[] getDestination() {
 		return this.destination;
 	}
 	
-	private void setDestination(double[] newDestination) throws IllegalArgumentException,
-						IllegalPositionException {
-		if ( !(newDestination instanceof double[]) || newDestination.length != 3)
-			throw new IllegalArgumentException();
+	/**
+	 * Set the destination of the unit to the given coordinates.
+	 * 
+	 * @param newDestination
+	 * 			The new destination coordinates.
+	 * 
+	 * @post The new destination of this unit is equal to the
+	 * 		given coordinates.
+	 * 		| new.getDestination() == newDestination
+	 * 
+	 * @throws IllegalPositionException
+	 * 			The given destination is not a valid position.
+	 * 		| !canHaveAsPosition(newDestination)
+	 */
+	private void setDestination(double[] newDestination) throws IllegalPositionException {
 		if (!canHaveAsPosition(newDestination)) {
 			throw new IllegalPositionException(newDestination, this);
 		}
@@ -735,6 +823,37 @@ public class Unit {
 			this.destination[i] = newDestination[i];
 		}
 	}
+	
+	/**
+	 * Returns the long term destination of the unit.
+	 */
+	@Basic
+	private int[] getDestCubeLT() {
+		return this.destCubeLT;
+	}
+	
+	
+	/**
+	 * Set the long term destination of the unit to the given coordinates.
+	 * 
+	 * @param destCubeLT
+	 * 			The new long term destination cube coordinates.
+	 * 
+	 * @post The new long term destination of this unit is equal to the
+	 * 		given cube coordinates.
+	 * 		| new.getDestCubeLT() == destCubeLT
+	 * 
+	 * @throws IllegalPositionException
+	 * 			The given position is not valid.
+	 * 		| !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
+	 * 				|| destCubeLT == null )
+	 */
+	private void setDestCubeLT(int[] destCubeLT) throws IllegalPositionException {
+		if ( !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) || destCubeLT == null) )
+			throw new IllegalPositionException(destCubeLT, this);
+		this.destCubeLT = destCubeLT;
+	}
+	
 	
 	private double[] destination = new double[3];
 	private int[] destCubeLT = null;
@@ -775,6 +894,7 @@ public class Unit {
 	private double[] movingDirection;
 	
 	
+	@Model
 	private double[] getVelocity() {
 		double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
 				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));
@@ -857,7 +977,13 @@ public class Unit {
 	
 	/* DEFENSIVE PROGR*/
 	
-	@Basic
+	
+	/**
+	 * Returns true if the unit is working.
+	 * 
+	 * @return	True if and only if the unit is workign.
+	 * 			| result = (getState() == State.WORKING)
+	 */
 	public boolean isWorking() {
 		return (getState() == State.WORKING);
 	}
@@ -880,14 +1006,19 @@ public class Unit {
 		}
 	}
 	
-	public void work() throws IllegalStateException {
+	public void work() /*throws IllegalStateException*/ {
 		if (!isMoving() && getState() != State.RESTING_1) {
 			startWorking();
 		}
 	}
 	
 	
-	@Basic
+	/**
+	 * Returns true if the unit is attacking.
+	 * 
+	 * @return	True if and only if the unit is attacking.
+	 * 			| result = (getState() == State.ATTACKING)
+	 */
 	public boolean isAttacking() {
 		return (getState() == State.ATTACKING);
 	}
@@ -930,7 +1061,7 @@ public class Unit {
 	}
 	
 	
-	public void setTimeToCompletion(float newValue) {
+	private void setTimeToCompletion(float newValue) {
 		 this.timeToCompletion = newValue;
 	}
 	
@@ -1002,7 +1133,13 @@ public class Unit {
 		return this.timeAfterResting;
 	}
 	
-	@Basic
+	/**
+	 * Returns true if the unit is resting.
+	 * 
+	 * @return	True if and only if the unit is resting.
+	 * 			| result = (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
+				|		|| getState() == State.RESTING_1)
+	 */
 	public boolean isResting() {
 		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
 				|| getState() == State.RESTING_1);
@@ -1109,12 +1246,14 @@ public class Unit {
 	private boolean defaultBehavior;
 	private Random random;
 	
+	
+	/* Class invars */
 	/* IETS MIS MET POSITIONERING */
 	/* Kijken of geen private method gebruikt w in formele doc van een public method 
 	 * 		-> anders @Model
 	 */
 	/* LOOP INVARIANTS etc */
-	/* TAGS @Raw, @Imm,... */
+	/* RRAAAAAAAW */
 	/* IllegalArgumentExceptions toevoegen */
 	/* Documentation toevoegen */
 }
