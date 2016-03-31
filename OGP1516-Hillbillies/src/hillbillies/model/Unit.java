@@ -103,9 +103,11 @@ public class Unit {
 			setToughness(toughness);
 		else setToughness(25);
 		
-		this.currentHitPoints = this.currentStaminaPoints = this.maxHitPoints 
+		this.minHitPoints = 0;
+		this.minStaminaPoints = 0;
+		/*this.currentHitPoints = this.currentStaminaPoints = this.maxHitPoints 
 				= this.maxStaminaPoints = (int) Math.ceil(
-				200*(getWeight()/100.0)*(getToughness()/100.0));
+				200*(getWeight()/100.0)*(getToughness()/100.0));*/
 		
 		setOrientation((float)(Math.PI/2.0));
 		
@@ -403,34 +405,29 @@ public class Unit {
 	 */
 	private int toughness;
 	
-	/**
-	 * Return the units' maximum number of hitpoints.
-	 */
-	@Basic
-	public int getMaxHitPoints() {
-		return this.maxHitPoints;
-	}
 	
 	/**
-	 * Update the maximum number of hitpoints of the unit.
+	 * Return the units' maximum number of hitpoints.
 	 * 
-	 * @post The new maximum no. of hitpoints of the unit is equal to
-	 * 		200 times the product of the weight divided by 100 and the toughness
-	 * 		divided by 100, rounded up to the next integer.
-	 * 		| new.getMaxHitPoints() = Math.ceil(200*(getWeight()/100.0)*
-	 * 		|	(getToughness()/100.0));
-	 * 
+	 * @return 	The maximum no. of hitpoints of the unit is equal to
+	 * 			200 times the product of the weight divided by 100 and the toughness
+	 * 			divided by 100, rounded up to the next integer.
+	 * 			| result = Math.ceil(200*(getWeight()/100.0)*
+	 * 			|	(getToughness()/100.0));
 	 */
-	private void updateMaxHitPoints() {
-		this.maxHitPoints = (int) Math.ceil(
+	public int getMaxHitPoints() {
+		return (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 	}
 	
-	/**
-	 * Variable registering the maximum number of hitpoints of the unit.
-	 */
-	private int maxHitPoints;
 	
+	/**
+	 * Return the units' minimum number of hitpoints.
+	 */
+	@Basic @Immutable
+	private int getMinHitPoints() {
+		return this.minHitPoints;
+	}
 	
 	/**
 	 * Return the units' current number of hitpoints.
@@ -441,20 +438,35 @@ public class Unit {
 	}
 	
 	/**
+	 * Check if a given value is a valid hitpoints value.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * @return true if and only if the value is larger than or equal to
+	 * 			zero and smaller than or equal to the maximum amount of
+	 * 			hitpoints for this unit.
+	 * 		| result =  (value >= getMinHitPoints() && value <= getMaxHitPoints() )
+	 */
+	private boolean isLegalHitPoints(int value) {
+		return (value >= getMinHitPoints() && value <= getMaxHitPoints());
+	}
+	
+	/**
 	 * Update the current number of hitpoints of the unit.
 	 * 
 	 * @param newValue
 	 * 			The new value for the current no. of hitpoints of the unit.
 	 * 
-	 * @pre	the given new value must be larger than or equal to zero and 
-	 * 		less than or equal to the max no. of hitpoints
-	 * 		| newValue >= 0 && newValue <= getMaxHitPoints()
+	 * @pre	the given new value must be a valid hitpoints value for this unit.
+	 * 		| isLegalHitPoints(newValue)
 	 * 
 	 * @post The new no. of hitpoints of the unit is equal to
 	 * 		the given new value.
+	 * 		| new.getCurrentHitPoints() == newValue
 	 * 
 	 */
 	private void updateCurrentHitPoints(int newValue) {
+		assert isLegalHitPoints(newValue);
 		this.currentHitPoints = newValue;
 	}
 	
@@ -464,32 +476,34 @@ public class Unit {
 	private int currentHitPoints;
 	
 	/**
-	 * Return the units' maximum number of stamina points.
+	 * Variable registering the minimum number of hitpoints of the unit.
 	 */
-	@Basic
-	public int getMaxStaminaPoints() {
-		return this.maxStaminaPoints;
-	}
+	private final int minHitPoints;
+	
 	
 	/**
-	 * Update the maximum number of stamina points of the unit.
+	 * Return the units' maximum number of stamina points.
 	 * 
-	 * @post The new maximum no. of stamina points of the unit is equal to
-	 * 		200 times the product of the weight divided by 100 and the toughness
-	 * 		divided by 100, rounded up to the next integer.
-	 * 		| new.getMaxStaminaPoints() = Math.ceil(200*(getWeight()/100.0)*
-	 * 		|	(getToughness()/100.0));
+	 * @return 	The maximum no. of stamina points of the unit is equal to
+	 * 			200 times the product of the weight divided by 100 and the toughness
+	 * 			divided by 100, rounded up to the next integer.
+	 * 			| result = Math.ceil(200*(getWeight()/100.0)*
+	 * 			|	(getToughness()/100.0));
 	 * 
 	 */
-	private void updateMaxStaminaPoints() {
-		this.maxStaminaPoints = (int) Math.ceil(
+	public int getMaxStaminaPoints() {
+		return (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 	}
 	
 	/**
-	 * Variable registering the maximum number of stamina points of the unit.
+	 * Return the units' minimum number of stamina points.
 	 */
-	private int maxStaminaPoints;
+	@Basic @Immutable
+	private int getMinStaminaPoints() {
+		return this.minStaminaPoints;
+	}
+
 	
 	/**
 	 * Return the units' current number of stamina points.
@@ -500,20 +514,36 @@ public class Unit {
 	}
 	
 	/**
+	 * Check if a given value is a valid stamina points value.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * @return true if and only if the value is larger than or equal to
+	 * 			zero and smaller than or equal to the maximum amount of
+	 * 			stamina points for this unit.
+	 * 		| result =  (value >= getMinStaminaPoints && 
+	 * 		|		value <= getMaxStaminaPoints() )
+	 */
+	private boolean isLegalStaminaPoints(int value) {
+		return (value >= getMinStaminaPoints() && value <= getMaxStaminaPoints());
+	}
+	
+	/**
 	 * Update the current number of stamina points of the unit.
 	 * 
 	 * @param newValue
 	 * 			The new value for the current no. of stamina points of the unit.
 	 * 
-	 * @pre the given new value must be larger than or equal to zero and 
-	 * 		less than or equal to the max no. of stamina points
-	 * 		| newValue >= 0 && newValue <= getMaxStaminaPoints()
+	 * @pre	the given new value must be a valid stamina points value for this unit.
+	 * 		| isLegalStaminaPoints(newValue)
 	 * 
 	 * @post The new no. of stamina points of the unit is equal to
 	 * 		the given new value.
+	 * 		| new.getCurrentStaminaPoints() == newValue;
 	 * 
 	 */
 	private void updateCurrentStaminaPoints(int newValue) {
+		assert isLegalStaminaPoints(newValue);
 		this.currentStaminaPoints = newValue;
 	}
 	
@@ -521,6 +551,11 @@ public class Unit {
 	 * Variable registering the current number of stamina points of the unit.
 	 */
 	private int currentStaminaPoints;
+	
+	/**
+	 * Variable registering the minimum number of stamina points of the unit.
+	 */
+	private final int minStaminaPoints;
 	
 	
 	/* DEFENSIVE PROGR --> ADD DOCUMENTATION + EXCEPTIONS!!!! */
@@ -532,10 +567,6 @@ public class Unit {
 		if (!isResting()) {
 			setTimeAfterResting(getTimeAfterResting() + dt);
 		}
-		
-		/* ????????????? of niet */
-		updateMaxStaminaPoints();
-		updateMaxHitPoints();
 		
 		if (getTimeAfterResting() >= 180.0) {
 			startResting();
@@ -1079,9 +1110,11 @@ public class Unit {
 	private Random random;
 	
 	/* IETS MIS MET POSITIONERING */
+	/* Kijken of geen private method gebruikt w in formele doc van een public method 
+	 * 		-> anders @Model
+	 */
 	/* LOOP INVARIANTS etc */
 	/* TAGS @Raw, @Imm,... */
-	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
 	/* Documentation toevoegen */
 }
