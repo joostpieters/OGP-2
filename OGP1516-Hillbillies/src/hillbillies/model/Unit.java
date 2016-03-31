@@ -108,6 +108,8 @@ public class Unit {
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 		
 		setOrientation((float)(Math.PI/2.0));
+		
+		this.random = new Random();
 	}
 	
 	/**
@@ -565,13 +567,12 @@ public class Unit {
 	
 	private void controlWaiting(double dt) {
 		if (isDefaultBehaviorEnabled()) {
-			Random random = new Random();
-			double dice = random.nextDouble();
+			double dice = this.random.nextDouble();
 			if (dice < 1.0/3.0) {
 				
 				int[] destCube = new int[3];
 				for (int i=0; i<3; i++) {
-					destCube[i] = random.nextInt(49);
+					destCube[i] = this.random.nextInt(49);
 				}
 				moveTo(destCube);
 				
@@ -916,8 +917,7 @@ public class Unit {
 	}
 	
 	private boolean dodge(Unit attacker) throws IllegalPositionException {
-		Random random = new Random();
-		if ( random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
+		if ( this.random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
 			this.jumpToRandomAdjacent();
 			return true;
 		}
@@ -925,20 +925,18 @@ public class Unit {
 	}
 	
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
-		Random random = new Random();
 		double[] newPosition = this.getPosition();
-		newPosition[0] += 2*random.nextDouble() - 1.0;
-		newPosition[1] += 2*random.nextDouble() - 1.0;
+		newPosition[0] += 2*this.random.nextDouble() - 1.0;
+		newPosition[1] += 2*this.random.nextDouble() - 1.0;
 		if (!canHaveAsPosition(newPosition)) throw new 
 					IllegalPositionException(newPosition, this);
 		this.setPosition(newPosition);
 	}
 	
 	private boolean block(Unit attacker) {
-		Random random = new Random();
 		double probability = 0.25*((this.getAgility() + this.getStrength())
 				/(attacker.getAgility() + attacker.getStrength()));
-		if ( random.nextDouble() <= probability ) {
+		if ( this.random.nextDouble() <= probability ) {
 			return true;
 		}
 		return false;
@@ -1078,13 +1076,13 @@ public class Unit {
 	
 	private State state;
 	private boolean defaultBehavior;
+	private Random random;
 	
 	/* IETS MIS MET POSITIONERING */
 	/* LOOP INVARIANTS etc */
 	/* TAGS @Raw, @Imm,... */
 	/* can private methods be invoked by public methods? + nakijken! en alles aanpassen */
 	/* IllegalArgumentExceptions toevoegen */
-	/* Verbetering: Random object in field zetten en hergebruiken*/
 	/* Documentation toevoegen */
 }
 
