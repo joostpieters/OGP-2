@@ -7,6 +7,8 @@ import be.kuleuven.cs.som.annotate.Raw;
 import be.kuleuven.cs.som.annotate.Model;
 
 import java.util.*;
+import java.lang.Math;
+import java.lang.*;
 
 //import java.util.Random;
 
@@ -400,7 +402,7 @@ public class Unit {
 	/**
 	 * Return the units' maximum number of hitpoints.
 	 * 
-	 * @return 	The maximum no. of hitpoints of the unit is equal to
+	 * @return 	The maximum no. of hitpoints of the unit, which is equal to
 	 * 			200 times the product of the weight divided by 100 and the toughness
 	 * 			divided by 100, rounded up to the next integer.
 	 * 			| result = Math.ceil(200*(getWeight()/100.0)*
@@ -475,7 +477,7 @@ public class Unit {
 	/**
 	 * Return the units' maximum number of stamina points.
 	 * 
-	 * @return 	The maximum no. of stamina points of the unit is equal to
+	 * @return 	The maximum no. of stamina points of the unit, which is equal to
 	 * 			200 times the product of the weight divided by 100 and the toughness
 	 * 			divided by 100, rounded up to the next integer.
 	 * 			| result = Math.ceil(200*(getWeight()/100.0)*
@@ -855,27 +857,56 @@ public class Unit {
 	}
 	
 	
+	/**
+	 * Variable registering the destination of the unit in the game world.
+	 */
 	private double[] destination = new double[3];
+	
+	/**
+	 * Variable registering the long term destination of the unit in the game world.
+	 */
 	private int[] destCubeLT = null;
 	
 	
-	private boolean reached(double dt) {
-		double d = Math.sqrt(Math.pow(getPosition()[0]-getDestination()[0],2)
-				+ Math.pow(getPosition()[1]-getDestination()[1],2) 
-				+ Math.pow(getPosition()[2]-getDestination()[2],2));
-		if (d<0.2) return true;
-		while (dt > 0.01) {
-			dt -= 0.01;
-			double[] tempPosition = new double[3];
-			for (int i=0; i<3; ++i) {
-				tempPosition[i] = getPosition()[i] - getVelocity()[i]*dt;
-			}
-			double d2 = Math.sqrt(Math.pow(tempPosition[0]-getDestination()[0],2)
-					+ Math.pow(tempPosition[1]-getDestination()[1],2) 
-					+ Math.pow(tempPosition[2]-getDestination()[2],2));
-			if (d2<0.2) return true;
-		}
-		return false;
+	/**
+	 * Returns true if the unit reaches its destination in the current time span.
+	 * 
+	 * @param	dt
+	 * 			The current time span.
+	 * 
+	 * @return	True if and only if the unit reaches the destination.
+	 * 			| result = (getDistanceToDestination(getPosition()) < getCurrentSpeed()*dt)
+	 */
+	private boolean reached(double dt) throws IllegalPositionException {
+		return (getDistanceToDestination(getPosition()) < getCurrentSpeed()*dt);
+	}
+	
+	
+	/**
+	 * Returns the distance to the short term destination from a given position.
+	 * 
+	 * @param	position
+	 * 			The position from which to calculate the distance.
+	 * 
+	 * @return	the distance to the destination, which is equal to the square root of 
+	 * 			the square of the differences between the x, y and z coordinates of the
+	 * 			current position and the destination.
+	 * 			| result = Math.sqrt(Math.pow(position[0]-getDestination()[0],2)
+	 * 			|	+ Math.pow(position[1]-getDestination()[1],2) 
+	 * 			|	+ Math.pow(position[2]-getDestination()[2],2))
+	 * 
+	 * @throws	IllegalPositionException
+	 * 			The given position is not a valid position.
+	 * 			| !canHaveAsPosition(position)
+	 */
+	@Model
+	private double getDistanceToDestination(double[] position) throws IllegalPositionException {
+		if (!canHaveAsPosition(position))
+			throw new IllegalPositionException(position, this);
+		
+		return Math.sqrt(Math.pow(position[0]-getDestination()[0],2)
+				+ Math.pow(position[1]-getDestination()[1],2) 
+				+ Math.pow(position[2]-getDestination()[2],2));
 	}
 	
 	
