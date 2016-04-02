@@ -25,15 +25,27 @@ public class IllegalTimeException extends RuntimeException {
 	 * ...
 	 */
 	public IllegalTimeException(float time, Unit unit) {
-		this.time = time;
+		this.timeF = time;
 		this.unit = unit;
+		this.timeD = 0;
 	}
 	
-	public float getTime() {
-		return time;
+	public IllegalTimeException(double time, Unit unit) {
+		this.timeD = time;
+		this.unit = unit;
+		this.timeF = 0;
 	}
 	
-	private final float time;
+	public double getTimeD() {
+		return timeD;
+	}
+	
+	public float getTimeF() {
+		return timeF;
+	}
+	
+	private final float timeF;
+	private final double timeD;
 	
 	public Unit getUnit() {
 		return unit;

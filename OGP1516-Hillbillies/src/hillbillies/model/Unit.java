@@ -13,19 +13,19 @@ import java.lang.*;
 //import java.util.Random;
 
 /**
-* A class of units with a current position, a name, weight, strength, agility
-* and toughness. 
-* 
-* @invar the current number of hitpoints must always be greater than or equal
-* 		to zero and equal to or smaller than the max number of hitpoints.
-* 		| currentHitPoints >= 0 && currentHitPoints <= maxHitPoints
-* @invar the current number of stamina points must always be greater than or equal
-* 		to zero and equal to or smaller than the max number of stamina points.
-* 		| currentStaminaPoints >= 0 && currentStaminaPoints <= maxStaminaPoints
-* 
-*@author Ruben Cartuyvels
-*@version	1.2
-*/
+ * A class of units with a current position, a name, weight, strength, agility
+ * and toughness. 
+ * 
+ * @invar the current number of hitpoints must always be greater than or equal
+ * 		to zero and equal to or smaller than the max number of hitpoints.
+ * 		| currentHitPoints >= 0 && currentHitPoints <= maxHitPoints
+ * @invar the current number of stamina points must always be greater than or equal
+ * 		to zero and equal to or smaller than the max number of stamina points.
+ * 		| currentStaminaPoints >= 0 && currentStaminaPoints <= maxStaminaPoints
+ * 
+ *@author Ruben Cartuyvels
+ *@version	1.2
+ */
 public class Unit {
 	/**
 	 * Initialize a new unit with the given attributes.
@@ -75,13 +75,13 @@ public class Unit {
 	public Unit (String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) 
 					throws IllegalPositionException, IllegalNameException {
-		
+
 		double[] doubleInitialPosition = convertPositionToDouble(initialPosition);
-		
+
 		setPosition(doubleInitialPosition);
-		
+
 		setName(name);
-		
+
 		if (weight > 24 && weight < 101) 
 			setWeight(weight);
 		else setWeight(25);
@@ -94,17 +94,17 @@ public class Unit {
 		if (toughness > 24 && toughness < 101)
 			setToughness(toughness);
 		else setToughness(25);
-		
+
 		this.minHitPoints = 0;
 		this.minStaminaPoints = 0;
-		
+
 		setOrientation((float)(Math.PI/2.0));
-		
+
 		this.random = new Random();
-		
+
 		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
 	}
-	
+
 	/**
 	 * Converts a position given in integers to a position given in double values.
 	 * 	This is an auxiliary method.
@@ -120,7 +120,7 @@ public class Unit {
 	 */
 	private double[] convertPositionToDouble(int[] intPosition) 
 			throws IllegalArgumentException {
-		
+
 		if ( !(intPosition instanceof int[]) || intPosition.length != 3)
 			throw new IllegalArgumentException();
 		double[] doublePosition = new double[3];
@@ -129,7 +129,7 @@ public class Unit {
 		}
 		return doublePosition;
 	}
-	
+
 	/**
 	 * Converts a position given in doubles to a position given in integer values.
 	 * 	This is an auxiliary method.
@@ -145,7 +145,7 @@ public class Unit {
 	 */
 	private int[] convertPositionToInt(double[] doublePosition) 
 			throws IllegalArgumentException {
-		
+
 		if ( !(doublePosition instanceof double[]) || doublePosition.length != 3)
 			throw new IllegalArgumentException();
 		int[] intPosition = new int[3];
@@ -154,7 +154,7 @@ public class Unit {
 		}
 		return intPosition;
 	}
-	
+
 	/**
 	 * Check whether the given position is a valid position for a unit.
 	 * 
@@ -180,7 +180,7 @@ public class Unit {
 		}
 		return valid;
 	}
-	
+
 	/**
 	 * Return the position of the cube in the game world occupied by 
 	 * the unit.
@@ -188,7 +188,7 @@ public class Unit {
 	public int[] getCubeCoordinate() {
 		return convertPositionToInt(getPosition());
 	}
-	
+
 	/**
 	 * Return the exact position of the unit in the game world.
 	 */
@@ -196,7 +196,7 @@ public class Unit {
 	public double[] getPosition() {
 		return this.position;
 	}
-	
+
 	/**
 	 * Set the position of the unit to the given position.
 	 * 
@@ -218,12 +218,12 @@ public class Unit {
 		this.position[1] = position[1];
 		this.position[2] = position[2];
 	}
-	
+
 	/**
 	 * Variable registering the position of the unit in the game world.
 	 */
 	private double position[] = new double[3];
-	
+
 	/**
 	 * Return the current name of the unit.
 	 */
@@ -231,7 +231,7 @@ public class Unit {
 	public String getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Set the name of the unit to the given name.
 	 * 
@@ -251,7 +251,7 @@ public class Unit {
 			throw new IllegalNameException(newName, this);
 		this.name = newName;
 	}
-	
+
 	/**
 	 * Check whether the given name is a valid name for a unit.
 	 * 
@@ -272,13 +272,13 @@ public class Unit {
 				&& Character.isUpperCase(name.charAt(0)) 
 				&& name.matches("[a-zA-Z\\s\'\"]+"));
 	}
-	
+
 	/**
 	 * Variable registering the name of the unit.
 	 */
 	private String name;
-	
-	
+
+
 	/**
 	 * Return the units weight.
 	 */
@@ -286,7 +286,7 @@ public class Unit {
 	public int getWeight() {
 		return this.weight;
 	}
-	
+
 	/**
 	 * Set the weight of the unit to the given new value.
 	 * 
@@ -305,12 +305,12 @@ public class Unit {
 				&& newValue >= (getStrength()+getAgility())/2 )
 			this.weight = newValue;
 	}
-	
+
 	/**
 	 * Variable registering the weight of the unit.
 	 */
 	private int weight;
-	
+
 	/**
 	 * Return the units strength.
 	 */
@@ -318,7 +318,7 @@ public class Unit {
 	public int getStrength() {
 		return this.strength;
 	}
-	
+
 	/**
 	 * Set the strength of the unit to the given new value.
 	 * 
@@ -334,12 +334,12 @@ public class Unit {
 		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201)
 			this.strength = newValue;
 	}
-	
+
 	/**
 	 * Variable registering the strength of the unit.
 	 */
 	private int strength;
-	
+
 	/**
 	 * Return the units agility.
 	 */
@@ -347,7 +347,7 @@ public class Unit {
 	public int getAgility() {
 		return this.agility;
 	}
-	
+
 	/**
 	 * Set the agility of the unit to the given new value.
 	 * 
@@ -363,12 +363,12 @@ public class Unit {
 		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201)
 			this.agility = newValue;
 	}
-	
+
 	/**
 	 * Variable registering the agility of the unit.
 	 */
 	private int agility;
-	
+
 	/**
 	 * Return the units toughness.
 	 */
@@ -376,7 +376,7 @@ public class Unit {
 	public int getToughness() {
 		return this.toughness;
 	}
-	
+
 	/**
 	 * Set the toughness of the unit to the given new value.
 	 * 
@@ -392,13 +392,13 @@ public class Unit {
 		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201)
 			this.toughness = newValue;
 	}
-	
+
 	/**
 	 * Variable registering the toughness of the unit.
 	 */
 	private int toughness;
-	
-	
+
+
 	/**
 	 * Return the units maximum number of hitpoints.
 	 * 
@@ -412,8 +412,8 @@ public class Unit {
 		return (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 	}
-	
-	
+
+
 	/**
 	 * Return the units minimum number of hitpoints.
 	 */
@@ -421,7 +421,7 @@ public class Unit {
 	private int getMinHitPoints() {
 		return this.minHitPoints;
 	}
-	
+
 	/**
 	 * Return the units current number of hitpoints.
 	 */
@@ -429,7 +429,7 @@ public class Unit {
 	public int getCurrentHitPoints() {
 		return this.currentHitPoints;
 	}
-	
+
 	/**
 	 * Check if a given value is a valid hitpoints value.
 	 * 
@@ -443,7 +443,7 @@ public class Unit {
 	private boolean isLegalHitPoints(int value) {
 		return (value >= getMinHitPoints() && value <= getMaxHitPoints());
 	}
-	
+
 	/**
 	 * Update the current number of hitpoints of the unit.
 	 * 
@@ -462,18 +462,18 @@ public class Unit {
 		assert isLegalHitPoints(newValue);
 		this.currentHitPoints = newValue;
 	}
-	
+
 	/**
 	 * Variable registering the current number of hitpoints of the unit.
 	 */
 	private int currentHitPoints;
-	
+
 	/**
 	 * Variable registering the minimum number of hitpoints of the unit.
 	 */
 	private final int minHitPoints;
-	
-	
+
+
 	/**
 	 * Return the units maximum number of stamina points.
 	 * 
@@ -488,7 +488,7 @@ public class Unit {
 		return (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
 	}
-	
+
 	/**
 	 * Return the units minimum number of stamina points.
 	 */
@@ -497,7 +497,7 @@ public class Unit {
 		return this.minStaminaPoints;
 	}
 
-	
+
 	/**
 	 * Return the units current number of stamina points.
 	 */
@@ -505,7 +505,7 @@ public class Unit {
 	public int getCurrentStaminaPoints() {
 		return this.currentStaminaPoints;
 	}
-	
+
 	/**
 	 * Check if a given value is a valid stamina points value.
 	 * 
@@ -520,7 +520,7 @@ public class Unit {
 	private boolean isLegalStaminaPoints(int value) {
 		return (value >= getMinStaminaPoints() && value <= getMaxStaminaPoints());
 	}
-	
+
 	/**
 	 * Update the current number of stamina points of the unit.
 	 * 
@@ -539,19 +539,19 @@ public class Unit {
 		assert isLegalStaminaPoints(newValue);
 		this.currentStaminaPoints = newValue;
 	}
-	
+
 	/**
 	 * Variable registering the current number of stamina points of the unit.
 	 */
 	private int currentStaminaPoints;
-	
+
 	/**
 	 * Variable registering the minimum number of stamina points of the unit.
 	 */
 	private final int minStaminaPoints;
-	
-	
-	
+
+
+
 	/**
 	 * Check if a given value is a valid game time dt value.
 	 * 
@@ -565,7 +565,7 @@ public class Unit {
 	private boolean isValidDT(double dt) {
 		return (Double.class.isInstance(dt) && dt < 0.2 && dt >= 0.0);
 	}
-	
+
 	/**
 	 * Advance the game time and manage activities of the unit.
 	 * 
@@ -577,18 +577,18 @@ public class Unit {
 	 * 			| ! isValidDT(dt)
 	 */
 	public void advanceTime(double dt) throws IllegalPositionException, 
-													IllegalArgumentException {
+	IllegalArgumentException {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
 		if (!isResting()) {
 			setTimeAfterResting(getTimeAfterResting() + dt);
 		}
-		
+
 		if (getTimeAfterResting() >= 180.0) {
 			startResting();
 		}
-		
+
 		if (isResting()) {
 			controlResting(dt);
 		}
@@ -610,26 +610,26 @@ public class Unit {
 		else if (isWorking()) {
 			controlWorking(dt);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Manage the waiting of the unit, i.e. when the state of the unit is equal to empty.
 	 * 
 	 * @param dt
 	 */
 	private void controlWaiting(double dt) throws IllegalPositionException {
-		
+
 		if (isDefaultBehaviorEnabled()) {
 			double dice = this.random.nextDouble();
 			if (dice < 1.0/3.0) {
-				
+
 				int[] destCube = new int[3];
 				for (int i=0; i<3; i++) {
 					destCube[i] = this.random.nextInt(49);
 				}
 				moveTo(destCube);
-				
+
 			}
 			if (dice >1.0/3.0 && dice < 2.0/3.0) {
 				startWorking();
@@ -644,7 +644,7 @@ public class Unit {
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns true if the unit is moving.
 	 * 
@@ -654,7 +654,7 @@ public class Unit {
 	public boolean isMoving() {
 		return (getState() == State.MOVING);
 	}
-	
+
 	/**
 	 * Makes the unit start moving, i.e. sets its state to moving.
 	 * 
@@ -664,16 +664,16 @@ public class Unit {
 	private void startMoving() {
 		setState(State.MOVING);
 	}
-	
+
 	/**
 	 * Manage the moving of the unit, i.e. when the state of the unit is equal to moving.
 	 * 
 	 * @param dt
 	 */
 	private void controlMoving(double dt) throws IllegalPositionException {
-	
+
 		if (!isAttacked()) {
-		
+
 			if (! reached(dt)) {
 				if (isSprinting()) {
 					updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
@@ -685,38 +685,40 @@ public class Unit {
 				updatePosition(dt);
 			}
 			else if (reached(dt)) {
-				
+
 				setPosition(getDestination());
 				if (isSprinting()) stopSprinting();
 				setState(State.EMPTY);
 			}
-			
-			
+
+
 			if (getCubeCoordinate() == getDestCubeLT()) {
 				setDestCubeLT(null);
 			}
-			
+
 		}
 		else {
 			setState(State.EMPTY);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Move to an adjacent cube.
 	 * 
 	 * @param cubeDirection
 	 * 			The relative directions of the cube to which the unit has to move.
 	 * 
-	 * @post	The destination of the unit is set to the right adjacent cube.
+	 * @post	The destination of the unit is set to the right adjacent cube, if
+	 * 			the unit is not already moving or in the initial resting state or attacked.
 	 * 			| new.getDestination() == determineCube(cubeDirection)
 	 * 
-	 * @post	The moving direction of the unit is set towards the destination.
-	 * 			cube.
+	 * @post	The moving direction of the unit is set towards the destination cube, if
+	 * 			the unit is not already moving or in the initial resting state or attacked.
 	 * 			| new.movingDirection == new.getDestination() - this.getPosition()
 	 * 
-	 * @post	The orientation of the unit is set towards the destination.
+	 * @post	The orientation of the unit is set towards the destination, if
+	 * 			the unit is not already moving or in the initial resting state or attacked.
 	 * 			| new.getOrientation() == Math.atan2(getVelocity()[0], getVelocity()[2] )
 	 * 
 	 * @throws IllegalArgumentException
@@ -725,31 +727,31 @@ public class Unit {
 	 */
 	public void moveToAdjacent(int... cubeDirection) 
 			throws IllegalPositionException, IllegalArgumentException {
-		
+
 		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
 			throw new IllegalArgumentException();
-		
+
 		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1) {
 			startMoving();
-			
+
 			double[] newPosition = new double[3];
 			double[] doubleCubeDirection = convertPositionToDouble(cubeDirection.clone());
 			double[] direction = new double[3];
-			
+
 			for (int i=0; i<3; ++i) {
 				newPosition[i] = (int) (getPosition()[i] 
 						+ doubleCubeDirection[i]);
 				newPosition[i] += getCubeLength()/2.0;
-				
+
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
-			
+
 			setDestination(newPosition);
 			this.movingDirection = direction;
 			setOrientation((float) Math.atan2(getVelocity()[0], getVelocity()[2] ));
 		}
 	}
-	
+
 	/**
 	 * Move to a target cube.
 	 * 
@@ -765,31 +767,31 @@ public class Unit {
 	 * 			| !canHaveAsPosition(convertPositionToDouble(destCube))
 	 */
 	public void moveTo(int[] destCube) throws IllegalPositionException,
-						IllegalArgumentException {
-		
+	IllegalArgumentException {
+
 		if (!canHaveAsPosition(convertPositionToDouble(destCube))) {
 			throw new IllegalPositionException(destCube, this);
 		}
-		
+
 		if (getState() != State.RESTING_1) {
 			setDestCubeLT(destCube);
 			int[] startCube;
 			while ((getCubeCoordinate() != destCube)) {
 				int x, y, z;
 				startCube = getCubeCoordinate();
-				
+
 				if (startCube[0] == destCube[0])  x = 0;
 				else if (startCube[0] < destCube[0]) x = 1;
 				else x = -1;
-				
+
 				if (startCube[1] == destCube[1])  y = 0;
 				else if (startCube[1] < destCube[1]) y = 1;
 				else y = -1;
-				
+
 				if (startCube[2] == destCube[2])  z = 0;
 				else if (startCube[2] < destCube[2]) z = 1;
 				else z = -1;
-				
+
 				moveToAdjacent(x, y, z);
 			}
 		}
@@ -802,7 +804,7 @@ public class Unit {
 	private double[] getDestination() {
 		return this.destination;
 	}
-	
+
 	/**
 	 * Set the destination of the unit to the given coordinates.
 	 * 
@@ -825,7 +827,7 @@ public class Unit {
 			this.destination[i] = newDestination[i];
 		}
 	}
-	
+
 	/**
 	 * Returns the long term destination of the unit.
 	 */
@@ -833,8 +835,8 @@ public class Unit {
 	private int[] getDestCubeLT() {
 		return this.destCubeLT;
 	}
-	
-	
+
+
 	/**
 	 * Set the long term destination of the unit to the given coordinates.
 	 * 
@@ -855,19 +857,19 @@ public class Unit {
 			throw new IllegalPositionException(destCubeLT, this);
 		this.destCubeLT = destCubeLT;
 	}
-	
-	
+
+
 	/**
 	 * Variable registering the destination of the unit in the game world.
 	 */
 	private double[] destination = new double[3];
-	
+
 	/**
 	 * Variable registering the long term destination of the unit in the game world.
 	 */
 	private int[] destCubeLT = null;
-	
-	
+
+
 	/**
 	 * Returns true if the unit reaches its destination in the current time span.
 	 * 
@@ -880,8 +882,8 @@ public class Unit {
 	private boolean reached(double dt) throws IllegalPositionException {
 		return (getDistanceToDestination(getPosition()) < getCurrentSpeed()*dt);
 	}
-	
-	
+
+
 	/**
 	 * Returns the distance to the short term destination from a given position.
 	 * 
@@ -903,13 +905,13 @@ public class Unit {
 	private double getDistanceToDestination(double[] position) throws IllegalPositionException {
 		if (!canHaveAsPosition(position))
 			throw new IllegalPositionException(position, this);
-		
+
 		return Math.sqrt(Math.pow(position[0]-getDestination()[0],2)
 				+ Math.pow(position[1]-getDestination()[1],2) 
 				+ Math.pow(position[2]-getDestination()[2],2));
 	}
-	
-	
+
+
 	/**
 	 * Update the current position of the moving unit.
 	 * 
@@ -927,8 +929,8 @@ public class Unit {
 		}
 		setPosition(newPosition);
 	}
-	
-	
+
+
 	/**
 	 * Returns the moving direction of the unit.
 	 */
@@ -936,13 +938,13 @@ public class Unit {
 	private double[] getMovingDirection() {
 		return this.movingDirection;
 	}
-	
+
 	/**
 	 * Variable registering the moving direction of the unit.
 	 */
 	private double[] movingDirection;
-	
-	
+
+
 	/**
 	 * Returns the units velocity.
 	 * 
@@ -963,7 +965,7 @@ public class Unit {
 		}
 		return v;
 	}
-	
+
 	/**
 	 * Returns the units base speed.
 	 * 
@@ -984,7 +986,7 @@ public class Unit {
 		else
 			return 1.5*(getStrength()+getAgility())/(2.0*getWeight());
 	}
-	
+
 	/**
 	 * Returns the units movement speed, which depends on the base speed, 
 	 * 		the moving direction and on whether the unit is currently moving or not.
@@ -1016,7 +1018,7 @@ public class Unit {
 		}
 		return 0.0;
 	}
-	
+
 	/**
 	 * Returns whether the unit is sprinting or not.
 	 */
@@ -1024,7 +1026,7 @@ public class Unit {
 	public boolean isSprinting() {
 		return this.isSprinting;
 	}
-	
+
 	/**
 	 * Makes the unit start sprinting.
 	 * 
@@ -1037,7 +1039,7 @@ public class Unit {
 			this.isSprinting = true;
 		}
 	}
-	
+
 	/**
 	 * Makes the unit stop sprinting.
 	 * 
@@ -1047,13 +1049,13 @@ public class Unit {
 	public void stopSprinting() {
 		this.isSprinting = false;
 	}
-	
+
 	/**
 	 * Variable registering the whether the unit is sprinting.
 	 */
 	private boolean isSprinting;
-	
-	
+
+
 	/**
 	 * Return the units orientation.
 	 */
@@ -1061,7 +1063,7 @@ public class Unit {
 	public float getOrientation() {
 		return orientation;
 	}
-	
+
 	/**
 	 * Set the orientation of the unit to the given new value.
 	 * 
@@ -1084,8 +1086,8 @@ public class Unit {
 	 * Variable registering the orientation of the unit.
 	 */
 	private float orientation;
-	
-		
+
+
 	/**
 	 * Returns true if the unit is working.
 	 * 
@@ -1095,8 +1097,8 @@ public class Unit {
 	public boolean isWorking() {
 		return (getState() == State.WORKING);
 	}
-	
-	
+
+
 	/**
 	 * Makes the unit start working, i.e. sets its state to working.
 	 * 
@@ -1111,7 +1113,7 @@ public class Unit {
 		setTimeToCompletion(500.0f/getStrength());
 		setState(State.WORKING);
 	}
-	
+
 	/**
 	 * Manage the working of the unit, i.e. when the state of 
 	 * 				the unit is equal to working.
@@ -1124,7 +1126,7 @@ public class Unit {
 			setState(State.EMPTY);
 		}
 	}
-	
+
 	/**
 	 * Makes the unit work.
 	 * 
@@ -1136,8 +1138,8 @@ public class Unit {
 			startWorking();
 		}
 	}
-	
-	
+
+
 	/**
 	 * Returns true if the unit is attacking.
 	 * 
@@ -1147,9 +1149,9 @@ public class Unit {
 	public boolean isAttacking() {
 		return (getState() == State.ATTACKING);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Makes the unit start attacking, i.e. sets its state to attacking.
 	 * 
@@ -1162,9 +1164,10 @@ public class Unit {
 	private void startAttacking() throws IllegalTimeException {
 		setTimeToCompletion(1.0f);
 		setState(State.ATTACKING);
+		getDefender().setAttacked(true);
 	}
-	
-	
+
+
 	/**
 	 * Manage the attacking of the unit, i.e. when the state of 
 	 * 				the unit is equal to attacking.
@@ -1174,15 +1177,15 @@ public class Unit {
 	private void controlAttacking(double dt) throws IllegalTimeException {
 		setTimeToCompletion((float) (getTimeToCompletion() - dt));
 		if (getTimeToCompletion() < 0.0) {
-			
-			getDefender().setAttacked(true);
+
+			//getDefender().setAttacked(true);
 			getDefender().defend(this);
 			getDefender().setAttacked(false);
 			setState(State.EMPTY);
 		}
 	}
-	
-	
+
+
 	/**
 	 * Attack another unit.
 	 * 
@@ -1210,28 +1213,45 @@ public class Unit {
 	public void attack(Unit defender) throws IllegalTimeException, IllegalVictimException {
 		if (!canAttack(defender))
 			throw new IllegalVictimException(this, defender);
-		
+
 		if (!isMoving()) {
 			startAttacking();
-			
+
 			// Orientation update
 			this.setOrientation((float)Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
 					defender.getPosition()[0]-this.getPosition()[0]));
-			
+
 			defender.setOrientation((float)Math.atan2(this.getPosition()[1]-defender.getPosition()[1],
 					this.getPosition()[0]-defender.getPosition()[0]));
-			
-			
+
+
 			this.defender = defender;
 		}
 	}
-	
+
+	/**
+	 * Returns true if the unit can attack another given unit, i.e. if the
+	 * 		given unit is within range.
+	 * 
+	 * @param	victim
+	 * 			The unit to check if in range or not.
+	 * 
+	 * @return	True if and only if the given unit occupies the same
+	 * 			or a neighboring cube of the game world.
+	 * 			| result = (abs(getCubeCoordinate() - victim.getCubeCoordinate()) <= 1)
+	 */
 	@Model
 	private boolean canAttack(Unit victim) {
-		
+		int[] attackerPos = this.getCubeCoordinate();
+		int[] victimPos = victim.getCubeCoordinate();
+		for (int i = 0; i < attackerPos.length; i++) {
+			if ( Math.abs(attackerPos[i] - victimPos[i]) > 1)
+				return false;
+		}
+		return true;
 	}
-	
-	
+
+
 	/**
 	 * Returns the time left for a unit to complete its work or attack.
 	 */
@@ -1239,27 +1259,69 @@ public class Unit {
 	private float getTimeToCompletion() {
 		return this.timeToCompletion;
 	}
-	
+
 	/**
-	 * 	@throws IllegalTimeException
-	 * 			The set time is not valid.
-	 * 			| !(canHaveAsTime(1.0f))
+	 * Checks if a given value is a valid time to completion value.
 	 * 
+	 * @param	value
+	 * 			Value to check
+	 * 
+	 * @return	true if and only if the given value is a float value and
+	 * 			is larger than -0.5.
+	 * 			| result = (Float.class.isInstance(value) && (value > -0.5))
 	 */
 	private boolean canHaveAsTime(float value) {
-		 return ( Float.class.isInstance(value) && (value >= -0.5f) );
+		return ( Float.class.isInstance(value) && (value > -0.5f) );
 	}
 	
+	/**
+	 * Checks if a given value is a valid time value.
+	 * 
+	 * @param	value
+	 * 			Value to check
+	 * 
+	 * @return	true if and only if the given value is a float value and
+	 * 			is larger than or equal to 0.0.
+	 * 			| result = (Double.class.isInstance(value) && (value >= 0.0))
+	 */
+	private boolean canHaveAsTime(double value) {
+		return ( Double.class.isInstance(value) && (value >= 0.0) );
+	}
+
+	/**
+	 * Sets the time to completion for an attack or work job to a given value.
+	 * 
+	 * @param newValue
+	 * 			the given value for the new time to completion.
+	 * 
+	 * @post	The time to completion field is set to the new value.
+	 * 			| new.getTimeToCompletion() = newValue
+	 * 
+	 * @throws IllegalTimeException
+	 * 			The time value is not valid.
+	 * 			| !(canHaveAsTime(1.0f))
+	 */
 	private void setTimeToCompletion(float newValue) throws IllegalTimeException {
 		if (!canHaveAsTime(newValue))
 			throw new IllegalTimeException(newValue, this);
 		this.timeToCompletion = newValue;
 	}
-	
+
+	/**
+	 * Field registering the time to completion.
+	 */
 	private float timeToCompletion;
-	
-	
-	private void defend(Unit attacker) throws IllegalPositionException {
+
+
+	/**
+	 * Defend an attack from an attacking unit. The defending unit will first try
+	 * 		to dodge the incoming attack, if that fails it will try to block it,
+	 * 		and if that fails too it will take damage.
+	 * 
+	 * @param	attacker
+	 * 			The attacking unit.
+	 */
+	private void defend(Unit attacker) {
 		boolean dodged = this.dodge(attacker);
 		if (!dodged) {
 			boolean blocked = this.block(attacker);
@@ -1268,24 +1330,69 @@ public class Unit {
 			}
 		}
 	}
-	
-	private boolean dodge(Unit attacker) throws IllegalPositionException {
+
+	/**
+	 * Try to dodge an attack from an attacking unit. If it succeeds, the unit
+	 * 		will jump to a random adjacent cube.
+	 * 
+	 * @param	attacker
+	 * 			The attacking unit.
+	 * 
+	 * @return	True if the attack is dodged, otherwise false. The probability 
+	 * 			for this to happen is equal to 0.2 times the quotient of the 
+	 * 			agility of the defender and the agility of the attacker.
+	 * 			| result = (random.nextDouble() <= 0.2*(this.getAgility()/attacker.getAgility()) )
+	 */
+	private boolean dodge(Unit attacker) {
 		if ( this.random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
-			this.jumpToRandomAdjacent();
+			while(true) {
+				try {
+					this.jumpToRandomAdjacent();
+					break;
+				}
+				catch (IllegalPositionException exc){
+					continue;
+				}
+			}
 			return true;
 		}
 		return false;
 	}
-	
+
+
+	/**
+	 * Jump to a random adjacent cube.
+	 * 
+	 * @post	The units position is set to a random adjacent cube.
+	 * 			| new.getPosition() = randomAdjacentPosition
+	 * 
+	 * @throws IllegalPositionException
+	 * 			The calculated random adjacent position is not a valid position.
+	 * 			| !(canHaveAsPosition(randomAdjacentPosition))
+	 */
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
 		double[] newPosition = this.getPosition();
 		newPosition[0] += 2*this.random.nextDouble() - 1.0;
 		newPosition[1] += 2*this.random.nextDouble() - 1.0;
 		if (!canHaveAsPosition(newPosition)) throw new 
-					IllegalPositionException(newPosition, this);
+		IllegalPositionException(newPosition, this);
 		this.setPosition(newPosition);
 	}
-	
+
+
+	/**
+	 * Try to block an attack from an attacking unit.
+	 * 
+	 * @param	attacker
+	 * 			The attacking unit.
+	 * 
+	 * @return	True if the attack is blocked, otherwise false. The probability 
+	 * 			for this to happen is equal to 0.25 times the quotient of the 
+	 * 			sum of the agility and the strength of the defender and 
+	 * 			the sum of the agility and the strength of the attacker.
+	 * 			| result = (random.nextDouble() <= 0.25*((this.getAgility() + this.getStrength())
+				|	/(attacker.getAgility() + attacker.getStrength())) )
+	 */
 	private boolean block(Unit attacker) {
 		double probability = 0.25*((this.getAgility() + this.getStrength())
 				/(attacker.getAgility() + attacker.getStrength()));
@@ -1294,76 +1401,134 @@ public class Unit {
 		}
 		return false;
 	}
-	
+
+
+	/**
+	 * The unit takes damage, i.e. loses an amount of hitpoints proportional with the
+	 * 		attackers strength.
+	 * 
+	 * @param	attacker
+	 * 			The attacking unit.
+	 * 
+	 * @post	the hitpoints of the unit get reduced by the strength of the
+	 * 			attacker divided by 10.
+	 * 			| new.getCurrentHitPoints() = this.getCurrentHitPoints()
+				|		- (attacker.getStrength()/10)
+	 */
 	private void takeDamage(Unit attacker) {
 		this.updateCurrentHitPoints(this.getCurrentHitPoints() - 
 				(attacker.getStrength()/10));
 	}
-	
+
 	/**
-	 * Returns the unit this unit is attacking.
+	 * Returns the unit that this unit is attacking.
 	 */
 	@Basic
 	private Unit getDefender() {
 		return this.defender;
 	}
-	
-	
+
+	/**
+	 * Field registering the unit that this unit is attacking.
+	 */
 	private Unit defender;
-	
-	
+
+
+	/**
+	 * Returns whether the unit is currently being attacked.
+	 */
 	@Basic
 	private boolean isAttacked() {
 		return this.isAttacked;
 	}
 	
+	/**
+	 * Set the units attacked field to a given boolean value.
+	 * 
+	 * @param isAttacked
+	 * 			the value to set the attacked field to.
+	 * 
+	 * @post The attacked field of this unit is equal to the
+	 * 		given value.
+	 * 		| new.isAttacked() == isAttacked
+	 */
 	private void setAttacked(boolean isAttacked) {
+		this.setState(State.EMPTY);
 		this.isAttacked = isAttacked;
 	}
 	
+	/**
+	 * Field registering whether the unit is being attacked.
+	 */
 	private boolean isAttacked;
 	
+	
+	/**
+	 * Returns the time the unit has been resting.
+	 */
 	@Basic 
 	private double getTimeResting() {
 		return this.timeResting;
 	}
 	
+	
+	/**
+	 * Returns the time that has passed after the last time the unit rested.
+	 */
 	@Basic 
 	private double getTimeAfterResting() {
 		return this.timeAfterResting;
 	}
 	
+
 	/**
 	 * Returns true if the unit is resting.
 	 * 
 	 * @return	True if and only if the unit is resting.
 	 * 			| result = (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
-				|		|| getState() == State.RESTING_1)
+	 * 			|		|| getState() == State.RESTING_1)
 	 */
 	public boolean isResting() {
 		return (getState() == State.RESTING_HP || getState() == State.RESTING_STAM
 				|| getState() == State.RESTING_1);
 	}
 	
-	private void startResting() {
-		setState(State.RESTING_1);
+	
+	/**
+	 * Makes the unit start resting, i.e. sets its state to resting.
+	 * 
+	 * @post	The units state is equal to the initial resting
+	 * 			| new.getState() == State.RESTING_1
+	 * 
+	 * @post	The time the unit has been resting is set to zero.
+	 * 			| new.getTimeResting() == 0.0
+	 */
+	private void startResting() throws IllegalTimeException {
 		setTimeResting(0.0);
+		setState(State.RESTING_1);
 	}
 	
-	private void controlResting(double dt) {
-		setTimeAfterResting(0.0);
+	
+	/**
+	 * Manage the resting of the unit, i.e. when the state of 
+	 * 				the unit is equal to resting.
+	 * 
+	 * @param dt
+	 */
+	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
-		
-		while (!isAttacked() && !isAttacking()) {
-			
+		setTimeAfterResting(0.0);
+
+		if (!isAttacked() && !isAttacking()) {
+
 			if (getState() == State.RESTING_1) {
 				if ((getTimeResting() * getToughness())/(0.2*200) > 1) {
-						
+
 					while (getTimeResting() - 0.2 > 0.0) {
 						updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
 						setTimeResting(getTimeResting() - 0.2);
 					}
-					
+
 					if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
 						setState(State.RESTING_HP);
 					}
@@ -1372,7 +1537,7 @@ public class Unit {
 					}
 				}
 			}
-			
+
 			if (getState() == State.RESTING_HP) {
 				if (getTimeResting() - 0.2 > 0.0) {
 					updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
@@ -1392,29 +1557,88 @@ public class Unit {
 		}
 	}
 	
-	public void rest() {
+	/**
+	 * Make the unit rest, if it's not currently moving.
+	 * 
+	 */
+	public void rest() throws IllegalTimeException {
 		if (!isMoving()) {
 			startResting();
 		}
 	}
 	
-	private void setTimeResting(double newValue) {
+	/**
+	 * Set the time the unit has been resting to a given value.
+	 * 
+	 * @param newValue
+	 * 			The new value for the time resting.
+	 * 
+	 * @post	The time the unit has been resting is equal to the given value.
+	 * 			| new.getTimeResting() == newValue
+	 * 
+	 * @throws IllegalTimeException
+	 * 			The new value is not a valid time value.
+	 * 			| !canHaveAsTime(newValue)
+	 */
+	private void setTimeResting(double newValue) throws IllegalTimeException {
+		if (!canHaveAsTime(newValue))
+			throw new IllegalTimeException(newValue, this);
 		this.timeResting = newValue;
 	}
 	
-	private void setTimeAfterResting(double newValue) {
+	/**
+	 * Set the time after the unit has last rested to a given value.
+	 * 
+	 * @param newValue
+	 * 			The new value for the time not rested.
+	 * 
+	 * @post	The time the unit has not been resting is equal to the given value.
+	 * 			| new.getTimeAfterResting() == newValue
+	 * 
+	 * @throws IllegalTimeException
+	 * 			The new value is not a valid time value.
+	 * 			| !canHaveAsTime(newValue)
+	 */
+	private void setTimeAfterResting(double newValue) throws IllegalTimeException {
+		if (!canHaveAsTime(newValue))
+			throw new IllegalTimeException(newValue, this);
 		this.timeAfterResting = newValue;
 	}
 	
+	/**
+	 * Field registering how long the unit has been resting.
+	 */
 	private double timeResting = 0.0;
+	
+	/**
+	 * Field registering how much time passed after the unit last rested.
+	 */
 	private double timeAfterResting = 0.0;
+
 	
-	
+	/**
+	 * Returns whether the default behavior of the unit is enabled.
+	 */
 	@Basic
 	public boolean isDefaultBehaviorEnabled() {
 		return this.defaultBehavior;
 	}
 	
+	
+	/**
+	 * Set the default behavior of the unit.
+	 * 
+	 * @param value
+	 * 			The new value for default behavior.
+	 * 
+	 * @post	If the value is true and the default behavior is not enabled,
+	 * 			the default behavior is set to true, hence enabled.
+	 * 			| new.isDefaultBehaviorEnabled() == true
+	 * 
+	 * @post	If the value is false and the default behavior is enabled,
+	 * 			the default behavior is set to false, hence disabled.
+	 * 			| new.isDefaultBehaviorEnabled() == false
+	 */
 	public void setDefaultBehaviorEnabled(boolean value) {
 		if (value == true && isDefaultBehaviorEnabled() == false) {
 			startDefaultBehavior();
@@ -1424,47 +1648,86 @@ public class Unit {
 		}
 	}
 	
+	/**
+	 * Start the default behavior of the unit.
+	 * 
+	 * @post	The default behavior of the unit is enabled.
+	 * 			| new.isDefaultBehaviorEnabled() == true
+	 */
 	public void startDefaultBehavior() {
 		this.defaultBehavior = true;
 	}
 	
+	/**
+	 * Stop the default behavior of the unit.
+	 * 
+	 * @post	The default behavior of the unit is disabled.
+	 * 			| new.isDefaultBehaviorEnabled() == false
+	 */
 	public void stopDefaultBehavior() {
 		this.defaultBehavior = false;
 	}
+
 	
-	
+	/**
+	 * Returns the current state of the unit.
+	 */
 	@Basic @Model
 	private State getState() {
 		return this.state;
 	}
 	
+	/**
+	 * Sets the current state of the unit.
+	 * 
+	 * @param	state
+	 * 			The state to set the state of the unit to.
+	 * 
+	 * @post	The state of the unit is set to the given state.
+	 * 			| new.getState() == state
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			the given state value is not a valid state for the unit.
+	 * 			| !State.contains(toString(state))
+	 */
 	private void setState(State state) {
+		/*if (!State.contains(state.toString()) )
+			throw new IllegalArgumentException();*/
 		this.state = state;
 	}
-	
+
+	/**
+	 * Variable registering the state of the unit.
+	 */
 	private State state;
+	
+	/**
+	 * Variable registering whether the default behavior of the unit is enabled.
+	 */
 	private boolean defaultBehavior;
-	private Random random;
 	
-	
+	/**
+	 * Variable registering a random generator.
+	 */
+	private final Random random;
+
+	/**
+	 * Returns the length of a cube of the game world.
+	 */
 	private static double getCubeLength() {
 		return cubeLength;
 	}
-	
+
 	/**
 	 * Variable registering the length of a cube of the game world.
 	 */
 	private final static double cubeLength = 1.0;
-	
-	
+
+
+	/* Facade exceptions controleren */
 	/* Class invars */
 	/* IETS MIS MET POSITIONERING */
-	/* Kijken of geen private method gebruikt w in formele doc van een public method 
-	 * 		-> anders @Model
-	 */
 	/* LOOP INVARIANTS etc */
 	/* RRAAAAAAAW */
-	/* IllegalArgumentExceptions toevoegen */
-	/* Documentation toevoegen */
 }
 
