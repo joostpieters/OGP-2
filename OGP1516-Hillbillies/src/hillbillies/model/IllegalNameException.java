@@ -10,7 +10,7 @@ package hillbillies.model;
 */
 public class IllegalNameException extends RuntimeException {
 	/**
-	 * Initialize this new illegal position exception with given position
+	 * Initialize this new illegal name exception with given position
 	 * and unit.
 	 * 
 	 * @param name
