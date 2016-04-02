@@ -16,15 +16,35 @@ import java.lang.*;
  * A class of units with a current position, a name, weight, strength, agility
  * and toughness. 
  * 
- * @invar the current number of hitpoints must always be greater than or equal
- * 		to zero and equal to or smaller than the max number of hitpoints.
- * 		| currentHitPoints >= 0 && currentHitPoints <= maxHitPoints
- * @invar the current number of stamina points must always be greater than or equal
- * 		to zero and equal to or smaller than the max number of stamina points.
- * 		| currentStaminaPoints >= 0 && currentStaminaPoints <= maxStaminaPoints
+ * @invar	The position of a unit must always be valid, within the game world.
+ * 			| isValidPosition(getPosition())
+ * 
+ * @invar	The name of a unit must always be a valid name.
+ * 			| isValidName(getName())
+ * 
+ * @invar	The weight of a unit must always be a valid weight for that unit.
+ * 			| canHaveAsWeight(getWeight()) 
+ * 
+ * @invar	The strength of a unit must always be a valid strength.
+ * 			| isValidStrength(getStrength()) 
+ * 
+ * @invar	The agility of a unit must always be a valid agility.
+ * 			| isValidAgility(getAgility()) 
+ * 
+ * @invar	The toughness of a unit must always be a valid toughness.
+ * 			| isValidToughness(getToughness()) 
+ * 
+ * @invar 	The current number of hitpoints must always be valid for this unit.
+ * 			| canHaveAsHitPoints(getCurrentHitPoints())
+ * 
+ * @invar 	The current number of stamina points must always be valid for this unit.
+ * 			| canHaveAsStaminaPoints(getCurrentStaminaPoints())
+ * 
+ * @invar	The orientation of a unit must always be valid.
+ * 			| isValidOrientation(getOrientation()) 
  * 
  *@author Ruben Cartuyvels
- *@version	1.2
+ *@version	1.4
  */
 public class Unit {
 	/**
@@ -52,26 +72,55 @@ public class Unit {
 	 * @post the new position of the unit is equal to the given position.
 	 * 		| new.getPosition() == position
 	 * 
+	 * @post if the given weight is valid, the new weight will be
+	 * 			equal to the given weight.
+	 * 		| if (canHaveAsWeight(weight))
+	 * 		| then new.getWeight() == weight
+	 * 
+	 * @post if the given strength is valid, the new strength will be
+	 * 			equal to the given strength.
+	 * 		| if (isValidStrength(strength))
+	 * 		| then new.getStrength() == strength
+	 * 
+	 * @post if the given agility is valid, the new agility will be
+	 * 			equal to the given agility.
+	 * 		| if (isValidAgility(agility))
+	 * 		| then new.getAgility() == agility
+	 * 
+	 * @post if the given toughness is valid, the new toughness will be
+	 * 			equal to the given toughness.
+	 * 		| if (isValidToughness(toughness))
+	 * 		| then new.getToughness() == toughness
+	 * 
 	 * @post The new orientation of the unit is equal to Pi/2.
-	 * 		| new.getOrientation() = Math.PI/2
+	 * 		| new.getOrientation() == Math.PI/2
+	 * 
+	 * @post The new current number of hitpoints of the unit is equal to the max number
+	 * 			of hitpoints for the unit.
+	 * 		| new.getCurrentHitPoints() == new.getMaxHitPoints()
+	 * 
+	 * @post The new current number of stamina points of the unit is equal to the max number
+	 * 			of stamina points for the unit.
+	 * 		| new.getCurrentStaminaPoints() == new.getMaxStaminaPoints()
 	 * 
 	 * @post The new minimum number of hitpoints of the unit is equal to 0.
-	 * 		| new.getMinHitPoints() = 0
+	 * 		| new.getMinHitPoints() == 0
 	 * 
 	 * @post The new minimum number of stamina points of the unit is equal to 0.
-	 * 		| new.getMinStaminaPoints() = 0
+	 * 		| new.getMinStaminaPoints() == 0
 	 * 
 	 * @post The default behavior of the unit is equal to the given value for default behavior.
-	 * 		| new.isDefaultBehaviorEnabled() = enableDefaultBehavior
+	 * 		| new.isDefaultBehaviorEnabled() == enableDefaultBehavior
 	 * 
 	 * @throws IllegalPositionException(position, this)
 	 *             The unit cannot have the given position (out of bounds).
-	 *             | ! canHaveAsPosition(position)
+	 *             | ! isValidPosition(position)
 	 *             
 	 * @throws IllegalNameException(name, this)
 	 *             The unit cannot have the given name.
-	 *             | ! canHaveAsName(name)            
+	 *             | ! isValidName(name)            
 	 */
+	@Raw
 	public Unit (String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) 
 					throws IllegalPositionException, IllegalNameException {
@@ -82,21 +131,24 @@ public class Unit {
 
 		setName(name);
 
-		if (weight > 24 && weight < 101) 
-			setWeight(weight);
-		else setWeight(25);
-		if (agility > 24 && agility < 101)
+		if (isValidAgility(agility))
 			setAgility(agility);
 		else setAgility(25);
-		if (strength > 24 && strength < 101) 
+		if (isValidStrength(strength)) 
 			setStrength(strength);
 		else setStrength(25);
-		if (toughness > 24 && toughness < 101)
+		if (isValidToughness(toughness))
 			setToughness(toughness);
 		else setToughness(25);
+		if (canHaveAsWeight(weight)) 
+			setWeight(weight);
+		else setWeight((getStrength()+getAgility())/2 +1);
 
 		this.minHitPoints = 0;
 		this.minStaminaPoints = 0;
+		
+		updateCurrentHitPoints(getMaxHitPoints());
+		updateCurrentStaminaPoints(getMaxStaminaPoints());
 
 		setOrientation((float)(Math.PI/2.0));
 
@@ -118,7 +170,7 @@ public class Unit {
 	 * 			| ! intPosition instanceof int[]
 	 * 			| || intPosition.length != 3
 	 */
-	private double[] convertPositionToDouble(int[] intPosition) 
+	private static double[] convertPositionToDouble(int[] intPosition) 
 			throws IllegalArgumentException {
 
 		if ( !(intPosition instanceof int[]) || intPosition.length != 3)
@@ -143,7 +195,7 @@ public class Unit {
 	 * 			| ! doublePosition instanceof double[]
 	 * 			| || doublePosition.length != 3
 	 */
-	private int[] convertPositionToInt(double[] doublePosition) 
+	private static int[] convertPositionToInt(double[] doublePosition) 
 			throws IllegalArgumentException {
 
 		if ( !(doublePosition instanceof double[]) || doublePosition.length != 3)
@@ -170,7 +222,7 @@ public class Unit {
 	 * 		|			coordinate > 0.0 && coordinate < 50.0)
 	 */
 	@Model
-	private boolean canHaveAsPosition(double[] position) {
+	private boolean isValidPosition(double[] position) {
 		boolean valid = true;
 		if (!(position instanceof double[]) || position.length != 3 )
 			valid = false;
@@ -209,10 +261,10 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException(position, this)
 	 * 			The given position is not valid.
-	 * 		| !canHaveAsPosition(position)
+	 * 		| !isValidPosition(position)
 	 */
 	private void setPosition(double[] position) throws IllegalPositionException {
-		if (! canHaveAsPosition(position) )
+		if (! isValidPosition(position) )
 			throw new IllegalPositionException(position, this);
 		this.position[0] = position[0];
 		this.position[1] = position[1];
@@ -244,10 +296,10 @@ public class Unit {
 	 * 
 	 * @throws IllegalNameException(newName, this)
 	 * 			The given name is not valid.
-	 * 		| !canHaveAsName(newName)
+	 * 		| !isValidName(newName)
 	 */
 	public void setName(String newName) throws IllegalNameException {
-		if (! canHaveAsName(newName))
+		if (! isValidName(newName))
 			throw new IllegalNameException(newName, this);
 		this.name = newName;
 	}
@@ -267,7 +319,7 @@ public class Unit {
 	 * 		| 		&& (name.matches("[a-zA-Z\\s\'\"]+"))
 	 */
 	@Model
-	private boolean canHaveAsName(String name) {
+	private boolean isValidName(String name) {
 		return (name != null && name.length() > 1 
 				&& Character.isUpperCase(name.charAt(0)) 
 				&& name.matches("[a-zA-Z\\s\'\"]+"));
@@ -286,23 +338,37 @@ public class Unit {
 	public int getWeight() {
 		return this.weight;
 	}
+	
+	/**
+	 * Check whether the given weight is valid.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * 
+	 * @return True if and only if the value is an integer, larger
+	 * 			than zero and smaller than 201, and at least the mean
+	 * 			of the agility and the strength of the unit.
+	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201 
+	 * 		|	&& value >= (getStrength()+getAgility())/2 )
+	 */
+	private boolean canHaveAsWeight(int value) {
+		return (Integer.class.isInstance(value) && value > 0 && value < 201 
+				&& value >= (getStrength()+getAgility())/2 );
+	}
 
 	/**
 	 * Set the weight of the unit to the given new value.
 	 * 
 	 * @param newValue
 	 * 			The new weight for this unit.
-	 * @post if the given weight is between 1 and 200 (inclusively) and
-	 * 			larger than the mean of the strength and the agility
-	 * 			of the unit, the new weight of the unit is equal to the given
-	 * 			weight.
-	 * 		| if (isInteger(newValue) && newValue > 0
-	 * 		| 	&& newValue < 201 && newValue >= (getStrength()+getAgility())/2)
+	 * 
+	 * @post if the given weight is valid for this unit, the new weight
+	 * 			will be equal to the given weight.
+	 * 		| if (canHaveAsWeight(newValue))
 	 * 		| then new.getWeight() == newValue
 	 */
 	public void setWeight(int newValue) {
-		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201 
-				&& newValue >= (getStrength()+getAgility())/2 )
+		if (canHaveAsWeight(newValue))
 			this.weight = newValue;
 	}
 
@@ -318,20 +384,34 @@ public class Unit {
 	public int getStrength() {
 		return this.strength;
 	}
+	
+	/**
+	 * Check whether the given strength is valid.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * 
+	 * @return True if and only if the value is an integer, larger
+	 * 			than zero and smaller than 201
+	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201) 
+	 */
+	private boolean isValidStrength(int value) {
+		return (Integer.class.isInstance(value) && value > 0 && value < 201 );
+	}
 
 	/**
 	 * Set the strength of the unit to the given new value.
 	 * 
 	 * @param newValue
 	 * 			The new strength for this unit.
-	 * @post if the given strength is between 1 and 200 (inclusively) then
-	 * 			 the new strength of the unit is equal to the given weight.
-	 * 		| if (isInteger(newValue) && newValue > 0
-	 * 		| 	&& newValue < 201
+	 * 
+	 * @post if the given strength is valid, the new strength will be
+	 * 			equal to the given strength.
+	 * 		| if (isValidStrength(newValue))
 	 * 		| then new.getStrength() == newValue
 	 */
 	public void setStrength(int newValue) {
-		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201)
+		if (isValidStrength(newValue))
 			this.strength = newValue;
 	}
 
@@ -347,20 +427,35 @@ public class Unit {
 	public int getAgility() {
 		return this.agility;
 	}
-
+	
+	/**
+	 * Check whether the given agility is valid.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * 
+	 * @return True if and only if the value is an integer, larger
+	 * 			than zero and smaller than 201
+	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201) 
+	 */
+	private boolean isValidAgility(int value) {
+		return (Integer.class.isInstance(value) && value > 0 && value < 201 );
+	}
+	
+	
 	/**
 	 * Set the agility of the unit to the given new value.
 	 * 
 	 * @param newValue
 	 * 			The new agility for this unit.
-	 * @post if the given agility is between 1 and 200 (inclusively) then
-	 * 			 the new agility of the unit is equal to the given agility.
-	 * 		| if (isInteger(newValue) && newValue > 0
-	 * 		| 	&& newValue < 201
+	 * 
+	 * @post if the given agility is valid, then the new agility will be
+	 * 			equal to the given agility.
+	 * 		| if (isValidAgility(newValue))
 	 * 		| then new.getAgility() == newValue
 	 */
 	public void setAgility(int newValue) {
-		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201)
+		if (isValidAgility(newValue))
 			this.agility = newValue;
 	}
 
@@ -376,20 +471,36 @@ public class Unit {
 	public int getToughness() {
 		return this.toughness;
 	}
-
+	
+	
+	/**
+	 * Check whether the given toughness is valid.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * 
+	 * @return True if and only if the value is an integer, larger
+	 * 			than zero and smaller than 201
+	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201) 
+	 */
+	private boolean isValidToughness(int value) {
+		return (Integer.class.isInstance(value) && value > 0 && value < 201 );
+	}
+	
+	
 	/**
 	 * Set the toughness of the unit to the given new value.
 	 * 
 	 * @param newValue
 	 * 			The new toughness for this unit.
-	 * @post if the given toughness is between 1 and 200 (inclusively) then
-	 * 			 the new toughness of the unit is equal to the given toughness.
-	 * 		| if (isInteger(newValue) && newValue > 0
-	 * 		| 	&& newValue < 201
+	 * 
+	 * @post if the given toughness is valid, then the new
+	 * 			toughness will be equal to the given toughness.
+	 * 		| if (isInteger(newValue))
 	 * 		| then new.getToughness() == newValue
 	 */
 	public void setToughness(int newValue) {
-		if (Integer.class.isInstance(newValue) && newValue > 0 && newValue < 201)
+		if (isValidToughness(newValue))
 			this.toughness = newValue;
 	}
 
@@ -417,7 +528,7 @@ public class Unit {
 	/**
 	 * Return the units minimum number of hitpoints.
 	 */
-	@Basic @Immutable @Model
+	@Basic @Immutable
 	private int getMinHitPoints() {
 		return this.minHitPoints;
 	}
@@ -440,7 +551,7 @@ public class Unit {
 	 * 			hitpoints for this unit.
 	 * 		| result =  (value >= getMinHitPoints() && value <= getMaxHitPoints() )
 	 */
-	private boolean isLegalHitPoints(int value) {
+	private boolean canHaveAsHitPoints(int value) {
 		return (value >= getMinHitPoints() && value <= getMaxHitPoints());
 	}
 
@@ -451,7 +562,7 @@ public class Unit {
 	 * 			The new value for the current no. of hitpoints of the unit.
 	 * 
 	 * @pre	the given new value must be a valid hitpoints value for this unit.
-	 * 		| isLegalHitPoints(newValue)
+	 * 		| canHaveAsHitPoints(newValue)
 	 * 
 	 * @post The new no. of hitpoints of the unit is equal to
 	 * 		the given new value.
@@ -459,7 +570,7 @@ public class Unit {
 	 * 
 	 */
 	private void updateCurrentHitPoints(int newValue) {
-		assert isLegalHitPoints(newValue);
+		assert canHaveAsHitPoints(newValue);
 		this.currentHitPoints = newValue;
 	}
 
@@ -492,7 +603,7 @@ public class Unit {
 	/**
 	 * Return the units minimum number of stamina points.
 	 */
-	@Basic @Immutable @Model
+	@Basic @Immutable
 	private int getMinStaminaPoints() {
 		return this.minStaminaPoints;
 	}
@@ -517,7 +628,7 @@ public class Unit {
 	 * 		| result =  (value >= getMinStaminaPoints && 
 	 * 		|		value <= getMaxStaminaPoints() )
 	 */
-	private boolean isLegalStaminaPoints(int value) {
+	private boolean canHaveAsStaminaPoints(int value) {
 		return (value >= getMinStaminaPoints() && value <= getMaxStaminaPoints());
 	}
 
@@ -528,7 +639,7 @@ public class Unit {
 	 * 			The new value for the current no. of stamina points of the unit.
 	 * 
 	 * @pre	the given new value must be a valid stamina points value for this unit.
-	 * 		| isLegalStaminaPoints(newValue)
+	 * 		| canHaveAsStaminaPoints(newValue)
 	 * 
 	 * @post The new no. of stamina points of the unit is equal to
 	 * 		the given new value.
@@ -536,7 +647,7 @@ public class Unit {
 	 * 
 	 */
 	private void updateCurrentStaminaPoints(int newValue) {
-		assert isLegalStaminaPoints(newValue);
+		assert canHaveAsStaminaPoints(newValue);
 		this.currentStaminaPoints = newValue;
 	}
 
@@ -577,7 +688,7 @@ public class Unit {
 	 * 			| ! isValidDT(dt)
 	 */
 	public void advanceTime(double dt) throws IllegalPositionException, 
-	IllegalArgumentException {
+				IllegalArgumentException, IllegalTimeException {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
@@ -764,12 +875,12 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The given destination cube is not valid.
-	 * 			| !canHaveAsPosition(convertPositionToDouble(destCube))
+	 * 			| !isValidPosition(convertPositionToDouble(destCube))
 	 */
 	public void moveTo(int[] destCube) throws IllegalPositionException,
-	IllegalArgumentException {
+						IllegalArgumentException {
 
-		if (!canHaveAsPosition(convertPositionToDouble(destCube))) {
+		if (!isValidPosition(convertPositionToDouble(destCube))) {
 			throw new IllegalPositionException(destCube, this);
 		}
 
@@ -817,10 +928,10 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The given destination is not a valid position.
-	 * 		| !canHaveAsPosition(newDestination)
+	 * 		| !isValidPosition(newDestination)
 	 */
 	private void setDestination(double[] newDestination) throws IllegalPositionException {
-		if (!canHaveAsPosition(newDestination)) {
+		if (!isValidPosition(newDestination)) {
 			throw new IllegalPositionException(newDestination, this);
 		}
 		for (int i=0; i<3; i++) {
@@ -849,11 +960,11 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The given position is not valid.
-	 * 		| !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
+	 * 		| !(isValidPosition(convertPositionToDouble(destCubeLT)) 
 	 * 				|| destCubeLT == null )
 	 */
 	private void setDestCubeLT(int[] destCubeLT) throws IllegalPositionException {
-		if ( !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) || destCubeLT == null) )
+		if ( !(isValidPosition(convertPositionToDouble(destCubeLT)) || destCubeLT == null) )
 			throw new IllegalPositionException(destCubeLT, this);
 		this.destCubeLT = destCubeLT;
 	}
@@ -899,11 +1010,11 @@ public class Unit {
 	 * 
 	 * @throws	IllegalPositionException
 	 * 			The given position is not a valid position.
-	 * 			| !canHaveAsPosition(position)
+	 * 			| !isValidPosition(position)
 	 */
 	@Model
 	private double getDistanceToDestination(double[] position) throws IllegalPositionException {
-		if (!canHaveAsPosition(position))
+		if (!isValidPosition(position))
 			throw new IllegalPositionException(position, this);
 
 		return Math.sqrt(Math.pow(position[0]-getDestination()[0],2)
@@ -1063,6 +1174,22 @@ public class Unit {
 	public float getOrientation() {
 		return orientation;
 	}
+	
+	
+	/**
+	 * Check whether the given orientation is valid.
+	 * 
+	 * @param value
+	 * 			The value to be checked.
+	 * 
+	 * @return True if and only if the value is a float, larger
+	 * 			than or equal to zero and smaller than 2*Pi
+	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 2*Math.PI) 
+	 */
+	private boolean isValidOrientation(float value) {
+		return (Float.class.isInstance(value) && value >= 0.0 && value < 2*Math.PI);
+	}
+	
 
 	/**
 	 * Set the orientation of the unit to the given new value.
@@ -1077,7 +1204,7 @@ public class Unit {
 	 * 		| then new.getOrientation() == newValue
 	 */
 	private void setOrientation(float newValue) {
-		if (newValue == (float) newValue && newValue >= 0.0 && newValue < 2*Math.PI) {
+		if (isValidOrientation(newValue)) {
 			this.orientation = newValue;
 		}
 	}
@@ -1368,13 +1495,13 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The calculated random adjacent position is not a valid position.
-	 * 			| !(canHaveAsPosition(randomAdjacentPosition))
+	 * 			| !(isValidPosition(randomAdjacentPosition))
 	 */
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
 		double[] newPosition = this.getPosition();
 		newPosition[0] += 2*this.random.nextDouble() - 1.0;
 		newPosition[1] += 2*this.random.nextDouble() - 1.0;
-		if (!canHaveAsPosition(newPosition)) throw new 
+		if (!isValidPosition(newPosition)) throw new 
 		IllegalPositionException(newPosition, this);
 		this.setPosition(newPosition);
 	}
@@ -1723,8 +1850,8 @@ public class Unit {
 	 */
 	private final static double cubeLength = 1.0;
 
-
-	/* Facade exceptions controleren */
+	/* static methods --> signature,...? */
+	
 	/* Class invars */
 	/* IETS MIS MET POSITIONERING */
 	/* LOOP INVARIANTS etc */

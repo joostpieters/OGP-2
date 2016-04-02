@@ -170,7 +170,12 @@ public class Facade implements IFacade {
 		}
 
 		public void rest(Unit unit) throws ModelException {
-			unit.rest();
+			try {
+				unit.rest();
+			}
+			catch (RuntimeException exc) {
+				throw new ModelException();
+			}
 		}
 
 		public boolean isResting(Unit unit) throws ModelException {
