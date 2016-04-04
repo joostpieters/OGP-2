@@ -582,7 +582,7 @@ public class Unit {
 	 * 
 	 */
 	@Raw
-	private void updateCurrentHitPoints(int newValue) {
+	public void updateCurrentHitPoints(int newValue) {
 		assert canHaveAsHitPoints(newValue);
 		this.currentHitPoints = newValue;
 	}
@@ -662,7 +662,7 @@ public class Unit {
 	 * 
 	 */
 	@Raw
-	private void updateCurrentStaminaPoints(int newValue) {
+	public void updateCurrentStaminaPoints(int newValue) {
 		assert canHaveAsStaminaPoints(newValue);
 		this.currentStaminaPoints = newValue;
 	}
@@ -1588,7 +1588,7 @@ public class Unit {
 	 * Returns whether the unit is currently being attacked.
 	 */
 	@Basic
-	private boolean isAttacked() {
+	public boolean isAttacked() {
 		return this.isAttacked;
 	}
 	
@@ -1822,8 +1822,8 @@ public class Unit {
 	/**
 	 * Returns the current state of the unit.
 	 */
-	@Basic @Model @Raw
-	private State getState() {
+	@Basic @Raw
+	public State getState() {
 		return this.state;
 	}
 	
@@ -1841,7 +1841,7 @@ public class Unit {
 	 * 			| !State.contains(toString(state))
 	 */
 	@Raw
-	private void setState(State state) {
+	public void setState(State state) {
 		/*if (!State.contains(state.toString()) )
 			throw new IllegalArgumentException();*/
 		this.state = state;

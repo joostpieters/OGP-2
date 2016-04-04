@@ -243,6 +243,128 @@ public class UnitTest {
 					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
 	}
 	
+	@Test
+	public void getCurrentSpeed_Legal_Up() {
+		unit.moveTo(new int[]{20,20,20});
+		assertEquals(unit.getCurrentSpeed(), 0.5*1.5*(unit.getStrength()+
+					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
+	}
+	
+	@Test
+	public void getCurrentSpeed_Legal_Down() {
+		unit.moveTo(new int[]{20,20,0});
+		assertEquals(unit.getCurrentSpeed(), 1.2*1.5*(unit.getStrength()+
+					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
+	}
+	
+	@Test
+	public void getCurrentSpeed_Legal_Standing() {
+		assertEquals(unit.getCurrentSpeed(), 0.0, 0.1);
+	}
+	
+	
+	/**
+	 * 			startSprinting
+	 */
+	
+	@Test
+	public void startSprinting_Legal() {
+		unit.setState(State.MOVING);
+		unit.startSprinting();
+		assertTrue(unit.isSprinting());
+		
+		unit.stopSprinting();
+		assertFalse(unit.isSprinting());
+	}
+	
+	@Test
+	public void startSprinting_Illegal() {
+		unit.updateCurrentStaminaPoints(0);
+		unit.setState(State.MOVING);
+		unit.startSprinting();
+		assertFalse(unit.isSprinting());
+	}
+	
+	
+	/**
+	 * 			work
+	 */
+	
+	@Test
+	public void work_Legal() {
+		unit.work();
+		assertTrue(unit.isWorking());
+	}
+	
+	@Test
+	public void work_Illegal() {
+		unit.setState(State.RESTING_1);
+		unit.work();
+		assertFalse(unit.isWorking());
+	}
+	
+	
+	/**
+	 * 			attack
+	 */
+	
+	@Test
+	public void attack_Legal() {
+		int[] position = new int[]{4,5,5};
+		Unit unit2 = new Unit("Chandler Bing", position, 100, 100, 100, 100, true);
+		
+		unit.attack(unit2);
+		assertTrue(unit.isAttacking());
+		assertTrue(unit2.isAttacked());
+	}
+	
+	@Test(expected = IllegalVictimException.class)
+	public void attack_Illegal_OOR() {
+		int[] position = new int[]{2,5,5};
+		Unit unit2 = new Unit("Chandler Bing", position, 100, 100, 100, 100, true);
+		
+		unit.attack(unit2);
+		assertFalse(unit.isAttacking());
+		assertFalse(unit2.isAttacked());
+	}
+	
+	@Test
+	public void attack_Illegal_Moving() {
+		int[] position = new int[]{2,5,5};
+		Unit unit2 = new Unit("Chandler Bing", position, 100, 100, 100, 100, true);
+		
+		unit.setState(State.MOVING);
+		unit.attack(unit2);
+		
+		assertFalse(unit.isAttacking());
+		assertFalse(unit2.isAttacked());
+	}
+	
+	
+	/**
+	 * 			rest
+	 */
+	@Test
+	public void rest_Legal() {
+		unit.rest();
+		assertTrue(unit.isResting());
+		assertEquals(unit.getState(), State.RESTING_1);
+	}
+	
+	
+	@Test
+	public void rest_Illegal() {
+		unit.setState(State.MOVING);
+		unit.rest();
+		
+		assertFalse(unit.isResting());
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	
