@@ -158,20 +158,20 @@ public class UnitTest {
 	
 	@Test
 	public void moveToAdjacent_Legal() throws Exception {
-		unit.moveToAdjacent(-1, -1, -1);
+		unit.moveToAdjacent(new int[]{-1, -1, -1});
 		assertEquals(unit.getDestination(), new int[]{4,4,4});
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void moveToAdjacent_Short() throws Exception {
-		unit.moveToAdjacent(-1, -1);
+		unit.moveToAdjacent(new int[]{-1, -1});
 		//assertEquals(unit.getPosition(), new int[]{5,5,5});
 	}
 	
 	@Test(expected = IllegalPositionException.class)
 	public void moveToAdjacent_OOB() throws Exception {
 		for (int i = 5; i >= 0; i--) {
-			unit.moveToAdjacent(-1, -1, -1);
+			unit.moveToAdjacent(new int[]{-1, -1, -1});
 		}
 	}
 	

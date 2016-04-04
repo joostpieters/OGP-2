@@ -6,8 +6,10 @@ import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Raw;
 import be.kuleuven.cs.som.annotate.Model;
 
+import static org.junit.Assert.*;
+
+
 import java.util.*;
-import java.lang.Math;
 import java.lang.*;
 
 //import java.util.Random;
@@ -204,7 +206,7 @@ public class Unit {
 			throw new IllegalArgumentException();
 		int[] intPosition = new int[3];
 		for (int i=0; i<3; i++) {
-			intPosition[i] = (int) doublePosition[i];
+			intPosition[i] = (int) Math.ceil(doublePosition[i]);
 		}
 		return intPosition;
 	}
@@ -690,7 +692,7 @@ public class Unit {
 	 */
 	@Model
 	private static boolean isValidDT(double dt) {
-		return (Double.class.isInstance(dt) && dt < 0.2 && dt >= 0.0);
+		return (/*Double.class.isInstance(dt) &&*/ dt <= 0.2 && dt >= 0.0);
 	}
 
 	/**
@@ -719,14 +721,17 @@ public class Unit {
 		if (isResting()) {
 			controlResting(dt);
 		}
-		else if (getState() == State.EMPTY) {
-			if (this.destCubeLT != null && this.getCubeCoordinate() != this.destCubeLT) {
-				moveTo(this.destCubeLT);
-			}
-			controlWaiting(dt);
-		}
 		else if (isMoving()) {
 			controlMoving(dt);
+		}
+		else if (getState() == State.EMPTY) {
+			if (!(isDestCubeLTReached(dt))
+						&& this.getCubeCoordinate() != getDestCubeLT()) {
+				//controlMoving(dt);
+				//moveTo(this.destCubeLT);
+				//System.out.println("haha");
+			}
+			controlWaiting(dt);
 		}
 		else if (isAttacking()) {
 			controlAttacking(dt);
@@ -814,13 +819,23 @@ public class Unit {
 			else if (reached(dt)) {
 
 				setPosition(getDestination());
-				if (isSprinting()) stopSprinting();
-				setState(State.EMPTY);
+				
+				
+				if (!(isDestCubeLTReached(dt) || getCubeCoordinate() == getDestCubeLT())) {
+					System.out.println("haha");
+					//assertTrue(this.destCubeLTReached);
+					//setState(State.EMPTY);
+				}
+				//setState(State.EMPTY);
+				//System.out.println("haha");
+				
 			}
-
-
-			if (getCubeCoordinate() == getDestCubeLT()) {
-				setDestCubeLT(null);
+			
+			
+			if (isDestCubeLTReached(dt) || getCubeCoordinate() == getDestCubeLT()) {
+				System.out.println("haha");
+				//assertTrue(this.destCubeLTReached);
+				//setState(State.EMPTY);
 			}
 
 		}
@@ -852,7 +867,7 @@ public class Unit {
 	 * 			The given direction is not a valid direction.
 	 * 			| !(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
 	 */
-	public void moveToAdjacent(int... cubeDirection) 
+	public void moveToAdjacent(int[] cubeDirection) 
 			throws IllegalPositionException, IllegalArgumentException {
 
 		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
@@ -862,14 +877,14 @@ public class Unit {
 			startMoving();
 
 			double[] newPosition = new double[3];
-			double[] doubleCubeDirection = convertPositionToDouble(cubeDirection.clone());
+			//double[] doubleCubeDirection = convertPositionToDouble(cubeDirection/*.clone()*/);
 			double[] direction = new double[3];
 
-			for (int i=0; i<3; ++i) {
-				newPosition[i] = (int) (getPosition()[i] 
-						+ doubleCubeDirection[i]);
+			for (int i=0; i<3; i++) {
+				newPosition[i] = Math.floor(getPosition()[i] 
+						+ cubeDirection[i]);
 				newPosition[i] += getCubeLength()/2.0;
-
+				
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
@@ -880,8 +895,9 @@ public class Unit {
 				setState(State.EMPTY);
 				throw new IllegalPositionException(newPosition, this);
 			}
+			
 			this.movingDirection = direction;
-			setOrientation((float) Math.atan2(getVelocity()[0], getVelocity()[2] ));
+			setOrientation((float) Math.atan2(getVelocity()[1], getVelocity()[0] ));
 		}
 	}
 
@@ -909,8 +925,9 @@ public class Unit {
 		if (getState() != State.RESTING_1) {
 			setDestCubeLT(destCube);
 			int[] startCube;
-			while ((getCubeCoordinate() != destCube)) {
-				int x, y, z;
+			int x, y, z;
+			int it = 100;
+			while ((getCubeCoordinate() != destCube) && (it > 0)) {
 				startCube = getCubeCoordinate();
 
 				if (startCube[0] == destCube[0])  x = 0;
@@ -924,8 +941,10 @@ public class Unit {
 				if (startCube[2] == destCube[2])  z = 0;
 				else if (startCube[2] < destCube[2]) z = 1;
 				else z = -1;
-
-				moveToAdjacent(x, y, z);
+				
+				// direction in field?
+				//moveToAdjacent(new int[]{x, y, z});
+				//it--;
 			}
 		}
 	}
@@ -968,6 +987,16 @@ public class Unit {
 	public int[] getDestCubeLT() {
 		return this.destCubeLT;
 	}
+	
+	/**
+	 * Returns the long term destination of the unit.
+	 */
+	@Basic
+	private boolean isDestCubeLTReached(double dt) {
+		return (getDistanceTo(getPosition(), convertPositionToDouble(getDestCubeLT())) 
+							< getCurrentSpeed()*dt);
+	}
+	
 
 
 	/**
@@ -986,7 +1015,8 @@ public class Unit {
 	 * 				|| destCubeLT == null )
 	 */
 	private void setDestCubeLT(int[] destCubeLT) throws IllegalPositionException {
-		if ( !(isValidPosition(convertPositionToDouble(destCubeLT)) || destCubeLT == null) )
+		if ( !(isValidPosition(convertPositionToDouble(destCubeLT)) 
+									|| destCubeLT == new int[]{-1,-1,-1}) )
 			throw new IllegalPositionException(destCubeLT, this);
 		this.destCubeLT = destCubeLT;
 	}
@@ -995,12 +1025,17 @@ public class Unit {
 	/**
 	 * Variable registering the destination of the unit in the game world.
 	 */
-	private double[] destination = new double[3];
+	private double[] destination = new double[3]; //{0.0,0.0,0.0};
 
 	/**
 	 * Variable registering the long term destination of the unit in the game world.
 	 */
-	private int[] destCubeLT = null;
+	private int[] destCubeLT = new int[3];
+	
+	/**
+	 * Variable registering whether the long term destination had been reached.
+	 */
+	private boolean destCubeLTReached = true;
 
 
 	/**
@@ -1013,7 +1048,7 @@ public class Unit {
 	 * 			| result = (getDistanceToDestination(getPosition()) < getCurrentSpeed()*dt)
 	 */
 	private boolean reached(double dt) throws IllegalPositionException {
-		return (getDistanceToDestination(getPosition()) < getCurrentSpeed()*dt);
+		return (getDistanceTo(getPosition(), getDestination()) < getCurrentSpeed()*dt);
 	}
 
 
@@ -1035,13 +1070,13 @@ public class Unit {
 	 * 			| !isValidPosition(position)
 	 */
 	@Model
-	private double getDistanceToDestination(double[] position) throws IllegalPositionException {
+	private double getDistanceTo(double[] position, double[] position2) throws IllegalPositionException {
 		if (!isValidPosition(position))
 			throw new IllegalPositionException(position, this);
 
-		return Math.sqrt(Math.pow(position[0]-getDestination()[0],2)
-				+ Math.pow(position[1]-getDestination()[1],2) 
-				+ Math.pow(position[2]-getDestination()[2],2));
+		return Math.sqrt(Math.pow(position[0]-position2[0],2)
+				+ Math.pow(position[1]-position2[1],2) 
+				+ Math.pow(position[2]-position2[2],2));
 	}
 
 
@@ -1057,7 +1092,7 @@ public class Unit {
 	 */
 	private void updatePosition(double dt) throws IllegalPositionException {
 		double[] newPosition = new double[3];
-		for (int i=0; i<3; ++i) {
+		for (int i=0; i<3; i++) {
 			newPosition[i] = getPosition()[i] + getVelocity()[i]*dt;
 		}
 		setPosition(newPosition);
@@ -1091,10 +1126,10 @@ public class Unit {
 	private double[] getVelocity() throws IllegalPositionException {
 		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
 				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
-		double d = getDistanceToDestination(getPosition());
+		double d = getDistanceTo(getPosition(), getDestination());
 		double[] v = new double[3];
 		for (int i=0; i<3; ++i) {
-			v[i] = getCurrentSpeed()*getMovingDirection()[i]/d;
+			v[i] = getCurrentSpeed()*(getDestination()[i]-getPosition()[i])/d;//getMovingDirection()[i]/d;
 		}
 		return v;
 	}
@@ -1142,9 +1177,9 @@ public class Unit {
 	 */
 	public double getCurrentSpeed() {
 		if (isMoving()) {
-			if (this.getMovingDirection()[2] == 1.0)
+			if ((getDestination()[2] - getPosition()[2]) > 0.0)
 				return 0.5*getBaseSpeed();
-			else if (this.getMovingDirection()[2] == -1.0)
+			else if ((getDestination()[2] - getPosition()[2]) < 0.0)
 				return 1.2*getBaseSpeed();
 			else
 				return getBaseSpeed();

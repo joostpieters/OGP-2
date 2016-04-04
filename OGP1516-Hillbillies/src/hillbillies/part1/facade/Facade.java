@@ -108,7 +108,7 @@ public class Facade implements IFacade {
 		
 		public void moveToAdjacent(Unit unit, int dx, int dy, int dz) throws ModelException {
 			try {
-				unit.moveToAdjacent(dx, dy, dz);
+				unit.moveToAdjacent(new int[]{dx, dy, dz});
 			}
 			catch (RuntimeException exc) {
 				throw new ModelException();
