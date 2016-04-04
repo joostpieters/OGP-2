@@ -130,7 +130,8 @@ public class Unit {
 		setPosition(doubleInitialPosition);
 
 		setName(name);
-
+		
+		// isValidINITIALAgility!!! not isValidAgility !!!!!!!!!!!!
 		if (isValidAgility(agility))
 			setAgility(agility);
 		else setAgility(25);
