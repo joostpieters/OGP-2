@@ -229,7 +229,7 @@ public class Unit {
 		if (!(position instanceof double[]) || position.length != 3 )
 			valid = false;
 		for (double coordinate: position) {
-			if (coordinate < 0.0 || coordinate > 50.0)
+			if (coordinate < 0.0 || coordinate >= 50.0)
 				valid = false;
 		}
 		return valid;
@@ -872,8 +872,14 @@ public class Unit {
 
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
-
-			setDestination(newPosition);
+			
+			try {
+				setDestination(newPosition);
+			}
+			catch (IllegalPositionException e) {
+				setState(State.EMPTY);
+				throw new IllegalPositionException(newPosition, this);
+			}
 			this.movingDirection = direction;
 			setOrientation((float) Math.atan2(getVelocity()[0], getVelocity()[2] ));
 		}
@@ -928,7 +934,7 @@ public class Unit {
 	 * Returns the destination of the unit.
 	 */
 	@Basic @Model
-	private double[] getDestination() {
+	public double[] getDestination() {
 		return this.destination;
 	}
 
@@ -959,7 +965,7 @@ public class Unit {
 	 * Returns the long term destination of the unit.
 	 */
 	@Basic
-	private int[] getDestCubeLT() {
+	public int[] getDestCubeLT() {
 		return this.destCubeLT;
 	}
 

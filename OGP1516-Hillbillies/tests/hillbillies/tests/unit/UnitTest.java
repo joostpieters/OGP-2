@@ -5,7 +5,7 @@ import org.junit.*;
 import org.junit.Test;
 
 
-import hillbillies.model.Unit;
+import hillbillies.model.*;
 
 /**
  * A class collecting tests for the class of units.
@@ -16,45 +16,233 @@ import hillbillies.model.Unit;
  */
 public class UnitTest {
 	 
-	private static Unit unitAttrib100;
+	private static Unit unit;
 	
 	@Before
-	public void setUpUnit() {
-		int[] position = new int[]{0,0,0};
-		unitAttrib100 = new Unit("Ruben", position, 100, 100, 100, 100, true);
+	public void setUpUnit() throws Exception {
+		int[] position = new int[]{5,5,5};
+		unit = new Unit("Ruben", position, 100, 100, 100, 100, true);
 	}
 	
-	// insert constructor tests here
+	/**************************************************
+	 * 	ATTRIBUTES: STRENGTH,... HITPOINTS, STAMINA
+	 **************************************************/
 	
 	@Test
 	public void setStrength_High() {
-		unitAttrib100.setStrength(201);
-		assertEquals(unitAttrib100.getStrength(), 100);
+		unit.setStrength(201);
+		assertEquals(unit.getStrength(), 100);
 	}
 	
 	@Test
 	public void setStrength_Low() {
-		unitAttrib100.setStrength(-1);
-		assertEquals(unitAttrib100.getStrength(), 100);
+		unit.setStrength(-1);
+		assertEquals(unit.getStrength(), 100);
+	}
+	
+	@Test
+	public void setStrength_Ok() {
+		unit.setStrength(150);
+		assertEquals(unit.getStrength(), 150);
+		unit.setStrength(1);
+		assertEquals(unit.getStrength(), 1);
+		unit.setStrength(200);
+		assertEquals(unit.getStrength(), 200);
 	}
 	
 	@Test
 	public void setAgility_High() {
-		unitAttrib100.setAgility(201);
-		assertEquals(unitAttrib100.getAgility(), 100);
+		unit.setAgility(201);
+		assertEquals(unit.getAgility(), 100);
 	}
 	
 	@Test
 	public void setAgility_Low() {
-		unitAttrib100.setAgility(-1);
-		assertEquals(unitAttrib100.getAgility(), 100);
+		unit.setAgility(-1);
+		assertEquals(unit.getAgility(), 100);
+	}
+	
+	@Test
+	public void setAgility_Ok() {
+		unit.setAgility(150);
+		assertEquals(unit.getAgility(), 150);
+		unit.setAgility(1);
+		assertEquals(unit.getAgility(), 1);
+		unit.setAgility(200);
+		assertEquals(unit.getAgility(), 200);
 	}
 	
 	@Test
 	public void setToughness_High() {
-		unitAttrib100.setToughness(201);
-		assertEquals(unitAttrib100.getToughness(), 100);
+		unit.setToughness(201);
+		assertEquals(unit.getToughness(), 100);
 	}
+	
+	@Test
+	public void setToughness_Low() {
+		unit.setToughness(-1);
+		assertEquals(unit.getToughness(), 100);
+	}
+	
+	@Test
+	public void setToughness_Ok() {
+		unit.setToughness(150);
+		assertEquals(unit.getToughness(), 150);
+		unit.setToughness(1);
+		assertEquals(unit.getToughness(), 1);
+		unit.setToughness(200);
+		assertEquals(unit.getToughness(), 200);
+	}
+	
+	@Test
+	public void setWeight_High() {
+		unit.setWeight(201);
+		assertEquals(unit.getWeight(), 100);
+	}
+	
+	@Test
+	public void setWeight_Low() {
+		unit.setWeight(-1);
+		assertEquals(unit.getWeight(), 100);
+	}
+	
+	@Test
+	public void setWeight_Ok() {
+		unit.setWeight(150);
+		assertEquals(unit.getWeight(), 150);
+		unit.setWeight(200);
+		assertEquals(unit.getWeight(), 200);
+	}
+	
+	@Test
+	public void setWeight_UnderMean() {
+		unit.setWeight(75);
+		assertEquals(unit.getWeight(), 100);
+	}
+	
+	@Test
+	public void getMaxHPStam_Middle() {
+		unit.setToughness(75);
+		unit.setStrength(70);
+		unit.setAgility(70);
+		unit.setWeight(75);
+		
+		//75/100 * 75/100 *200 = 112.5
+		assertEquals(unit.getMaxHitPoints(), 113);
+		assertEquals(unit.getMaxStaminaPoints(), 113);
+	}
+	
+	@Test
+	public void getMaxHPStam_Low() {
+		unit.setToughness(1);
+		unit.setStrength(1);
+		unit.setAgility(1);
+		unit.setWeight(1);
+		
+		//1/100 * 1/100 *200 = 0.02
+		assertEquals(unit.getMaxHitPoints(), 1);
+		assertEquals(unit.getMaxStaminaPoints(), 1);
+	}
+	
+	
+	
+	/**************************************************
+	 * 		ACTIVITIES: moving
+	 **************************************************/
+	
+	
+	/**
+	 * 			moveToAdjacent
+	 */
+	
+	
+	@Test
+	public void moveToAdjacent_Legal() throws Exception {
+		unit.moveToAdjacent(-1, -1, -1);
+		assertEquals(unit.getDestination(), new int[]{4,4,4});
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void moveToAdjacent_Short() throws Exception {
+		unit.moveToAdjacent(-1, -1);
+		//assertEquals(unit.getPosition(), new int[]{5,5,5});
+	}
+	
+	@Test(expected = IllegalPositionException.class)
+	public void moveToAdjacent_OOB() throws Exception {
+		for (int i = 5; i >= 0; i--) {
+			unit.moveToAdjacent(-1, -1, -1);
+		}
+	}
+	
+	
+	/**
+	 * 			moveTo
+	 */
+	
+	
+	@Test
+	public void moveTo_Legal() throws Exception {
+		int[] dest = new int[]{10,10,10};
+		unit.moveTo(dest);
+		assertEquals(unit.getDestCubeLT(), dest);
+	}
+	
+	@Test
+	public void moveTo_Legal_Low() throws Exception {
+		int[] dest = new int[]{0,0,0};
+		unit.moveTo(dest);
+		assertEquals(unit.getDestCubeLT(), dest);
+	}
+	
+	@Test
+	public void moveTo_Legal_High() throws Exception {
+		int[] dest = new int[]{49, 49, 49};
+		unit.moveTo(dest);
+		assertEquals(unit.getDestCubeLT(), dest);
+	}
+	
+	@Test
+	public void moveTo_Legal_Interrupt() throws Exception {
+		int[] dest = new int[]{49, 49, 49};
+		unit.moveTo(dest);
+		assertEquals(unit.getDestCubeLT(), dest);
+		unit.rest();
+		assertEquals(unit.getDestCubeLT(), dest);
+	}
+	
+	@Test(expected = IllegalPositionException.class)
+	public void moveTo_OOB_High() throws Exception {
+		int[] dest = new int[]{50, 49, 49};
+		unit.moveTo(dest);
+	}
+	
+	
+	@Test(expected = IllegalPositionException.class)
+	public void moveTo_OOB_Low() throws Exception {
+		int[] dest = new int[]{0, 0, -1};
+		unit.moveTo(dest);
+	}
+	
+	@Test(expected = IllegalPositionException.class)
+	public void moveTo_OOB_Short() throws Exception {
+		int[] dest = new int[]{0, 0};
+		unit.moveTo(dest);
+	}
+	
+	
+	/**
+	 * 			getCurrentSpeed
+	 */
+	
+	
+	@Test
+	public void getCurrentSpeed_Legal_Flat() {
+		unit.moveTo(new int[]{20,20,5});
+		assertEquals(unit.getCurrentSpeed(), 1.5*(unit.getStrength()+
+					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
+	}
+	
 	
 	
 	
