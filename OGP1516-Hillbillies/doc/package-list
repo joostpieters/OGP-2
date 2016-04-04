@@ -1,1 +1,5 @@
 hillbillies.model
+hillbillies.part1.facade
+hillbillies.tests.facade
+hillbillies.tests.unit
+hillbillies.tests.util
