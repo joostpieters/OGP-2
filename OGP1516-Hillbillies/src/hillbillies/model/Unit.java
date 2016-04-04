@@ -155,6 +155,7 @@ public class Unit {
 		this.random = new Random();
 
 		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
+		this.setState(State.EMPTY);
 	}
 
 	/**
@@ -222,7 +223,7 @@ public class Unit {
 	 * 		|			coordinate > 0.0 && coordinate < 50.0)
 	 */
 	@Model
-	private boolean isValidPosition(double[] position) {
+	private static boolean isValidPosition(double[] position) {
 		boolean valid = true;
 		if (!(position instanceof double[]) || position.length != 3 )
 			valid = false;
@@ -237,6 +238,7 @@ public class Unit {
 	 * Return the position of the cube in the game world occupied by 
 	 * the unit.
 	 */
+	@Raw
 	public int[] getCubeCoordinate() {
 		return convertPositionToInt(getPosition());
 	}
@@ -244,7 +246,7 @@ public class Unit {
 	/**
 	 * Return the exact position of the unit in the game world.
 	 */
-	@Basic
+	@Basic @Raw
 	public double[] getPosition() {
 		return this.position;
 	}
@@ -263,6 +265,7 @@ public class Unit {
 	 * 			The given position is not valid.
 	 * 		| !isValidPosition(position)
 	 */
+	@Raw
 	private void setPosition(double[] position) throws IllegalPositionException {
 		if (! isValidPosition(position) )
 			throw new IllegalPositionException(position, this);
@@ -279,7 +282,7 @@ public class Unit {
 	/**
 	 * Return the current name of the unit.
 	 */
-	@Basic
+	@Basic @Raw
 	public String getName() {
 		return name;
 	}
@@ -298,6 +301,7 @@ public class Unit {
 	 * 			The given name is not valid.
 	 * 		| !isValidName(newName)
 	 */
+	@Raw
 	public void setName(String newName) throws IllegalNameException {
 		if (! isValidName(newName))
 			throw new IllegalNameException(newName, this);
@@ -319,7 +323,7 @@ public class Unit {
 	 * 		| 		&& (name.matches("[a-zA-Z\\s\'\"]+"))
 	 */
 	@Model
-	private boolean isValidName(String name) {
+	private static boolean isValidName(String name) {
 		return (name != null && name.length() > 1 
 				&& Character.isUpperCase(name.charAt(0)) 
 				&& name.matches("[a-zA-Z\\s\'\"]+"));
@@ -334,7 +338,7 @@ public class Unit {
 	/**
 	 * Return the units weight.
 	 */
-	@Basic
+	@Basic @Raw
 	public int getWeight() {
 		return this.weight;
 	}
@@ -351,6 +355,7 @@ public class Unit {
 	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201 
 	 * 		|	&& value >= (getStrength()+getAgility())/2 )
 	 */
+	@Raw
 	private boolean canHaveAsWeight(int value) {
 		return (Integer.class.isInstance(value) && value > 0 && value < 201 
 				&& value >= (getStrength()+getAgility())/2 );
@@ -367,6 +372,7 @@ public class Unit {
 	 * 		| if (canHaveAsWeight(newValue))
 	 * 		| then new.getWeight() == newValue
 	 */
+	@Raw
 	public void setWeight(int newValue) {
 		if (canHaveAsWeight(newValue))
 			this.weight = newValue;
@@ -380,7 +386,7 @@ public class Unit {
 	/**
 	 * Return the units strength.
 	 */
-	@Basic
+	@Basic @Raw
 	public int getStrength() {
 		return this.strength;
 	}
@@ -395,7 +401,7 @@ public class Unit {
 	 * 			than zero and smaller than 201
 	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201) 
 	 */
-	private boolean isValidStrength(int value) {
+	private static boolean isValidStrength(int value) {
 		return (Integer.class.isInstance(value) && value > 0 && value < 201 );
 	}
 
@@ -410,6 +416,7 @@ public class Unit {
 	 * 		| if (isValidStrength(newValue))
 	 * 		| then new.getStrength() == newValue
 	 */
+	@Raw
 	public void setStrength(int newValue) {
 		if (isValidStrength(newValue))
 			this.strength = newValue;
@@ -423,7 +430,7 @@ public class Unit {
 	/**
 	 * Return the units agility.
 	 */
-	@Basic
+	@Basic @Raw
 	public int getAgility() {
 		return this.agility;
 	}
@@ -438,7 +445,7 @@ public class Unit {
 	 * 			than zero and smaller than 201
 	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201) 
 	 */
-	private boolean isValidAgility(int value) {
+	private static boolean isValidAgility(int value) {
 		return (Integer.class.isInstance(value) && value > 0 && value < 201 );
 	}
 	
@@ -454,6 +461,7 @@ public class Unit {
 	 * 		| if (isValidAgility(newValue))
 	 * 		| then new.getAgility() == newValue
 	 */
+	@Raw
 	public void setAgility(int newValue) {
 		if (isValidAgility(newValue))
 			this.agility = newValue;
@@ -467,7 +475,7 @@ public class Unit {
 	/**
 	 * Return the units toughness.
 	 */
-	@Basic
+	@Basic @Raw
 	public int getToughness() {
 		return this.toughness;
 	}
@@ -483,7 +491,7 @@ public class Unit {
 	 * 			than zero and smaller than 201
 	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 201) 
 	 */
-	private boolean isValidToughness(int value) {
+	private static boolean isValidToughness(int value) {
 		return (Integer.class.isInstance(value) && value > 0 && value < 201 );
 	}
 	
@@ -499,6 +507,7 @@ public class Unit {
 	 * 		| if (isInteger(newValue))
 	 * 		| then new.getToughness() == newValue
 	 */
+	@Raw
 	public void setToughness(int newValue) {
 		if (isValidToughness(newValue))
 			this.toughness = newValue;
@@ -519,6 +528,7 @@ public class Unit {
 	 * 			| result = Math.ceil(200*(getWeight()/100.0)*
 	 * 			|	(getToughness()/100.0));
 	 */
+	@Raw
 	public int getMaxHitPoints() {
 		return (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
@@ -528,7 +538,7 @@ public class Unit {
 	/**
 	 * Return the units minimum number of hitpoints.
 	 */
-	@Basic @Immutable
+	@Basic @Immutable @Raw
 	private int getMinHitPoints() {
 		return this.minHitPoints;
 	}
@@ -536,7 +546,7 @@ public class Unit {
 	/**
 	 * Return the units current number of hitpoints.
 	 */
-	@Basic
+	@Basic @Raw
 	public int getCurrentHitPoints() {
 		return this.currentHitPoints;
 	}
@@ -551,6 +561,7 @@ public class Unit {
 	 * 			hitpoints for this unit.
 	 * 		| result =  (value >= getMinHitPoints() && value <= getMaxHitPoints() )
 	 */
+	@Raw
 	private boolean canHaveAsHitPoints(int value) {
 		return (value >= getMinHitPoints() && value <= getMaxHitPoints());
 	}
@@ -569,6 +580,7 @@ public class Unit {
 	 * 		| new.getCurrentHitPoints() == newValue
 	 * 
 	 */
+	@Raw
 	private void updateCurrentHitPoints(int newValue) {
 		assert canHaveAsHitPoints(newValue);
 		this.currentHitPoints = newValue;
@@ -595,6 +607,7 @@ public class Unit {
 	 * 			|	(getToughness()/100.0));
 	 * 
 	 */
+	@Raw
 	public int getMaxStaminaPoints() {
 		return (int) Math.ceil(
 				200*(getWeight()/100.0)*(getToughness()/100.0));
@@ -603,7 +616,7 @@ public class Unit {
 	/**
 	 * Return the units minimum number of stamina points.
 	 */
-	@Basic @Immutable
+	@Basic @Immutable @Raw
 	private int getMinStaminaPoints() {
 		return this.minStaminaPoints;
 	}
@@ -612,7 +625,7 @@ public class Unit {
 	/**
 	 * Return the units current number of stamina points.
 	 */
-	@Basic
+	@Basic @Raw
 	public int getCurrentStaminaPoints() {
 		return this.currentStaminaPoints;
 	}
@@ -628,6 +641,7 @@ public class Unit {
 	 * 		| result =  (value >= getMinStaminaPoints && 
 	 * 		|		value <= getMaxStaminaPoints() )
 	 */
+	@Raw
 	private boolean canHaveAsStaminaPoints(int value) {
 		return (value >= getMinStaminaPoints() && value <= getMaxStaminaPoints());
 	}
@@ -646,6 +660,7 @@ public class Unit {
 	 * 		| new.getCurrentStaminaPoints() == newValue;
 	 * 
 	 */
+	@Raw
 	private void updateCurrentStaminaPoints(int newValue) {
 		assert canHaveAsStaminaPoints(newValue);
 		this.currentStaminaPoints = newValue;
@@ -673,7 +688,7 @@ public class Unit {
 	 * 		| result =  (dt >= 0 && dt < 0.2 )
 	 */
 	@Model
-	private boolean isValidDT(double dt) {
+	private static boolean isValidDT(double dt) {
 		return (Double.class.isInstance(dt) && dt < 0.2 && dt >= 0.0);
 	}
 
@@ -1170,7 +1185,7 @@ public class Unit {
 	/**
 	 * Return the units orientation.
 	 */
-	@Basic
+	@Basic @Raw
 	public float getOrientation() {
 		return orientation;
 	}
@@ -1186,7 +1201,7 @@ public class Unit {
 	 * 			than or equal to zero and smaller than 2*Pi
 	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 2*Math.PI) 
 	 */
-	private boolean isValidOrientation(float value) {
+	private static boolean isValidOrientation(float value) {
 		return (Float.class.isInstance(value) && value >= 0.0 && value < 2*Math.PI);
 	}
 	
@@ -1203,6 +1218,7 @@ public class Unit {
 	 * 		| 	&& newValue < 2*Math.PI
 	 * 		| then new.getOrientation() == newValue
 	 */
+	@Raw
 	private void setOrientation(float newValue) {
 		if (isValidOrientation(newValue)) {
 			this.orientation = newValue;
@@ -1397,7 +1413,7 @@ public class Unit {
 	 * 			is larger than -0.5.
 	 * 			| result = (Float.class.isInstance(value) && (value > -0.5))
 	 */
-	private boolean canHaveAsTime(float value) {
+	private static boolean canHaveAsTime(float value) {
 		return ( Float.class.isInstance(value) && (value > -0.5f) );
 	}
 	
@@ -1411,7 +1427,7 @@ public class Unit {
 	 * 			is larger than or equal to 0.0.
 	 * 			| result = (Double.class.isInstance(value) && (value >= 0.0))
 	 */
-	private boolean canHaveAsTime(double value) {
+	private static boolean canHaveAsTime(double value) {
 		return ( Double.class.isInstance(value) && (value >= 0.0) );
 	}
 
@@ -1799,7 +1815,7 @@ public class Unit {
 	/**
 	 * Returns the current state of the unit.
 	 */
-	@Basic @Model
+	@Basic @Model @Raw
 	private State getState() {
 		return this.state;
 	}
@@ -1817,6 +1833,7 @@ public class Unit {
 	 * 			the given state value is not a valid state for the unit.
 	 * 			| !State.contains(toString(state))
 	 */
+	@Raw
 	private void setState(State state) {
 		/*if (!State.contains(state.toString()) )
 			throw new IllegalArgumentException();*/
@@ -1850,11 +1867,19 @@ public class Unit {
 	 */
 	private final static double cubeLength = 1.0;
 
-	/* static methods --> signature,...? */
 	
-	/* Class invars */
+	
+	/* tests */
 	/* IETS MIS MET POSITIONERING */
 	/* LOOP INVARIANTS etc */
-	/* RRAAAAAAAW */
+	
+	
+	
+	/* VRAGEN
+	 * 
+	 * 
+	 * Nog methods @Raw?
+	 * 
+	 */
 }
 
