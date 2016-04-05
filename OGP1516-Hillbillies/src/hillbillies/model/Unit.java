@@ -586,7 +586,8 @@ public class Unit {
 	@Raw
 	public void updateCurrentHitPoints(int newValue) {
 		assert canHaveAsHitPoints(newValue);
-		this.currentHitPoints = newValue;
+		if (canHaveAsHitPoints(newValue))
+			this.currentHitPoints = newValue;
 	}
 
 	/**
@@ -666,7 +667,8 @@ public class Unit {
 	@Raw
 	public void updateCurrentStaminaPoints(int newValue) {
 		assert canHaveAsStaminaPoints(newValue);
-		this.currentStaminaPoints = newValue;
+		if (canHaveAsStaminaPoints(newValue))
+			this.currentStaminaPoints = newValue;
 	}
 
 	/**
@@ -707,7 +709,7 @@ public class Unit {
 	 */
 	public void advanceTime(double dt) throws IllegalPositionException, 
 				IllegalArgumentException, IllegalTimeException {
-		/*if (! isValidDT(dt)) {
+		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
 		if (!isResting()) {
@@ -716,7 +718,7 @@ public class Unit {
 
 		if (getTimeAfterResting() >= 180.0) {
 			startResting();
-		}*/
+		}
 
 		if (isResting()) {
 			controlResting(dt);
@@ -802,15 +804,16 @@ public class Unit {
 	private void controlMoving(double dt) throws IllegalPositionException {
 
 		if (!isAttacked()) {
-
-			if (! reached(dt)) {
-				if (isSprinting()) {
-					updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
-					if (getCurrentStaminaPoints() <= 0) {
-						stopSprinting();
-						updateCurrentStaminaPoints(0);
-					}
+			
+			if (isSprinting()) {
+				updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
+				if (getCurrentStaminaPoints() <= 0) {
+					stopSprinting();
+					updateCurrentStaminaPoints(0);
 				}
+			}
+			
+			if (! reached(dt)) {
 				updatePosition(dt);
 			}
 			else if (reached(dt)) {
@@ -823,17 +826,9 @@ public class Unit {
 					System.out.println("EQ");
 					System.out.println(Arrays.toString(getDestCubeLT()));*/
 					this.destCubeLTReached = true;
-					setState(State.EMPTY);
+					if (isSprinting()) stopSprinting();
 				}
-				
-				if ( !Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
-					
-					/*System.out.println("ctrlmov STr LTnr");
-					System.out.println(Arrays.toString(getCubeCoordinate()));
-					System.out.println("NOT EQ");
-					System.out.println(Arrays.toString(getDestCubeLT()));*/
-					setState(State.EMPTY);
-				}				
+				setState(State.EMPTY);	
 			}
 
 		}
@@ -1703,6 +1698,7 @@ public class Unit {
 	 */
 	private void startResting() throws IllegalTimeException {
 		setTimeResting(0.0);
+		setTimeAfterResting(0.0);
 		setState(State.RESTING_1);
 	}
 	
@@ -1715,37 +1711,46 @@ public class Unit {
 	 */
 	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
-		setTimeAfterResting(0.0);
+		System.out.println(getTimeResting());
 
 		if (!isAttacked() && !isAttacking()) {
 
 			if (getState() == State.RESTING_1) {
-				if ((getTimeResting() * getToughness())/(0.2*200) > 1) {
+				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
 
-					while (getTimeResting() - 0.2 > 0.0) {
+					/*while (getTimeResting() - 0.2 > 0.0) {
 						updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
 						setTimeResting(getTimeResting() - 0.2);
-					}
+					}*/
+					
+					//double temp = (getTimeResting() * getToughness())/(0.2*200) - 1.0;
+					
+					updateCurrentHitPoints(getCurrentHitPoints() + 
+							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
+					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 
 					if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
 						setState(State.RESTING_HP);
 					}
 					else if (this.getCurrentStaminaPoints() < this.getMaxStaminaPoints()) {
 						setState(State.RESTING_STAM);
+						System.out.println(getState());
 					}
 				}
 			}
 
-			if (getState() == State.RESTING_HP) {
-				if (getTimeResting() - 0.2 > 0.0) {
-					updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-					setTimeResting(getTimeResting() - 0.2);
+			else if (getState() == State.RESTING_HP) {
+				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
+					updateCurrentHitPoints(getCurrentHitPoints() + 
+							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
+					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 				}
 			}
-			else {
-				if (getTimeResting() - 0.2 > 0.0) {
-					updateCurrentStaminaPoints(getCurrentStaminaPoints() + (getToughness()/100));
-					setTimeResting(getTimeResting() - 0.2);
+			else if (getState() == State.RESTING_STAM) {
+				if ((getTimeResting() * getToughness())/(0.2*100) > 1.0) {
+					updateCurrentStaminaPoints(getCurrentStaminaPoints() + 
+							(int) Math.round((getTimeResting()*getToughness())/(0.2*100)) );
+					setTimeResting(getTimeResting() - (0.2*100*1.0)/getToughness());
 				}
 			}
 			if (getCurrentHitPoints() == getMaxHitPoints() &&
