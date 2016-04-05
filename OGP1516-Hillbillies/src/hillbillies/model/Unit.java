@@ -206,7 +206,7 @@ public class Unit {
 			throw new IllegalArgumentException();
 		int[] intPosition = new int[3];
 		for (int i=0; i<3; i++) {
-			intPosition[i] = (int) Math.ceil(doublePosition[i]);
+			intPosition[i] = (int) Math.floor(doublePosition[i]);
 		}
 		return intPosition;
 	}
@@ -586,7 +586,8 @@ public class Unit {
 	@Raw
 	public void updateCurrentHitPoints(int newValue) {
 		assert canHaveAsHitPoints(newValue);
-		this.currentHitPoints = newValue;
+		if (canHaveAsHitPoints(newValue))
+			this.currentHitPoints = newValue;
 	}
 
 	/**
@@ -666,7 +667,8 @@ public class Unit {
 	@Raw
 	public void updateCurrentStaminaPoints(int newValue) {
 		assert canHaveAsStaminaPoints(newValue);
-		this.currentStaminaPoints = newValue;
+		if (canHaveAsStaminaPoints(newValue))
+			this.currentStaminaPoints = newValue;
 	}
 
 	/**
@@ -692,7 +694,7 @@ public class Unit {
 	 */
 	@Model
 	private static boolean isValidDT(double dt) {
-		return (/*Double.class.isInstance(dt) &&*/ dt <= 0.2 && dt >= 0.0);
+		return (Double.class.isInstance(dt) && dt <= 0.2 && dt >= 0.0);
 	}
 
 	/**
@@ -726,18 +728,15 @@ public class Unit {
 		}
 		else if (getState() == State.EMPTY) {
 			if (!(isDestCubeLTReached(dt))
-						&& this.getCubeCoordinate() != getDestCubeLT()) {
-				//controlMoving(dt);
-				//moveTo(this.destCubeLT);
-				//System.out.println("haha");
+						&& !Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
+				
+				moveTowards(getDestCubeLT());
+				//System.out.println("advt stEM LTnr");
 			}
 			controlWaiting(dt);
 		}
 		else if (isAttacking()) {
 			controlAttacking(dt);
-		}
-		else if (isResting()) {
-			controlResting(dt);
 		}
 		else if (isWorking()) {
 			controlWorking(dt);
@@ -763,7 +762,7 @@ public class Unit {
 				moveTo(destCube);
 
 			}
-			if (dice >1.0/3.0 && dice < 2.0/3.0) {
+			else if (dice >1.0/3.0 && dice < 2.0/3.0) {
 				startWorking();
 			}
 			else {
@@ -805,37 +804,31 @@ public class Unit {
 	private void controlMoving(double dt) throws IllegalPositionException {
 
 		if (!isAttacked()) {
-
-			if (! reached(dt)) {
-				if (isSprinting()) {
-					updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
-					if (getCurrentStaminaPoints() <= 0) {
-						stopSprinting();
-						updateCurrentStaminaPoints(0);
-					}
+			
+			if (isSprinting()) {
+				updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
+				if (getCurrentStaminaPoints() <= 0) {
+					stopSprinting();
+					updateCurrentStaminaPoints(0);
 				}
+			}
+			
+			if (! reached(dt)) {
 				updatePosition(dt);
 			}
 			else if (reached(dt)) {
 
 				setPosition(getDestination());
 				
-				
-				if (!(isDestCubeLTReached(dt) || getCubeCoordinate() == getDestCubeLT())) {
-					System.out.println("haha");
-					//assertTrue(this.destCubeLTReached);
-					//setState(State.EMPTY);
+				if (Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
+					/*System.out.println("ben er");
+					System.out.println(Arrays.toString(getCubeCoordinate()));
+					System.out.println("EQ");
+					System.out.println(Arrays.toString(getDestCubeLT()));*/
+					this.destCubeLTReached = true;
+					if (isSprinting()) stopSprinting();
 				}
-				//setState(State.EMPTY);
-				//System.out.println("haha");
-				
-			}
-			
-			
-			if (isDestCubeLTReached(dt) || getCubeCoordinate() == getDestCubeLT()) {
-				System.out.println("haha");
-				//assertTrue(this.destCubeLTReached);
-				//setState(State.EMPTY);
+				setState(State.EMPTY);	
 			}
 
 		}
@@ -881,10 +874,9 @@ public class Unit {
 			double[] direction = new double[3];
 
 			for (int i=0; i<3; i++) {
-				newPosition[i] = Math.floor(getPosition()[i] 
-						+ cubeDirection[i]);
+				newPosition[i] = Math.floor(getPosition()[i] )
+						+ (double) cubeDirection[i];
 				newPosition[i] += getCubeLength()/2.0;
-				
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
@@ -924,12 +916,23 @@ public class Unit {
 
 		if (getState() != State.RESTING_1) {
 			setDestCubeLT(destCube);
+			this.destCubeLTReached = false;
+			
+			moveTowards(destCube);
+		}
+	}
+	
+	
+	
+	private void moveTowards(int[] destCube) {
+			
 			int[] startCube;
-			int x, y, z;
-			int it = 100;
-			while ((getCubeCoordinate() != destCube) && (it > 0)) {
+			int[] nextCubeDirections;
+						
+			if ((getCubeCoordinate() != destCube)) {
+				int x, y, z;
 				startCube = getCubeCoordinate();
-
+				
 				if (startCube[0] == destCube[0])  x = 0;
 				else if (startCube[0] < destCube[0]) x = 1;
 				else x = -1;
@@ -942,13 +945,19 @@ public class Unit {
 				else if (startCube[2] < destCube[2]) z = 1;
 				else z = -1;
 				
+<<<<<<< HEAD
 				// direction in field?
 				moveToAdjacent(new int[]{x, y, z});
 				it--;
+=======
+				nextCubeDirections = new int[]{x,y,z};
+				moveToAdjacent(nextCubeDirections);
+>>>>>>> movingbug
 			}
-		}
 	}
 
+	
+	
 	/**
 	 * Returns the destination of the unit.
 	 */
@@ -991,13 +1000,18 @@ public class Unit {
 	/**
 	 * Returns the long term destination of the unit.
 	 */
+	/*
 	@Basic
 	private boolean isDestCubeLTReached(double dt) {
 		return (getDistanceTo(getPosition(), convertPositionToDouble(getDestCubeLT())) 
 							< getCurrentSpeed()*dt);
 	}
+	*/
 	
-
+	@Basic
+	private boolean isDestCubeLTReached(double dt) {
+		return this.destCubeLTReached;
+	}
 
 	/**
 	 * Set the long term destination of the unit to the given coordinates.
@@ -1690,6 +1704,7 @@ public class Unit {
 	 */
 	private void startResting() throws IllegalTimeException {
 		setTimeResting(0.0);
+		setTimeAfterResting(0.0);
 		setState(State.RESTING_1);
 	}
 	
@@ -1702,17 +1717,15 @@ public class Unit {
 	 */
 	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
-		setTimeAfterResting(0.0);
 
 		if (!isAttacked() && !isAttacking()) {
 
 			if (getState() == State.RESTING_1) {
-				if ((getTimeResting() * getToughness())/(0.2*200) > 1) {
-
-					while (getTimeResting() - 0.2 > 0.0) {
-						updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-						setTimeResting(getTimeResting() - 0.2);
-					}
+				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
+					
+					updateCurrentHitPoints(getCurrentHitPoints() + 
+							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
+					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 
 					if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
 						setState(State.RESTING_HP);
@@ -1723,21 +1736,24 @@ public class Unit {
 				}
 			}
 
-			if (getState() == State.RESTING_HP) {
-				if (getTimeResting() - 0.2 > 0.0) {
-					updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-					setTimeResting(getTimeResting() - 0.2);
+			else if (getState() == State.RESTING_HP) {
+				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
+					updateCurrentHitPoints(getCurrentHitPoints() + 
+							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
+					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 				}
 			}
-			else {
-				if (getTimeResting() - 0.2 > 0.0) {
-					updateCurrentStaminaPoints(getCurrentStaminaPoints() + (getToughness()/100));
-					setTimeResting(getTimeResting() - 0.2);
+			else if (getState() == State.RESTING_STAM) {
+				if ((getTimeResting() * getToughness())/(0.2*100) > 1.0) {
+					updateCurrentStaminaPoints(getCurrentStaminaPoints() + 
+							(int) Math.round((getTimeResting()*getToughness())/(0.2*100)) );
+					setTimeResting(getTimeResting() - (0.2*100*1.0)/getToughness());
 				}
 			}
 			if (getCurrentHitPoints() == getMaxHitPoints() &&
 					getCurrentStaminaPoints() == getMaxStaminaPoints()) {
 				setState(State.EMPTY);
+				//System.out.println(getState());
 			}
 		}
 	}
@@ -1825,12 +1841,7 @@ public class Unit {
 	 * 			| new.isDefaultBehaviorEnabled() == false
 	 */
 	public void setDefaultBehaviorEnabled(boolean value) {
-		if (value == true && isDefaultBehaviorEnabled() == false) {
-			startDefaultBehavior();
-		}
-		else if (value == false && isDefaultBehaviorEnabled() == true) {
-			stopDefaultBehavior();
-		}
+		this.defaultBehavior = value;
 	}
 	
 	/**

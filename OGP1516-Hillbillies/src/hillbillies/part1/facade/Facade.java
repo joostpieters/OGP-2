@@ -2,6 +2,7 @@ package hillbillies.part1.facade;
 
 import hillbillies.model.Unit;
 import hillbillies.model.IllegalPositionException;
+import hillbillies.model.IllegalTimeException;
 import hillbillies.model.IllegalNameException;
 import ogp.framework.util.ModelException;
 
@@ -107,12 +108,13 @@ public class Facade implements IFacade {
 		}
 		
 		public void moveToAdjacent(Unit unit, int dx, int dy, int dz) throws ModelException {
-			try {
+			unit.moveToAdjacent(new int[]{dx, dy, dz});
+			/*try {
 				unit.moveToAdjacent(new int[]{dx, dy, dz});
 			}
-			catch (RuntimeException exc) {
+			catch (IllegalPositionException | IllegalArgumentException | IllegalTimeException exc) {
 				throw new ModelException();
-			}
+			}*/
 		}
 		
 		public double getCurrentSpeed(Unit unit) throws ModelException {
@@ -183,7 +185,7 @@ public class Facade implements IFacade {
 		}
 
 		public void setDefaultBehaviorEnabled(Unit unit, boolean value) throws ModelException {
-			
+			unit.setDefaultBehaviorEnabled(value);
 		}
 
 		public boolean isDefaultBehaviorEnabled(Unit unit) throws ModelException {
