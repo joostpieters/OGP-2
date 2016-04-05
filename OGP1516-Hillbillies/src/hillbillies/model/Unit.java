@@ -943,8 +943,8 @@ public class Unit {
 				else z = -1;
 				
 				// direction in field?
-				//moveToAdjacent(new int[]{x, y, z});
-				//it--;
+				moveToAdjacent(new int[]{x, y, z});
+				it--;
 			}
 		}
 	}
