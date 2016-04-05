@@ -945,14 +945,8 @@ public class Unit {
 				else if (startCube[2] < destCube[2]) z = 1;
 				else z = -1;
 				
-<<<<<<< HEAD
-				// direction in field?
-				moveToAdjacent(new int[]{x, y, z});
-				it--;
-=======
 				nextCubeDirections = new int[]{x,y,z};
 				moveToAdjacent(nextCubeDirections);
->>>>>>> movingbug
 			}
 	}
 
