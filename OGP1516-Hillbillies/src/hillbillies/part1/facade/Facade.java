@@ -185,7 +185,7 @@ public class Facade implements IFacade {
 		}
 
 		public void setDefaultBehaviorEnabled(Unit unit, boolean value) throws ModelException {
-			
+			unit.setDefaultBehaviorEnabled(value);
 		}
 
 		public boolean isDefaultBehaviorEnabled(Unit unit) throws ModelException {

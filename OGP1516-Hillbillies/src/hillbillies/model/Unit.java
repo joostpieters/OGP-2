@@ -694,7 +694,7 @@ public class Unit {
 	 */
 	@Model
 	private static boolean isValidDT(double dt) {
-		return (/*Double.class.isInstance(dt) &&*/ dt <= 0.2 && dt >= 0.0);
+		return (Double.class.isInstance(dt) && dt <= 0.2 && dt >= 0.0);
 	}
 
 	/**
@@ -762,7 +762,7 @@ public class Unit {
 				moveTo(destCube);
 
 			}
-			if (dice >1.0/3.0 && dice < 2.0/3.0) {
+			else if (dice >1.0/3.0 && dice < 2.0/3.0) {
 				startWorking();
 			}
 			else {
@@ -1711,19 +1711,11 @@ public class Unit {
 	 */
 	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
-		System.out.println(getTimeResting());
 
 		if (!isAttacked() && !isAttacking()) {
 
 			if (getState() == State.RESTING_1) {
 				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
-
-					/*while (getTimeResting() - 0.2 > 0.0) {
-						updateCurrentHitPoints(getCurrentHitPoints() + (getToughness()/200));
-						setTimeResting(getTimeResting() - 0.2);
-					}*/
-					
-					//double temp = (getTimeResting() * getToughness())/(0.2*200) - 1.0;
 					
 					updateCurrentHitPoints(getCurrentHitPoints() + 
 							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
@@ -1734,7 +1726,6 @@ public class Unit {
 					}
 					else if (this.getCurrentStaminaPoints() < this.getMaxStaminaPoints()) {
 						setState(State.RESTING_STAM);
-						System.out.println(getState());
 					}
 				}
 			}
@@ -1756,6 +1747,7 @@ public class Unit {
 			if (getCurrentHitPoints() == getMaxHitPoints() &&
 					getCurrentStaminaPoints() == getMaxStaminaPoints()) {
 				setState(State.EMPTY);
+				//System.out.println(getState());
 			}
 		}
 	}
@@ -1843,12 +1835,7 @@ public class Unit {
 	 * 			| new.isDefaultBehaviorEnabled() == false
 	 */
 	public void setDefaultBehaviorEnabled(boolean value) {
-		if (value == true && isDefaultBehaviorEnabled() == false) {
-			startDefaultBehavior();
-		}
-		else if (value == false && isDefaultBehaviorEnabled() == true) {
-			stopDefaultBehavior();
-		}
+		this.defaultBehavior = value;
 	}
 	
 	/**
