@@ -206,7 +206,7 @@ public class Unit {
 			throw new IllegalArgumentException();
 		int[] intPosition = new int[3];
 		for (int i=0; i<3; i++) {
-			intPosition[i] = (int) Math.ceil(doublePosition[i]);
+			intPosition[i] = (int) Math.floor(doublePosition[i]);
 		}
 		return intPosition;
 	}
@@ -707,7 +707,7 @@ public class Unit {
 	 */
 	public void advanceTime(double dt) throws IllegalPositionException, 
 				IllegalArgumentException, IllegalTimeException {
-		if (! isValidDT(dt)) {
+		/*if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
 		if (!isResting()) {
@@ -716,7 +716,7 @@ public class Unit {
 
 		if (getTimeAfterResting() >= 180.0) {
 			startResting();
-		}
+		}*/
 
 		if (isResting()) {
 			controlResting(dt);
@@ -726,18 +726,15 @@ public class Unit {
 		}
 		else if (getState() == State.EMPTY) {
 			if (!(isDestCubeLTReached(dt))
-						&& this.getCubeCoordinate() != getDestCubeLT()) {
-				//controlMoving(dt);
-				//moveTo(this.destCubeLT);
-				//System.out.println("haha");
+						&& !Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
+				
+				moveTowards(getDestCubeLT());
+				//System.out.println("advt stEM LTnr");
 			}
 			controlWaiting(dt);
 		}
 		else if (isAttacking()) {
 			controlAttacking(dt);
-		}
-		else if (isResting()) {
-			controlResting(dt);
 		}
 		else if (isWorking()) {
 			controlWorking(dt);
@@ -820,22 +817,23 @@ public class Unit {
 
 				setPosition(getDestination());
 				
-				
-				if (!(isDestCubeLTReached(dt) || getCubeCoordinate() == getDestCubeLT())) {
-					System.out.println("haha");
-					//assertTrue(this.destCubeLTReached);
-					//setState(State.EMPTY);
+				if (Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
+					/*System.out.println("ben er");
+					System.out.println(Arrays.toString(getCubeCoordinate()));
+					System.out.println("EQ");
+					System.out.println(Arrays.toString(getDestCubeLT()));*/
+					this.destCubeLTReached = true;
+					setState(State.EMPTY);
 				}
-				//setState(State.EMPTY);
-				//System.out.println("haha");
 				
-			}
-			
-			
-			if (isDestCubeLTReached(dt) || getCubeCoordinate() == getDestCubeLT()) {
-				System.out.println("haha");
-				//assertTrue(this.destCubeLTReached);
-				//setState(State.EMPTY);
+				if ( !Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
+					
+					/*System.out.println("ctrlmov STr LTnr");
+					System.out.println(Arrays.toString(getCubeCoordinate()));
+					System.out.println("NOT EQ");
+					System.out.println(Arrays.toString(getDestCubeLT()));*/
+					setState(State.EMPTY);
+				}				
 			}
 
 		}
@@ -881,10 +879,9 @@ public class Unit {
 			double[] direction = new double[3];
 
 			for (int i=0; i<3; i++) {
-				newPosition[i] = Math.floor(getPosition()[i] 
-						+ cubeDirection[i]);
+				newPosition[i] = Math.floor(getPosition()[i] )
+						+ (double) cubeDirection[i];
 				newPosition[i] += getCubeLength()/2.0;
-				
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
@@ -924,12 +921,23 @@ public class Unit {
 
 		if (getState() != State.RESTING_1) {
 			setDestCubeLT(destCube);
+			this.destCubeLTReached = false;
+			
+			moveTowards(destCube);
+		}
+	}
+	
+	
+	
+	private void moveTowards(int[] destCube) {
+			
 			int[] startCube;
-			int x, y, z;
-			int it = 100;
-			while ((getCubeCoordinate() != destCube) && (it > 0)) {
+			int[] nextCubeDirections;
+						
+			if ((getCubeCoordinate() != destCube)) {
+				int x, y, z;
 				startCube = getCubeCoordinate();
-
+				
 				if (startCube[0] == destCube[0])  x = 0;
 				else if (startCube[0] < destCube[0]) x = 1;
 				else x = -1;
@@ -942,13 +950,13 @@ public class Unit {
 				else if (startCube[2] < destCube[2]) z = 1;
 				else z = -1;
 				
-				// direction in field?
-				//moveToAdjacent(new int[]{x, y, z});
-				//it--;
+				nextCubeDirections = new int[]{x,y,z};
+				moveToAdjacent(nextCubeDirections);
 			}
-		}
 	}
 
+	
+	
 	/**
 	 * Returns the destination of the unit.
 	 */
@@ -991,13 +999,18 @@ public class Unit {
 	/**
 	 * Returns the long term destination of the unit.
 	 */
+	/*
 	@Basic
 	private boolean isDestCubeLTReached(double dt) {
 		return (getDistanceTo(getPosition(), convertPositionToDouble(getDestCubeLT())) 
 							< getCurrentSpeed()*dt);
 	}
+	*/
 	
-
+	@Basic
+	private boolean isDestCubeLTReached(double dt) {
+		return this.destCubeLTReached;
+	}
 
 	/**
 	 * Set the long term destination of the unit to the given coordinates.
