@@ -7,7 +7,7 @@ import hillbillies.model.IllegalNameException;
 import ogp.framework.util.ModelException;
 
 
-public class Facade implements IFacade {
+public class Facade implements /*hillbillies.part1.facade.*/IFacade {
 	//public Facade() {}
 	
 		public Unit createUnit(String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
