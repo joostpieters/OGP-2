@@ -1917,10 +1917,9 @@ public class Unit {
 	
 	
 	/* tests */
-	/* IETS MIS MET POSITIONERING */
 	/* LOOP INVARIANTS etc */
 	
-	
+	// Override equals etc in value classes!
 	
 	/* VRAGEN
 	 * 
