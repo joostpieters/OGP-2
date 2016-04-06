@@ -6,8 +6,6 @@ import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Raw;
 import be.kuleuven.cs.som.annotate.Model;
 
-import static org.junit.Assert.*;
-
 
 import java.util.*;
 import java.lang.*;
