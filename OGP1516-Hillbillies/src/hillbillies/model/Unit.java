@@ -126,7 +126,10 @@ public class Unit {
 					throws IllegalPositionException, IllegalNameException {
 
 		double[] doubleInitialPosition = convertPositionToDouble(initialPosition);
-
+		
+		for (int i=0; i<doubleInitialPosition.length; i++) {
+			doubleInitialPosition[i] += 0.5;
+		}
 		setPosition(doubleInitialPosition);
 
 		setName(name);
@@ -152,8 +155,6 @@ public class Unit {
 		updateCurrentStaminaPoints(getMaxStaminaPoints());
 
 		setOrientation((float)(Math.PI/2.0));
-
-		this.random = new Random();
 
 		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
 		this.setState(State.EMPTY);
@@ -692,7 +693,7 @@ public class Unit {
 	 */
 	@Model
 	private static boolean isValidDT(double dt) {
-		return (Double.class.isInstance(dt) && dt <= 0.2 && dt >= 0.0);
+		return (dt <= 0.2 && dt >= 0.0);
 	}
 
 	/**
@@ -750,12 +751,12 @@ public class Unit {
 	private void controlWaiting(double dt) throws IllegalPositionException {
 
 		if (isDefaultBehaviorEnabled()) {
-			double dice = this.random.nextDouble();
+			double dice = random.nextDouble();
 			if (dice < 1.0/3.0) {
 
 				int[] destCube = new int[3];
 				for (int i=0; i<3; i++) {
-					destCube[i] = this.random.nextInt(49);
+					destCube[i] = random.nextInt(49);
 				}
 				moveTo(destCube);
 
@@ -1535,7 +1536,7 @@ public class Unit {
 	 * 			| result = (random.nextDouble() <= 0.2*(this.getAgility()/attacker.getAgility()) )
 	 */
 	private boolean dodge(Unit attacker) {
-		if ( this.random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
+		if ( random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
 			while(true) {
 				try {
 					this.jumpToRandomAdjacent();
@@ -1563,8 +1564,8 @@ public class Unit {
 	 */
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
 		double[] newPosition = this.getPosition();
-		newPosition[0] += 2*this.random.nextDouble() - 1.0;
-		newPosition[1] += 2*this.random.nextDouble() - 1.0;
+		newPosition[0] += 2*random.nextDouble() - 1.0;
+		newPosition[1] += 2*random.nextDouble() - 1.0;
 		if (!isValidPosition(newPosition)) throw new 
 		IllegalPositionException(newPosition, this);
 		this.setPosition(newPosition);
@@ -1587,7 +1588,7 @@ public class Unit {
 	private boolean block(Unit attacker) {
 		double probability = 0.25*((this.getAgility() + this.getStrength())
 				/(attacker.getAgility() + attacker.getStrength()));
-		if ( this.random.nextDouble() <= probability ) {
+		if ( random.nextDouble() <= probability ) {
 			return true;
 		}
 		return false;
@@ -1898,7 +1899,7 @@ public class Unit {
 	/**
 	 * Variable registering a random generator.
 	 */
-	private final Random random;
+	private static final Random random = new Random();
 
 	/**
 	 * Returns the length of a cube of the game world.
@@ -1916,6 +1917,8 @@ public class Unit {
 	
 	/* tests */
 	/* LOOP INVARIANTS etc */
+	
+	// isValidINITIALAgility!!! not isValidAgility !!!!!!!!!!!!
 	
 	// Override equals etc in value classes!
 	

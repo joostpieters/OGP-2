@@ -6,6 +6,12 @@ import hillbillies.model.World.TerrainType;
 import hillbillies.part2.listener.TerrainChangeListener;
 import hillbillies.model.IllegalPositionException;
 import hillbillies.model.IllegalTimeException;
+import hillbillies.model.Log;
+
+import java.util.Set;
+
+import hillbillies.model.Boulder;
+import hillbillies.model.Faction;
 import hillbillies.model.IllegalNameException;
 import ogp.framework.util.ModelException;
 
@@ -59,7 +65,21 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	}
 
 	@Override
-	public boolean isSolidConnectedToBorder(World world, int x, int y, int z) throws ModelException;
+	public boolean isSolidConnectedToBorder(World world, int x, int y, int z) throws ModelException {
+		return world.isSolidConnectedToBorder(x, y,z);
+	}
+	
+	public Unit spawnUnit(World world, boolean enableDefaultBehavior) throws ModelException {
+		return world.spawnUnit();
+	}
+	
+	public void addUnit(Unit unit, World world) throws ModelException {
+		world.addUnit(unit);
+	}
+	
+	public Set<Unit> getUnits(World world) throws ModelException {
+		return world.getUnits();
+	}
 	
 	
 	/* ********************************************
@@ -274,6 +294,48 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	public boolean isDefaultBehaviorEnabled(Unit unit) throws ModelException {
 		return unit.isDefaultBehaviorEnabled();
 	}
+	
+	
+	/* ********************************************
+	 * 					FACTIONS 
+	 **********************************************/
+	
+	@Override
+	public Set<Unit> getUnitsOfFaction(Faction faction) throws ModelException {
+		return faction.getUnitsOfFaction();
+	}
+	
+	@Override
+	public Set<Faction> getActiveFactions(World world) throws ModelException {
+		return world.getActiveFactions();
+	}
+	
+	
+	
+	/* ********************************************
+	 * 					BOULDERS, LOGS 
+	 **********************************************/
+	
+	@Override
+	public double[] getPosition(Boulder boulder) throws ModelException {
+		return boulder.getPosition();
+	}
+	
+	@Override
+	public Set<Boulder> getBoulders(World world) throws ModelException {
+		return world.getBoulders();
+	}
+	
+	@Override
+	public double[] getPosition(Log log) throws ModelException {
+		return log.getPosition();
+	}
+
+	@Override
+	public Set<Log> getLogs(World world) throws ModelException {
+		return world.getLogs();
+	}
+	
 	
 	
 	
