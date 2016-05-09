@@ -1,12 +1,12 @@
 
 package hillbillies.model;
 
-public class Boulder {
+public class Boulder extends Item {
 	
 	private World world;
 	private double[] position;
 	
-	public Boulder(int x, int y, int z) {
+	public Boulder(int x, int y, int z, World world) {
 		double xD = this.world.getCubeLength()/2 + (double) x;
 		double yD = this.world.getCubeLength()/2 + (double) y;
 		double zD = this.world.getCubeLength()/2 + (double) z;

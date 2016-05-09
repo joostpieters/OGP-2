@@ -69,14 +69,17 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 		return world.isSolidConnectedToBorder(x, y,z);
 	}
 	
+	@Override
 	public Unit spawnUnit(World world, boolean enableDefaultBehavior) throws ModelException {
 		return world.spawnUnit();
 	}
 	
+	@Override
 	public void addUnit(Unit unit, World world) throws ModelException {
 		world.addUnit(unit);
 	}
 	
+	@Override
 	public Set<Unit> getUnits(World world) throws ModelException {
 		return world.getUnits();
 	}
@@ -85,6 +88,36 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	/* ********************************************
 	 * 					UNITS 
 	 **********************************************/
+	
+	@Override
+	public boolean isCarryingBoulder(Unit unit) throws ModelException {
+		return unit.isCarryingBoulder();
+	}
+	
+	@Override
+	public boolean isCarryingLog(Unit unit) throws ModelException {
+		return unit.isCarryingLog();
+	}
+	
+	@Override
+	public Faction getFaction(Unit unit) throws ModelException {
+		return unit.getFaction();
+	}
+	
+	@Override
+	public boolean isAlive(Unit unit) throws ModelException {
+		return unit.isAlive();
+	}
+	
+	@Override
+	public void workAt(Unit unit, int x, int y, int z) throws ModelException {
+		unit.workAt(x, y, z);
+	}
+	
+	@Override
+	public int getExperiencePoints(Unit unit) throws ModelException {
+		return unit.getExperiencePoints();
+	}
 	
 	@Override
 	public Unit createUnit(String name, int[] initialPosition, int weight, int agility, int strength, int toughness,

@@ -38,8 +38,8 @@ public class World {
 	
 	private final Set<Faction> factions = new TreeSet<Faction>(new NbUnitsComparator());
 	
-	private final Set<Log> logs = new HashSet<Log>();
-	private final Set<Boulder> boulders = new HashSet<Boulder>();
+	private final Set<Item> logs = new HashSet<Item>();
+	private final Set<Item> boulders = new HashSet<Item>();
 	
 	
 	private final ConnectedToBorder connectedToBorderChecker;
@@ -110,6 +110,12 @@ public class World {
 	
 	public TerrainType getCubeTypeAt(int x, int y, int z) {
 		return TerrainType.byOrdinal(this.terrainTypes[x][y][z]);
+	}
+	
+	public Set<Item> getObjectsAt(int x, int y, int z) {
+		//Set<Item> items = new HashSet<Item>();
+		//Set<Item> items = this.boulders;
+		return this.boulders;
 	}
 	
 	
@@ -189,12 +195,12 @@ public class World {
 		return new TreeSet<Faction>(this.factions);
 	}
 	
-	public Set<Boulder> getBoulders() {
-		return new HashSet<Boulder>(this.boulders);
+	public Set<Item> getBoulders() {
+		return new HashSet<Item>(this.boulders);
 	}
 	
-	public Set<Log> getLogs() {
-		return new HashSet<Log>(this.logs);
+	public Set<Item> getLogs() {
+		return new HashSet<Item>(this.logs);
 	}
 	
 	
@@ -240,11 +246,11 @@ public class World {
 		double dice = random.nextDouble();
 		if (dice < 0.25) {
 			if (getCubeTypeAt(x,y,z) == TerrainType.ROCK) {
-				Boulder boulder = new Boulder(x, y, z);
+				Boulder boulder = new Boulder(x, y, z, this);
 				this.boulders.add(boulder);
 			}
 			else if (getCubeTypeAt(x,y,z) == TerrainType.TREE) {
-				Log log = new Log(x, y, z);
+				Log log = new Log(x, y, z, this);
 				this.logs.add(log);
 			}
 		}
