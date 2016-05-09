@@ -33,15 +33,6 @@ public class World {
 	
 	private int[][][] terrainTypes;
 	private final TerrainChangeListener modelListener;
-	
-	private final Set<Unit> units = new HashSet<Unit>();
-	
-	private final Set<Faction> factions = new TreeSet<Faction>(new NbUnitsComparator());
-	
-	private final Set<Item> logs = new HashSet<Item>();
-	private final Set<Item> boulders = new HashSet<Item>();
-	
-	
 	private final ConnectedToBorder connectedToBorderChecker;
 	
 	private static final Random random = new Random();
@@ -112,16 +103,10 @@ public class World {
 		return TerrainType.byOrdinal(this.terrainTypes[x][y][z]);
 	}
 	
-	public Set<Item> getObjectsAt(int x, int y, int z) {
-		//Set<Item> items = new HashSet<Item>();
-		//Set<Item> items = this.boulders;
-		return this.boulders;
-	}
-	
-	
 	private boolean isValidTerrainType(TerrainType type) {
 		return TerrainType.contains("type");
 	}
+	
 	
 	public void advanceTime(double dt) {
 		if (!isValidDT(dt))
@@ -149,8 +134,38 @@ public class World {
 		return (dt <= 0.2 && dt >= 0.0);
 	}
 	
+	
+	/**********************************************************
+	 * 
+	 * 							UNITS
+	 *
+	 **********************************************************/
+	
+	/**
+	 * Set collecting references to units that this world contains.
+	 * 
+	 * @invar	the set of units is effective.
+	 * 			| units != null
+	 * 
+	 * @invar	Each element in the set references a unit that this world
+	 * 			can have as unit.
+	 * 			| for each unit in units:
+	 * 			| 		canHaveAsUnit(unit)
+	 * 
+	 * @invar	Each unit in the set references this world as their world.
+	 * 			| for each unit in units:
+	 * 			|		unit.getWorld() == this
+	 */
+	private final Set<Unit> units = new HashSet<Unit>();
+	
+	/**
+	 * Spawn a unit with a random position in this world and random initial
+	 * attributes.
+	 * 
+	 * @return the spawned unit.
+	 */
 	public Unit spawnUnit() {
-		if (getUnits().size() < 100) {
+		if (getAllUnits().size() < 100) {
 			int x, y, z;
 			while(true) {
 				try {
@@ -179,21 +194,144 @@ public class World {
 		return null;
 	}
 	
-	public void addUnit(Unit unit) {
+	
+	/**
+	 * Check whether this world contains the given unit.
+	 * 
+	 * @param 	unit
+	 * 			The unit to check.
+	 */
+	@Basic @Raw
+	public boolean hasAsUnit(Unit unit) {
+		return this.units.contains(unit);
+	}
+	
+	/**
+	 * Check whether this world can contain the given unit.
+	 * 
+	 * @param 	unit
+	 * 			The unit to check.
+	 * 
+	 * @return	False if the given unit is not effective.
+	 * 			| if (unit == null)
+	 * 			| 	then result = false
+	 * 			True if this world is not terminated or the given unit is
+	 * 			also terminated
+	 * 			| else result == ( (!this.isTerminated())
+	 * 			|		|| unit.isTerminated())
+	 */
+	@Raw
+	public boolean canHaveAsUnit(Unit unit) {
+		// !!!!!!
+		return true;
+	}
+	
+	/**
+	 * Check whether this world contains proper units.
+	 * 
+	 * @return	True if and only if this world can contain each of its units
+	 * 			and if each of these units references this world as their world.
+	 * 			| result == ( for each unit in Unit:
+	 * 			|		if (this.hasAsUnit(unit) )
+	 * 			|			then ( canHaveAsUnit(unit) &&
+	 * 			|				(unit.getWorld() == this) ) )
+	 */
+	@Raw
+	public boolean hasProperUnits() {
+		return true;
+	}
+	
+	/**
+	 * Return the number of units this world contains.
+	 * 
+	 * @return	The number of units this world contains.
+	 * 			| count( {unit in Unit | hasAsUnit(unit)} )
+	 */
+	@Raw
+	public int getNbUnits() {
+		return 1;
+	}
+	
+	/**
+	 * Return a set collecting all units this world contains.
+	 * 
+	 * @return	The resulting set is effective.
+	 * 			| result != null
+	 * @return	Each unit in the resulting set is attached to this world
+	 * 			and vice versa.
+	 * 			| for each unit in Unit:
+	 * 			| 	result.contains(unit) == this.hasAsUnit(unit)
+	 */
+	public Set<Unit> getAllUnits() {
+		return new HashSet<Unit>(this.units);
+	}
+	
+	/**
+	 * Add the given unit to the set of units that this world contains.
+	 * 
+	 * @param	unit
+	 * 			The unit to be added.
+	 * 
+	 * @post	This world has the given unit as one of its units.
+	 * 			| new.hasAsUnit(unit)
+	 * @post	The given unit references this world as its world.
+	 * 			| (new unit).getWorld() == this
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			This world cannot have the given unit as one of its units.
+	 * 			| !canHaveAsUnit(unit)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The given unit already references some world.
+	 */
+	public void addUnit(Unit unit)  throws IllegalArgumentException {
 		// CONDITIONS IVM ASSOCIATIONS ETC CHECKEN
 		
 		if (!unit.equals(null))
 			this.units.add(unit);
 	}
 	
-	public Set<Unit> getUnits() {
-		return new HashSet<Unit>(this.units);
+	
+	/**
+	 * Remove the given unit from this world.
+	 * 
+	 * @param	unit
+	 * 			The unit to remove.
+	 * @post	This world does not contain the given unit.
+	 * 			| !new.hasAsUnit(unit)
+	 * @post	If this world contains the given unit, the unit is no
+	 * 			longer attached to any world.
+	 * 			| if (hasAsUnit(unit))
+	 * 			| 	then ( (new unit).getWorld() == null)
+	 */
+	public void removeUnit(Unit unit) {
+		
 	}
+	
+	
+	/**********************************************************
+	 * 
+	 * 							FACTIONS
+	 *
+	 **********************************************************/
+	
+	private final Set<Faction> factions = new TreeSet<Faction>(new NbUnitsComparator());
 	
 	
 	public Set<Faction> getActiveFactions() {
 		return new TreeSet<Faction>(this.factions);
 	}
+	
+	
+	/**********************************************************
+	 * 
+	 * 							ITEMS
+	 *
+	 **********************************************************/
+	
+	private final Set<Item> logs = new HashSet<Item>();
+	private final Set<Item> boulders = new HashSet<Item>();
+	
 	
 	public Set<Item> getBoulders() {
 		return new HashSet<Item>(this.boulders);
@@ -201,6 +339,12 @@ public class World {
 	
 	public Set<Item> getLogs() {
 		return new HashSet<Item>(this.logs);
+	}
+	
+	public Set<Item> getObjectsAt(int x, int y, int z) {
+		//Set<Item> items = new HashSet<Item>();
+		//Set<Item> items = this.boulders;
+		return this.boulders;
 	}
 	
 	

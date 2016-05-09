@@ -10,6 +10,7 @@ public class Log extends Item {
 		double yD = this.world.getCubeLength()/2 + (double) y;
 		double zD = this.world.getCubeLength()/2 + (double) z;
 		
+		this.world = world;
 		this.position = new double[3]; 
 		setPosition(xD, yD, zD);
 	}

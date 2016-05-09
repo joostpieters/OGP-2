@@ -8,8 +8,8 @@ public class Faction {
 	
 	private final Set<Unit> units = new HashSet<Unit>();
 	
-	public Faction () {
-		
+	public Faction (Unit unit) {
+		this.units.add(unit);
 	}
 	
 	public int getNbOfUnits() {
@@ -18,6 +18,11 @@ public class Faction {
 	
 	public Set<Unit> getUnitsOfFaction() {
 		return new HashSet<Unit>(this.units);
+	}
+	
+	// destructor
+	public void removeUnit(Unit unit) {
+		this.units.remove(unit);
 	}
 	
 	public static class NbUnitsComparator implements Comparator<Faction> {
