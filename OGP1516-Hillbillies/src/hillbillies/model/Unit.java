@@ -15,7 +15,7 @@ import java.lang.*;
 
 /**
  * A class of units with a current position, a name, weight, strength, agility
- * and toughness. 
+ * and toughness, attached to a faction and a world.
  * 
  * @invar	The position of a unit must always be valid, within the game world.
  * 			| isValidPosition(getPosition())
@@ -47,12 +47,17 @@ import java.lang.*;
  * @invar	Each unit must have a proper world in which it belongs
  * 			| hasProperWorld()
  * 
+ * @invar	Each unit must have a proper faction to which it belongs
+ * 			| hasProperFaction()
+ * 
  *@author Ruben Cartuyvels
  *@version	1.4
  */
 public class Unit {
+	
 	/**
-	 * Initialize a new unit with the given attributes.
+	 * Initialize a new unit with the given attributes, not yet attached to
+	 * a world or a faction.
 	 * 
 	 * @param name
 	 *            The name of the unit.
@@ -2034,10 +2039,84 @@ public class Unit {
 	 *
 	 **********************************************************/
 	
+	/**
+	 * Variable registering the faction to which this unit belongs.
+	 */
+	private Faction faction = null;
 	
 	
+	/**
+	 * Return the faction to which this unit belongs. Returns a null refererence
+	 * if this unit does not belong to any faction.
+	 */
+	@Basic @Raw
+	public Faction getFaction() {
+		return this.faction;
+	}
+	
+	/**
+	 * Check whether this unit can join a given faction.
+	 * 
+	 * @param	faction
+	 * 			The faction to check.
+	 * 
+	 * @return	True if and only if the given faction is not effective or if it
+	 * 			can be joined by this unit.
+	 * 			| result == ( (faction == null)
+	 * 			| 				|| faction.canHaveAsUnit(this) )
+	 */
+	@Raw
+	public boolean canHaveAsFaction(Faction faction) {
+		return ( (faction == null) || faction.canHaveAsUnit(this) );
+	}
+	
+	/**
+	 * Check whether this unit has a proper faction to which it belongs.
+	 * 
+	 * @return	True if and only if this unit can have its faction as the faction to
+	 * 			which it belongs and if that faction is either not effective or contains
+	 * 			this unit.
+	 * 			| result == ( canHaveAsUnit(getFaction()) && ( (getFaction() == null)
+	 * 			|				|| getFaction.hasAsUnit(this) ) )
+	 */
+	@Raw
+	public boolean hasProperFaction() {
+		return (canHaveAsFaction(getFaction()) && ( (getFaction() == null) 
+					|| getFaction().hasAsUnit(this) ) );
+	}
 	
 	
+	/**
+	 * Set the faction this unit belongs to to the given faction.
+	 * 
+	 * @param	faction
+	 * 			The faction to add the unit to.
+	 * 
+	 * @post	This unit references the given world as the world
+	 * 			it belongs to.
+	 * 			| new.getFaction() == faction
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given world is effective it must already reference this unit
+	 * 			as one of its units.
+	 * 			| (faction != null) && !faction.hasAsUnit(this)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given faction is not effective and this unit references an
+	 * 			effective faction, that faction may not contain this unit.
+	 * 			| (faction == null) && (getFaction() != null) 
+	 * 			|					&& (getFaction().hasAsUnit(this))
+	 */
+	public void setFaction(Faction faction) throws IllegalArgumentException {
+		if ( (faction != null) && !faction.hasAsUnit(this) )
+			throw new IllegalArgumentException();
+		if ( (faction == null) && (getFaction() != null) && (getFaction().hasAsUnit(this)) )
+			throw new IllegalArgumentException();
+		this.faction = faction;
+	}
+	
+	
+	/* ISVALIDFACTION/UNITS IPV CANHAVEAS????????????
 	/* tests */
 	/* LOOP INVARIANTS etc */
 	

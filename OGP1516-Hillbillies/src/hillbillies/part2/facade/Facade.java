@@ -340,7 +340,7 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public Set<Faction> getActiveFactions(World world) throws ModelException {
-		return world.getActiveFactions();
+		return world.getAllFactions();
 	}
 	
 	

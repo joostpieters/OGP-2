@@ -15,6 +15,18 @@ import hillbillies.model.Faction.*;
 
 import java.util.*;
 
+/**
+ * A class of worlds containing up to 100 units and 5 factions.
+ * 
+ * @invar	The units in each worlds must be proper units for that world.
+ * 			| hasProperUnits()
+ * 
+ * @invar	The factions associated with each world must be proper factions for
+ * 			that world.
+ * 			| hasProperFactions()
+ * 
+ * @author rubencartuyvels
+ */
 public class World {
 	
 	private final static int maxUnits = 100;
@@ -175,6 +187,10 @@ public class World {
 	 * @invar	Each unit in the set references this world as their world.
 	 * 			| for each unit in units:
 	 * 			|		unit.getWorld() == this
+	 * 
+	 * @invar	The number of units in the set is always smaller than or
+	 * 			equal to 100.
+	 * 			| units.size() <= 100
 	 */
 	private final Set<Unit> units = new HashSet<Unit>();
 	
@@ -208,6 +224,14 @@ public class World {
 			int toughness = random.nextInt(76) + 25;
 			int weight = (strength+agility)/2 + random.nextInt(100 - (strength+agility)/2);
 			Unit unit = new Unit("Name", position, weight, agility, strength, toughness, true);
+			
+			this.addUnit(unit);
+			if (this.getNbFactions() < 5) {
+				Faction faction = new Faction();
+				faction.addUnit(unit);
+			} else {
+				this.factions.first().addUnit(unit);
+			}
 			
 			return unit;
 		}
@@ -322,6 +346,8 @@ public class World {
 			throw new IllegalArgumentException();
 		if (unit.getWorld() != null)
 			throw new IllegalArgumentException();
+		if (getNbUnits() >= 100)
+			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
 		this.units.add(unit);
 		unit.setWorld(this);
 	}
@@ -353,11 +379,152 @@ public class World {
 	 *
 	 **********************************************************/
 	
-	private final Set<Faction> factions = new TreeSet<Faction>(new NbUnitsComparator());
+	/**
+	 * Set collecting references to factions that this world contains.
+	 * 
+	 * @invar	the set of units is effective.
+	 * 			| factions != null
+	 * 
+	 * @invar	Each element in the set references a faction that this world
+	 * 			can have as faction.
+	 * 			| for each faction in factions:
+	 * 			| 		canHaveAsFaction(faction)
+	 * 
+	 * @invar	Each faction in the set references this world as their world.
+	 * 			| for each faction in factions:
+	 * 			|		faction.getWorld() == this
+	 * 
+	 * @invar	The number of active factions in the set is always smaller than or
+	 * 			equal to 5.
+	 * 			| factions.size() <= 5
+	 */
+	private final TreeSet<Faction> factions = new TreeSet<Faction>(new NbUnitsComparator());
 	
 	
-	public Set<Faction> getActiveFactions() {
+	/**
+	 * Check whether this world contains the given faction.
+	 * 
+	 * @param 	faction
+	 * 			The faction to check.
+	 */
+	@Basic @Raw
+	public boolean hasAsFaction(Faction faction) {
+		return this.factions.contains(faction);
+	}
+	
+	/**
+	 * Check whether this world can contain the given faction.
+	 * 
+	 * @param 	faction
+	 * 			The faction to check.
+	 * 
+	 * @return	False if the given faction is not effective.
+	 * 			| if (faction == null)
+	 * 			| 	then result = false
+	 * 			True if this world is not terminated or the given faction is
+	 * 			also terminated
+	 * 			| else result == ( (!this.isTerminated())
+	 * 			|		|| faction.isTerminated())
+	 */
+	@Raw
+	public boolean canHaveAsFaction(Faction faction) {
+		return ( (faction != null) && 
+						( !this.isTerminated() || faction.isTerminated()) );
+	}
+	
+	/**
+	 * Check whether this world contains proper factions.
+	 * 
+	 * @return	True if and only if this world can contain each of its factions
+	 * 			and if each of these factions references this world as their world.
+	 * 			| result == ( for each faction in Faction:
+	 * 			|		if (this.hasAsFaction(faction) )
+	 * 			|			then ( canHaveAsFaction(faction) &&
+	 * 			|				(faction.getWorld() == this) ) )
+	 */
+	@Raw
+	public boolean hasProperFactions() {
+		for (Faction faction: this.factions) {
+			if (!canHaveAsFaction(faction)) 
+				return false;
+			if (faction.getWorld() != this)
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Return the number of factions this world contains.
+	 * 
+	 * @return	The number of factions this world contains.
+	 * 			| count( {faction in Faction | hasAsFaction(faction)} )
+	 */
+	@Raw
+	public int getNbFactions() {
+		return this.factions.size();
+	}
+	
+	/**
+	 * Return a set collecting all factions this world contains.
+	 * 
+	 * @return	The resulting set is effective.
+	 * 			| result != null
+	 * @return	Each faction in the resulting set is attached to this world
+	 * 			and vice versa.
+	 * 			| for each faction in Faction:
+	 * 			| 	result.contains(faction) == this.hasAsFaction(faction)
+	 */
+	public Set<Faction> getAllFactions() {
 		return new TreeSet<Faction>(this.factions);
+	}
+	
+	/**
+	 * Add the given faction to the set of factions that this world contains.
+	 * 
+	 * @param	faction
+	 * 			The faction to be added.
+	 * 
+	 * @post	This world has the given faction as one of its factions.
+	 * 			| new.hasAsFaction(faction)
+	 * @post	The given faction references this world as its world.
+	 * 			| (new faction).getWorld() == this
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			This world cannot have the given faction as one of its factions.
+	 * 			| !canHaveAsFaction(faction)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The given faction already references some world.
+	 */
+	public void addFaction(Faction faction)  throws IllegalArgumentException {
+		if (!canHaveAsFaction(faction))
+			throw new IllegalArgumentException();
+		if (faction.getWorld() != null)
+			throw new IllegalArgumentException();
+		if (getNbFactions() >= 100)
+			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
+		this.factions.add(faction);
+		faction.setWorld(this);
+	}
+	
+	
+	/**
+	 * Remove the given unit from this world.
+	 * 
+	 * @param	faction
+	 * 			The faction to remove.
+	 * @post	This world does not contain the given faction.
+	 * 			| !new.hasAsFaction(faction)
+	 * @post	If this world contains the given faction, the faction is no
+	 * 			longer attached to any world.
+	 * 			| if (hasAsFaction(faction))
+	 * 			| 	then ( (new faction).getWorld() == null)
+	 */
+	public void removeFaction(Faction faction) {
+		if (hasAsFaction(faction)) {
+			this.factions.remove(faction);
+			faction.setWorld(null);
+		}
 	}
 	
 	
@@ -416,7 +583,7 @@ public class World {
 		for (Faction faction: this.factions) {
 			if (!faction.isTerminated()) {
 				faction.setWorld(null);
-				this.units.remove(faction);
+				this.factions.remove(faction);
 			}
 		}
 		this.isTerminated = true;
