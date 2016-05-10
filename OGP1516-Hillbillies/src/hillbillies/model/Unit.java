@@ -1,11 +1,12 @@
 package hillbillies.model;
 
 
-import be.kuleuven.cs.som.annotate.Basic;
+/*import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Raw;
-import be.kuleuven.cs.som.annotate.Model;
+import be.kuleuven.cs.som.annotate.Model;*/
 
+import be.kuleuven.cs.som.annotate.*;
 
 import java.util.*;
 import java.lang.*;
@@ -42,6 +43,9 @@ import java.lang.*;
  * 
  * @invar	The orientation of a unit must always be valid.
  * 			| isValidOrientation(getOrientation()) 
+ * 
+ * @invar	Each unit must have a proper world in which it belongs
+ * 			| hasProperWorld()
  * 
  *@author Ruben Cartuyvels
  *@version	1.4
@@ -875,7 +879,7 @@ public class Unit {
 			for (int i=0; i<3; i++) {
 				newPosition[i] = Math.floor(getPosition()[i] )
 						+ (double) cubeDirection[i];
-				newPosition[i] += getCubeLength()/2.0;
+				newPosition[i] += this.getWorld().getCubeLength()/2.0;
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
@@ -1904,16 +1908,123 @@ public class Unit {
 	/**
 	 * Returns the length of a cube of the game world.
 	 */
-	private static double getCubeLength() {
+	/*private static double getCubeLength() {
 		return cubeLength;
-	}
+	}*/
 
 	/**
 	 * Variable registering the length of a cube of the game world.
 	 */
-	private final static double cubeLength = 1.0;
+	//private final static double cubeLength = 1.0;
 
 	
+	
+	/**
+	 * Variable registering whether or not this unit is terminated.
+	 */
+	private boolean isTerminated = false;
+	
+	/**
+	 * Check whether this unit is terminated.
+	 */
+	@Basic @Raw
+	public boolean isTerminated() {
+		return this.isTerminated;
+	}
+	
+	/**
+	 * Terminate this unit.
+	 * 
+	 * @post	This unit is terminated.
+	 * 			| new.isTerminated()
+	 */
+	public void terminate() {
+		this.isTerminated = true;
+	}
+	
+	
+	
+	/* *********************************************************
+	 * 
+	 * 						UNIT - WORLD
+	 *
+	 **********************************************************/
+	
+	/**
+	 * Variable registering the world to which this unit belongs.
+	 */
+	private World world = null;
+	
+	
+	/**
+	 * Return the world to which this unit belongs. Returns a null refererence
+	 * if this unit does not belong to any world.
+	 */
+	@Basic @Raw
+	public World getWorld() {
+		return this.world;
+	}
+	
+	/**
+	 * Check whether this unit can be attached to a given world.
+	 * 
+	 * @param	world
+	 * 			The world to check.
+	 * 
+	 * @return	True if and only if the given world is not effective or if it
+	 * 			can contain this unit.
+	 * 			| result == ( (world == null)
+	 * 			| 				|| world.canHaveAsUnit(this) )
+	 */
+	@Raw
+	public boolean canHaveAsWorld(World world) {
+		return ( (world == null) || world.canHaveAsUnit(this) );
+	}
+	
+	/**
+	 * Check whether this unit has a proper world in which it belongs.
+	 * 
+	 * @return	True if and only if this unit can have its world as the world to
+	 * 			which it belongs and if that world is either not effective or contains
+	 * 			this unit.
+	 * 			| result == ( canHaveAsUnit(getWorld()) && ( (getWorld() == null)
+	 * 			|				|| getWorld.hasAsUnit(this) ) )
+	 */
+	@Raw
+	public boolean hasProperWorld() {
+		return (canHaveAsWorld(getWorld()) && ( (getWorld() == null) 
+					|| getWorld().hasAsUnit(this) ) );
+	}
+	
+	
+	/**
+	 * Set the world this unit belongs to to the given world.
+	 * 
+	 * @param	world
+	 * 			The world to add the unit to.
+	 * 
+	 * @post	This unit references the given world as the world
+	 * 			it belongs to.
+	 * 			| new.getWorld() == world
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given world is effective it must already reference this unit
+	 * 			as one of its units.
+	 * 			| (world != null) && !world.hasAsUnit(this)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given world is not effective and this unit references an
+	 * 			effective world, that world may not contain this unit.
+	 * 			| (world == null) && (getWorld() != null) 
+	 * 			|					&& (getWorld().hasAsUnit(this))
+	 */
+	public void setWorld(World world) throws IllegalArgumentException {
+		if ( (world != null) && !world.hasAsUnit(this) )
+			throw new IllegalArgumentException();
+		if ( (world == null) && (getWorld() != null) && (getWorld().hasAsUnit(this)) )
+			throw new IllegalArgumentException();
+		this.world = world;
+	}
 	
 	/* tests */
 	/* LOOP INVARIANTS etc */

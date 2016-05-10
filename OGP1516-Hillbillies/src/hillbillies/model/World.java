@@ -3,10 +3,8 @@ package hillbillies.model;
 import hillbillies.part2.listener.TerrainChangeListener;
 import hillbillies.util.ConnectedToBorder;
 import ogp.framework.util.ModelException;
-import be.kuleuven.cs.som.annotate.Basic;
-import be.kuleuven.cs.som.annotate.Immutable;
-import be.kuleuven.cs.som.annotate.Raw;
-import be.kuleuven.cs.som.annotate.Model;
+
+import be.kuleuven.cs.som.annotate.*;
 
 import hillbillies.model.Boulder;
 import hillbillies.model.Log;
@@ -36,7 +34,29 @@ public class World {
 	private final ConnectedToBorder connectedToBorderChecker;
 	
 	private static final Random random = new Random();
+	private boolean isTerminated = false;
 	
+	public boolean isTerminated() {
+		return this.isTerminated;
+	}
+	
+	/**
+	 * Initialize this new world with given terrain types for each cube of the
+	 * game world and a modelListener. The new world contains no units nor factions.
+	 * 
+	 * @param	terrainTypes
+	 * 
+	 * @param	modelListener
+	 * 
+	 * @post	This new world contains no units.
+	 * 			| new.getNbUnits() == 0
+	 * 
+	 * @post	This new world contains no factions.
+	 * 			| new.getNbFactions() == 0
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The given terrain type array is not valid.
+	 */
 	@Raw
 	public World(int[][][] terrainTypes, TerrainChangeListener modelListener) 
 							throws IllegalArgumentException {
@@ -135,7 +155,7 @@ public class World {
 	}
 	
 	
-	/**********************************************************
+	/* *********************************************************
 	 * 
 	 * 							UNITS
 	 *
@@ -222,8 +242,8 @@ public class World {
 	 */
 	@Raw
 	public boolean canHaveAsUnit(Unit unit) {
-		// !!!!!!
-		return true;
+		return ( (unit != null) && 
+						( !this.isTerminated() || unit.isTerminated()) );
 	}
 	
 	/**
@@ -238,6 +258,12 @@ public class World {
 	 */
 	@Raw
 	public boolean hasProperUnits() {
+		for (Unit unit: this.units) {
+			if (!canHaveAsUnit(unit)) 
+				return false;
+			if (unit.getWorld() != this)
+				return false;
+		}
 		return true;
 	}
 	
@@ -249,7 +275,14 @@ public class World {
 	 */
 	@Raw
 	public int getNbUnits() {
-		return 1;
+		return this.units.size();
+		/*
+		int count = 0:
+		for (Object o: this.units) {
+			if (hasAsUnit(o))
+				count ++;
+		}
+		return count;*/
 	}
 	
 	/**
@@ -285,10 +318,12 @@ public class World {
 	 * 			The given unit already references some world.
 	 */
 	public void addUnit(Unit unit)  throws IllegalArgumentException {
-		// CONDITIONS IVM ASSOCIATIONS ETC CHECKEN
-		
-		if (!unit.equals(null))
-			this.units.add(unit);
+		if (!canHaveAsUnit(unit))
+			throw new IllegalArgumentException();
+		if (unit.getWorld() != null)
+			throw new IllegalArgumentException();
+		this.units.add(unit);
+		unit.setWorld(this);
 	}
 	
 	
@@ -305,11 +340,14 @@ public class World {
 	 * 			| 	then ( (new unit).getWorld() == null)
 	 */
 	public void removeUnit(Unit unit) {
-		
+		if (hasAsUnit(unit)) {
+			this.units.remove(unit);
+			unit.setWorld(null);
+		}
 	}
 	
 	
-	/**********************************************************
+	/* *********************************************************
 	 * 
 	 * 							FACTIONS
 	 *
@@ -323,7 +361,7 @@ public class World {
 	}
 	
 	
-	/**********************************************************
+	/* *********************************************************
 	 * 
 	 * 							ITEMS
 	 *
@@ -346,6 +384,53 @@ public class World {
 		//Set<Item> items = this.boulders;
 		return this.boulders;
 	}
+	
+	
+	
+	/**
+	 * Terminate this world.
+	 * 
+	 * @post	This world is terminated.
+	 * 			| new.isTerminated()
+	 * 
+	 * @effect	Each non-terminated unit in this world is removed from
+	 * 			this world.
+	 * 			| for each unit in getAllUnits():
+	 * 			|		if (!unit.isTerminated())
+	 * 			|			then this.removeUnit(unit)
+	 * 
+	 * @effect	Each non-terminated faction in this world is removed from
+	 * 			this world.
+	 * 			| for each faction in getAllFactions():
+	 * 			|		if (!faction.isTerminated())
+	 * 			|			then this.removeFaction(faction)
+	 */
+	public void terminate() {
+		for (Unit unit: this.units) {
+			if (!unit.isTerminated()) {
+				unit.setWorld(null);
+				this.units.remove(unit);
+			}
+		}
+		//this.factions.clear(); (IF WE CHOOSE TO MAKE FACTIONS A LIST)
+		for (Faction faction: this.factions) {
+			if (!faction.isTerminated()) {
+				faction.setWorld(null);
+				this.units.remove(faction);
+			}
+		}
+		this.isTerminated = true;
+	}
+	
+	
+	
+	
+	/* *********************************************************
+	 * 
+	 * 							TERRAIN
+	 *
+	 **********************************************************/
+	
 	
 	
 	@Basic @Immutable

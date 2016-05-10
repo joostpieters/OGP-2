@@ -25,6 +25,25 @@ public class Faction {
 		this.units.remove(unit);
 	}
 	
+	
+	private boolean isTerminated = false;
+	
+	public boolean isTerminated() {
+		return this.isTerminated;
+	}
+	
+	private World world;
+	
+	public World getWorld() {
+		return this.world;
+	}
+	
+	public void setWorld(World world) {
+		this.world = world;
+	}
+	
+	
+	
 	public static class NbUnitsComparator implements Comparator<Faction> {
 	    @Override
 	    public int compare(Faction a, Faction b) {
