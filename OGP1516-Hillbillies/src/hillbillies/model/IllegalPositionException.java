@@ -11,28 +11,23 @@ package hillbillies.model;
 public class IllegalPositionException extends RuntimeException {
 	
 	/**
-	 * Initialize this new illegal position exception with given position
-	 * and unit.
+	 * Initialize this new illegal position exception with given position.
 	 * 
 	 * @param position
 	 * 			The illegal position.
-	 * @param unit
-	 * 			The unit.
 	 * @post The position of this new illegal position exception is equal
 	 * 		to the given position
 	 * 		| new.getPosition() == position
 	 * 
 	 * ...
 	 */
-	public IllegalPositionException(double[] position, Unit unit) {
+	public IllegalPositionException(double[] position) {
 		this.position = position;
-		this.unit = unit;
 		this.positionInt = null;
 	}
 	
-	public IllegalPositionException(int[] position, Unit unit) {
+	public IllegalPositionException(int[] position) {
 		this.positionInt = position;
-		this.unit = unit;
 		this.position = null;
 	}
 	
@@ -43,9 +38,5 @@ public class IllegalPositionException extends RuntimeException {
 	private final double[] position;
 	private final int[] positionInt;
 	
-	public Unit getUnit() {
-		return unit;
-	}
 	
-	private final Unit unit;
 }

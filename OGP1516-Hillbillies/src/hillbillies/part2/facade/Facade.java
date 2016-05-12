@@ -335,7 +335,7 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public Set<Unit> getUnitsOfFaction(Faction faction) throws ModelException {
-		return faction.getUnitsOfFaction();
+		return faction.getAllUnits();
 	}
 	
 	@Override
@@ -356,7 +356,7 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public Set<Boulder> getBoulders(World world) throws ModelException {
-		return world.getBoulders();
+		return world.getAllBoulders();
 	}
 	
 	@Override
@@ -366,7 +366,7 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 
 	@Override
 	public Set<Log> getLogs(World world) throws ModelException {
-		return world.getLogs();
+		return world.getAllLogs();
 	}
 	
 	

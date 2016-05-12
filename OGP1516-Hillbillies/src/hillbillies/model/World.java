@@ -340,6 +340,9 @@ public class World {
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			The given unit already references some world.
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The maximum number of units in this world has already been reached.
 	 */
 	public void addUnit(Unit unit)  throws IllegalArgumentException {
 		if (!canHaveAsUnit(unit))
@@ -382,7 +385,7 @@ public class World {
 	/**
 	 * Set collecting references to factions that this world contains.
 	 * 
-	 * @invar	the set of units is effective.
+	 * @invar	the set of factions is effective.
 	 * 			| factions != null
 	 * 
 	 * @invar	Each element in the set references a faction that this world
@@ -495,13 +498,16 @@ public class World {
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			The given faction already references some world.
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The maximum number of factions in this faction has already been reached.
 	 */
 	public void addFaction(Faction faction)  throws IllegalArgumentException {
 		if (!canHaveAsFaction(faction))
 			throw new IllegalArgumentException();
 		if (faction.getWorld() != null)
 			throw new IllegalArgumentException();
-		if (getNbFactions() >= 100)
+		if (getNbFactions() >= 5)
 			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
 		this.factions.add(faction);
 		faction.setWorld(this);
@@ -534,25 +540,333 @@ public class World {
 	 *
 	 **********************************************************/
 	
-	private final Set<Item> logs = new HashSet<Item>();
-	private final Set<Item> boulders = new HashSet<Item>();
+	
+	//		LOGS
+	
+	/**
+	 * Set collecting references to logs that this world contains.
+	 * 
+	 * @invar	the set of logs is effective.
+	 * 			| logs != null
+	 * 
+	 * @invar	Each element in the set references a log that this world
+	 * 			can have as log.
+	 * 			| for each log in logs:
+	 * 			| 		canHaveAsLog(log)
+	 * 
+	 * @invar	Each log in the set references this world as their world.
+	 * 			| for each log in logs:
+	 * 			|		log.getWorld() == this
+	 */
+	private final Set<Log> logs = new HashSet<Log>();
 	
 	
-	public Set<Item> getBoulders() {
-		return new HashSet<Item>(this.boulders);
+	/**
+	 * Check whether the given log is in this world.
+	 * 
+	 * @param 	log
+	 * 			The log to check.
+	 */
+	/*@Basic @Raw
+	public boolean hasAsLog(Log log) {
+		return this.logs.contains(log);
+	}
+	*/
+	/**
+	 * Check whether this world can contain the given log.
+	 * 
+	 * @param 	log
+	 * 			The log to check.
+	 * 
+	 * @return	False if the given log is not effective.
+	 * 			| if (log == null)
+	 * 			| 	then result = false
+	 * 			True if this world is not terminated or the given log is
+	 * 			also terminated
+	 * 			| else result == ( (!this.isTerminated())
+	 * 			|		|| log.isTerminated())
+	 */
+	/*@Raw
+	public boolean canHaveAsLog(Log log) {
+		return ( (log != null) && 
+						( !this.isTerminated() || log.isTerminated()) );
+	}
+	*/
+	/**
+	 * Check whether this world contains proper logs.
+	 * 
+	 * @return	True if and only if this world can contain each of its logs
+	 * 			and if each of these logs references this world as their world.
+	 * 			| result == ( for each log in Log:
+	 * 			|		if (this.hasAsLog(log) )
+	 * 			|			then ( canHaveAsLog(log) &&
+	 * 			|				(log.getWorld() == this) ) )
+	 */
+	@Raw
+	public boolean hasProperLogs() {
+		for (Log log: this.logs) {
+			if (!canHaveAsItem(log)) 
+				return false;
+			if (log.getWorld() != this)
+				return false;
+		}
+		return true;
 	}
 	
-	public Set<Item> getLogs() {
-		return new HashSet<Item>(this.logs);
+	/**
+	 * Return the number of logs this world contains.
+	 * 
+	 * @return	The number of logs this world contains.
+	 * 			| count( {log in Log | hasAsLog(log)} )
+	 */
+	@Raw
+	public int getNbLogs() {
+		return this.logs.size();
 	}
 	
+	/**
+	 * Return a set collecting all logs in this world.
+	 * 
+	 * @return	The resulting set is effective.
+	 * 			| result != null
+	 * @return	Each log in the resulting set is attached to this world
+	 * 			and vice versa.
+	 * 			| for each log in Log:
+	 * 			| 	result.contains(log) == this.hasAsLog(log)
+	 */
+	public Set<Log> getAllLogs() {
+		return new HashSet<Log>(this.logs);
+	}
+	
+	/**
+	 * Add the given log to the set of logs that this world contains.
+	 * 
+	 * @param	log
+	 * 			The log to be added.
+	 * 
+	 * @post	This world has the given log as one of its logs.
+	 * 			| new.hasAsLog(log)
+	 * 
+	 * @post	The given log references this world as its world.
+	 * 			| (new log).getWorld() == this
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			This world cannot have the given log as one of its logs.
+	 * 			| !canHaveAsLog(log)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The given log already references some world.
+	 */
+	public void addLog(Log log)  throws IllegalArgumentException {
+		if (!canHaveAsItem(log))
+			throw new IllegalArgumentException();
+		if (log.getWorld() != null)
+			throw new IllegalArgumentException();
+		this.logs.add(log);
+		log.setWorld(this);
+	}
+	
+	
+	/**
+	 * Remove the given log from this world.
+	 * 
+	 * @param	log
+	 * 			The log to remove.
+	 * 
+	 * @post	This world does not contain the given log.
+	 * 			| !new.hasAsLog(log)
+	 * 
+	 * @post	If this world contains the given log, the log is no
+	 * 			longer attached to any world.
+	 * 			| if (hasAsLog(log))
+	 * 			| 	then ( (new log).getWorld() == null)
+	 */
+	public void removeLog(Log log) {
+		if (hasAsItem(log)) {
+			this.logs.remove(log);
+			log.setWorld(null);
+		}
+	}
+	
+
+	
+	//		BOULDERS
+		
+	
+	/**
+	 * Set collecting references to boulders that this world contains.
+	 * 
+	 * @invar	the set of boulders is effective.
+	 * 			| boulders != null
+	 * 
+	 * @invar	Each element in the set references a boulder that this world
+	 * 			can have as boulder.
+	 * 			| for each log in boulders:
+	 * 			| 		canHaveAsBoulder(boulder)
+	 * 
+	 * @invar	Each boulder in the set references this world as their world.
+	 * 			| for each boulder in boulders:
+	 * 			|		boulder.getWorld() == this
+	 */
+	private final Set<Boulder> boulders = new HashSet<Boulder>();
+	
+	
+	/**
+	 * Check whether the given boulder is in this world.
+	 * 
+	 * @param 	boulder
+	 * 			The boulder to check.
+	 */
+	@Basic @Raw
+	public boolean hasAsItem(Item item) {
+		return (this.boulders.contains(item) || this.logs.contains(item));
+	}
+	
+	/**
+	 * Check whether this world can contain the given boulder.
+	 * 
+	 * @param 	boulder
+	 * 			The boulder to check.
+	 * 
+	 * @return	False if the given boulder is not effective.
+	 * 			| if (log == null)
+	 * 			| 	then result = false
+	 * 			True if this world is not terminated or the given boulder is
+	 * 			also terminated
+	 * 			| else result == ( (!this.isTerminated())
+	 * 			|		|| boulder.isTerminated())
+	 */
+	@Raw
+	public boolean canHaveAsItem(Item item) {
+		return ( (item != null) && 
+						( !this.isTerminated() || item.isTerminated()) );
+	}
+	
+	/**
+	 * Check whether this world contains proper boulders.
+	 * 
+	 * @return	True if and only if this world can contain each of its boulders
+	 * 			and if each of these boulders references this world as their world.
+	 * 			| result == ( for each boulder in Boulder:
+	 * 			|		if (this.hasAsBoulder(boulder) )
+	 * 			|			then ( canHaveAsBoulder(boulder) &&
+	 * 			|				(boulder.getWorld() == this) ) )
+	 */
+	@Raw
+	public boolean hasProperBoulders() {
+		for (Boulder boulder: this.boulders) {
+			if (!canHaveAsItem(boulder)) 
+				return false;
+			if (boulder.getWorld() != this)
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Return the number of boulders this world contains.
+	 * 
+	 * @return	The number of boulders this world contains.
+	 * 			| count( {boulder in Boulder | hasAsBoulder(boulder)} )
+	 */
+	@Raw
+	public int getNbBoulders() {
+		return this.boulders.size();
+	}
+	
+	/**
+	 * Return a set collecting all boulders in this world.
+	 * 
+	 * @return	The resulting set is effective.
+	 * 			| result != null
+	 * @return	Each boulder in the resulting set is attached to this world
+	 * 			and vice versa.
+	 * 			| for each boulder in Boulder:
+	 * 			| 	result.contains(boulder) == this.hasAsBoulder(boulder)
+	 */
+	public Set<Boulder> getAllBoulders() {
+		return new HashSet<Boulder>(this.boulders);
+	}
+	
+	/**
+	 * Add the given boulder to the set of boulders that this world contains.
+	 * 
+	 * @param	boulder
+	 * 			The boulder to be added.
+	 * 
+	 * @post	This world has the given boulder as one of its boulders.
+	 * 			| new.hasAsBoulder(boulder)
+	 * 
+	 * @post	The given boulder references this world as its world.
+	 * 			| (new boulder).getWorld() == this
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			This world cannot have the given boulder as one of its boulders.
+	 * 			| !canHaveAsBoulder(boulder)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The given boulder already references some world.
+	 */
+	public void addBoulder(Boulder boulder)  throws IllegalArgumentException {
+		if (!canHaveAsItem(boulder))
+			throw new IllegalArgumentException();
+		if (boulder.getWorld() != null)
+			throw new IllegalArgumentException();
+		this.boulders.add(boulder);
+		boulder.setWorld(this);
+	}
+	
+	
+	/**
+	 * Remove the given boulder from this world.
+	 * 
+	 * @param	boulder
+	 * 			The boulder to remove.
+	 * 
+	 * @post	This world does not contain the given boulder.
+	 * 			| !new.hasAsBoulder(boulder)
+	 * 
+	 * @post	If this world contains the given boulder, the boulder is no
+	 * 			longer attached to any world.
+	 * 			| if (hasAsBoulder(boulder))
+	 * 			| 	then ( (new boulder).getWorld() == null)
+	 */
+	public void removeBoulder(Boulder boulder) {
+		if (hasAsItem(boulder)) {
+			this.boulders.remove(boulder);
+			boulder.setWorld(null);
+		}
+	}
+	
+	
+	
+	// NODIG?????????
 	public Set<Item> getObjectsAt(int x, int y, int z) {
-		//Set<Item> items = new HashSet<Item>();
-		//Set<Item> items = this.boulders;
-		return this.boulders;
+		Set<Item> items = new HashSet<Item>();
+		
+		for (Boulder boulder: this.boulders) {
+			if (boulder != null && (boulder.getIntPosition() == (new int[] {x, y, z}) )) {
+				items.add(boulder);
+			}
+		}
+		for (Log log: this.logs) {
+			if (log != null && (log.getIntPosition() == (new int[] {x, y, z}) )) {
+				items.add(log);
+			}
+		}
+		return items;
 	}
 	
 	
+	
+	
+	
+	/* *********************************************************
+	 * 
+	 * 						DESTRUCTOR
+	 *
+	 **********************************************************/
+
 	
 	/**
 	 * Terminate this world.
@@ -571,6 +885,18 @@ public class World {
 	 * 			| for each faction in getAllFactions():
 	 * 			|		if (!faction.isTerminated())
 	 * 			|			then this.removeFaction(faction)
+	 * 
+	 * @effect	Each non-terminated log in this world is removed from
+	 * 			this world.
+	 * 			| for each log in getAllLogs():
+	 * 			|		if (!log.isTerminated())
+	 * 			|			then this.removeLog(log)
+	 * 
+	 * @effect	Each non-terminated boulder in this world is removed from
+	 * 			this world.
+	 * 			| for each boulder in getAllBoulders():
+	 * 			|		if (!boulder.isTerminated())
+	 * 			|			then this.removeBoulder(boulder)
 	 */
 	public void terminate() {
 		for (Unit unit: this.units) {
@@ -586,6 +912,19 @@ public class World {
 				this.factions.remove(faction);
 			}
 		}
+		for (Log log: this.logs) {
+			if (!log.isTerminated()) {
+				log.setWorld(null);
+				this.logs.remove(log);
+			}
+		}
+		for (Boulder boulder: this.boulders) {
+			if (!boulder.isTerminated()) {
+				boulder.setWorld(null);
+				this.boulders.remove(boulder);
+			}
+		}
+		
 		this.isTerminated = true;
 	}
 	

@@ -255,7 +255,7 @@ public class Unit {
 	}
 
 	/**
-	 * Return the exact position of the unit in the game world.
+	 * Return the exact position of the unit in its game world.
 	 */
 	@Basic @Raw
 	public double[] getPosition() {
@@ -279,7 +279,7 @@ public class Unit {
 	@Raw
 	private void setPosition(double[] position) throws IllegalPositionException {
 		if (! isValidPosition(position) )
-			throw new IllegalPositionException(position, this);
+			throw new IllegalPositionException(position);
 		this.position[0] = position[0];
 		this.position[1] = position[1];
 		this.position[2] = position[2];
@@ -893,7 +893,7 @@ public class Unit {
 			}
 			catch (IllegalPositionException e) {
 				setState(State.EMPTY);
-				throw new IllegalPositionException(newPosition, this);
+				throw new IllegalPositionException(newPosition);
 			}
 			
 			this.movingDirection = direction;
@@ -919,7 +919,7 @@ public class Unit {
 						IllegalArgumentException {
 
 		if (!isValidPosition(convertPositionToDouble(destCube))) {
-			throw new IllegalPositionException(destCube, this);
+			throw new IllegalPositionException(destCube);
 		}
 
 		if (getState() != State.RESTING_1) {
@@ -984,7 +984,7 @@ public class Unit {
 	 */
 	private void setDestination(double[] newDestination) throws IllegalPositionException {
 		if (!isValidPosition(newDestination)) {
-			throw new IllegalPositionException(newDestination, this);
+			throw new IllegalPositionException(newDestination);
 		}
 		for (int i=0; i<3; i++) {
 			this.destination[i] = newDestination[i];
@@ -1033,7 +1033,7 @@ public class Unit {
 	private void setDestCubeLT(int[] destCubeLT) throws IllegalPositionException {
 		if ( !(isValidPosition(convertPositionToDouble(destCubeLT)) 
 									|| destCubeLT == new int[]{-1,-1,-1}) )
-			throw new IllegalPositionException(destCubeLT, this);
+			throw new IllegalPositionException(destCubeLT);
 		this.destCubeLT = destCubeLT;
 	}
 
@@ -1088,7 +1088,7 @@ public class Unit {
 	@Model
 	private double getDistanceTo(double[] position, double[] position2) throws IllegalPositionException {
 		if (!isValidPosition(position))
-			throw new IllegalPositionException(position, this);
+			throw new IllegalPositionException(position);
 
 		return Math.sqrt(Math.pow(position[0]-position2[0],2)
 				+ Math.pow(position[1]-position2[1],2) 
@@ -1576,7 +1576,7 @@ public class Unit {
 		newPosition[0] += 2*random.nextDouble() - 1.0;
 		newPosition[1] += 2*random.nextDouble() - 1.0;
 		if (!isValidPosition(newPosition)) throw new 
-		IllegalPositionException(newPosition, this);
+		IllegalPositionException(newPosition);
 		this.setPosition(newPosition);
 	}
 
@@ -1992,7 +1992,7 @@ public class Unit {
 	 * @return	True if and only if this unit can have its world as the world to
 	 * 			which it belongs and if that world is either not effective or contains
 	 * 			this unit.
-	 * 			| result == ( canHaveAsUnit(getWorld()) && ( (getWorld() == null)
+	 * 			| result == ( canHaveAsWorld(getWorld()) && ( (getWorld() == null)
 	 * 			|				|| getWorld.hasAsUnit(this) ) )
 	 */
 	@Raw
@@ -2076,7 +2076,7 @@ public class Unit {
 	 * @return	True if and only if this unit can have its faction as the faction to
 	 * 			which it belongs and if that faction is either not effective or contains
 	 * 			this unit.
-	 * 			| result == ( canHaveAsUnit(getFaction()) && ( (getFaction() == null)
+	 * 			| result == ( canHaveAsFaction(getFaction()) && ( (getFaction() == null)
 	 * 			|				|| getFaction.hasAsUnit(this) ) )
 	 */
 	@Raw
@@ -2116,6 +2116,10 @@ public class Unit {
 	}
 	
 	
+	/* ISVALID POSITION etc IN WORLD IPV IN UNIT, ITEM AFZONDERLIJK???????
+	 * 
+	 */
+	/* BOULDER, LOG ASSOCIATIONS
 	/* ISVALIDFACTION/UNITS IPV CANHAVEAS????????????
 	/* tests */
 	/* LOOP INVARIANTS etc */

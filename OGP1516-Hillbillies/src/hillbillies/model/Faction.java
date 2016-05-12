@@ -29,6 +29,7 @@ public class Faction {
 	 * @post	No units are attached to this new faction.
 	 * 			| new.getNbUnits() == 0
 	 */
+	@Raw
 	public Faction () {
 		//this.units.add(unit);
 	}
@@ -161,13 +162,6 @@ public class Faction {
 	@Raw
 	public int getNbUnits() {
 		return this.units.size();
-		/*
-		int count = 0:
-		for (Object o: this.units) {
-			if (hasAsUnit(o))
-				count ++;
-		}
-		return count;*/
 	}
 	
 	/**
@@ -202,11 +196,14 @@ public class Faction {
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			The given unit already references some faction.
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The maximum number of units in this faction has already been reached.
 	 */
 	public void addUnit(Unit unit)  throws IllegalArgumentException {
 		if (!canHaveAsUnit(unit))
 			throw new IllegalArgumentException();
-		if (unit.getWorld() != null)
+		if (unit.getFaction() != null)
 			throw new IllegalArgumentException();
 		if (getNbUnits() >= 50)
 			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
@@ -283,7 +280,7 @@ public class Faction {
 	 * @return	True if and only if this faction can have its world as the world to
 	 * 			which it belongs and if that world is either not effective or contains
 	 * 			this faction.
-	 * 			| result == ( canHaveAsFaction(getWorld()) && ( (getWorld() == null)
+	 * 			| result == ( canHaveAsWorld(getWorld()) && ( (getWorld() == null)
 	 * 			|				|| getWorld.hasAsFaction(this) ) )
 	 */
 	@Raw
