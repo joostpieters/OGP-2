@@ -7,6 +7,8 @@ import be.kuleuven.cs.som.annotate.Raw;
 import be.kuleuven.cs.som.annotate.Model;*/
 
 import be.kuleuven.cs.som.annotate.*;
+import hillbillies.model.World.TerrainType;
+import ogp.framework.util.ModelException;
 
 import java.util.*;
 import java.lang.*;
@@ -18,7 +20,7 @@ import java.lang.*;
  * and toughness, attached to a faction and a world.
  * 
  * @invar	The position of a unit must always be valid, within the game world.
- * 			| isValidPosition(getPosition())
+ * 			| canHaveAsPosition(getPosition())
  * 
  * @invar	The name of a unit must always be a valid name.
  * 			| isValidName(getName())
@@ -123,7 +125,7 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException(position, this)
 	 *             The unit cannot have the given position (out of bounds).
-	 *             | ! isValidPosition(position)
+	 *             | ! canHaveAsPosition(position)
 	 *             
 	 * @throws IllegalNameException(name, this)
 	 *             The unit cannot have the given name.
@@ -219,6 +221,43 @@ public class Unit {
 		return intPosition;
 	}
 
+	
+	/**
+	 * Check whether the given position is a valid position for this unit in its world.
+	 * 
+	 * @param position
+	 * 			The position to be checked.
+	 * 
+	 * @return True if and only if the position is effective, if it
+	 * 			consists of an array with 3 double elements, if each coordinate
+	 * 			is between 0 and the upper limit of that dimension and if
+	 * 			the terrain type of that world cube is passable.
+	 * 		| result = ( (position instanceof double[])
+	 * 		|		&& (position.length == 3)
+	 * 		| 		&& !(position[0] < 0.0 || position[0] >= getWorld().getNbCubesX())
+	 * 		|		&& !(position[1] < 0.0 || position[1] >= getWorld().getNbCubesY())
+	 * 		|		&& !(position[2] < 0.0 || position[2] >= getWorld().getNbCubesZ())
+	 * 		|		&& TerrainType.byOrdinal(getWorld().getTerrainTypes()
+	 * 		|				[intPosition[0]][intPosition[1]][intPosition[2]]).isPassable()
+	 */
+	@Model
+	private boolean canHaveAsPosition(double[] position) {
+		if (!(position instanceof double[]) || position.length != 3 )
+			return false;
+		if (position[0] < 0.0 || position[0] >= getWorld().getNbCubesX())
+			return false;
+		if (position[1] < 0.0 || position[1] >= getWorld().getNbCubesY())
+			return false;
+		if (position[2] < 0.0 || position[2] >= getWorld().getNbCubesZ())
+			return false;
+		int[] intPosition = convertPositionToInt(position);
+		if (!TerrainType.byOrdinal(getWorld().getTerrainTypes()
+				[intPosition[0]][intPosition[1]][intPosition[2]]).isPassable() )
+			return false;
+		return true;
+	}
+	
+	
 	/**
 	 * Check whether the given position is a valid position for a unit.
 	 * 
@@ -233,18 +272,19 @@ public class Unit {
 	 * 		| 		&& (for each coordinate in position:
 	 * 		|			coordinate > 0.0 && coordinate < 50.0)
 	 */
-	@Model
-	private static boolean isValidPosition(double[] position) {
-		boolean valid = true;
+	/*@Model @Deprecated
+	private static boolean canHaveAsPosition(double[] position) {
+		//boolean valid = true;
 		if (!(position instanceof double[]) || position.length != 3 )
-			valid = false;
+			return false;
 		for (double coordinate: position) {
 			if (coordinate < 0.0 || coordinate >= 50.0)
-				valid = false;
+				return false;
 		}
-		return valid;
-	}
-
+		return true;
+	}*/
+	
+	
 	/**
 	 * Return the position of the cube in the game world occupied by 
 	 * the unit.
@@ -274,11 +314,11 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException(position, this)
 	 * 			The given position is not valid.
-	 * 		| !isValidPosition(position)
+	 * 		| !canHaveAsPosition(position)
 	 */
 	@Raw
 	private void setPosition(double[] position) throws IllegalPositionException {
-		if (! isValidPosition(position) )
+		if (! canHaveAsPosition(position) )
 			throw new IllegalPositionException(position);
 		this.position[0] = position[0];
 		this.position[1] = position[1];
@@ -913,12 +953,12 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The given destination cube is not valid.
-	 * 			| !isValidPosition(convertPositionToDouble(destCube))
+	 * 			| !canHaveAsPosition(convertPositionToDouble(destCube))
 	 */
 	public void moveTo(int[] destCube) throws IllegalPositionException,
 						IllegalArgumentException {
 
-		if (!isValidPosition(convertPositionToDouble(destCube))) {
+		if (!canHaveAsPosition(convertPositionToDouble(destCube))) {
 			throw new IllegalPositionException(destCube);
 		}
 
@@ -980,10 +1020,10 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The given destination is not a valid position.
-	 * 		| !isValidPosition(newDestination)
+	 * 		| !canHaveAsPosition(newDestination)
 	 */
 	private void setDestination(double[] newDestination) throws IllegalPositionException {
-		if (!isValidPosition(newDestination)) {
+		if (!canHaveAsPosition(newDestination)) {
 			throw new IllegalPositionException(newDestination);
 		}
 		for (int i=0; i<3; i++) {
@@ -1027,11 +1067,11 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The given position is not valid.
-	 * 		| !(isValidPosition(convertPositionToDouble(destCubeLT)) 
+	 * 		| !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
 	 * 				|| destCubeLT == null )
 	 */
 	private void setDestCubeLT(int[] destCubeLT) throws IllegalPositionException {
-		if ( !(isValidPosition(convertPositionToDouble(destCubeLT)) 
+		if ( !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
 									|| destCubeLT == new int[]{-1,-1,-1}) )
 			throw new IllegalPositionException(destCubeLT);
 		this.destCubeLT = destCubeLT;
@@ -1083,11 +1123,11 @@ public class Unit {
 	 * 
 	 * @throws	IllegalPositionException
 	 * 			The given position is not a valid position.
-	 * 			| !isValidPosition(position)
+	 * 			| !canHaveAsPosition(position)
 	 */
 	@Model
 	private double getDistanceTo(double[] position, double[] position2) throws IllegalPositionException {
-		if (!isValidPosition(position))
+		if (!canHaveAsPosition(position))
 			throw new IllegalPositionException(position);
 
 		return Math.sqrt(Math.pow(position[0]-position2[0],2)
@@ -1569,14 +1609,14 @@ public class Unit {
 	 * 
 	 * @throws IllegalPositionException
 	 * 			The calculated random adjacent position is not a valid position.
-	 * 			| !(isValidPosition(randomAdjacentPosition))
+	 * 			| !(canHaveAsPosition(randomAdjacentPosition))
 	 */
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
 		double[] newPosition = this.getPosition();
 		newPosition[0] += 2*random.nextDouble() - 1.0;
 		newPosition[1] += 2*random.nextDouble() - 1.0;
-		if (!isValidPosition(newPosition)) throw new 
-		IllegalPositionException(newPosition);
+		if (!canHaveAsPosition(newPosition)) 
+			throw new IllegalPositionException(newPosition);
 		this.setPosition(newPosition);
 	}
 
@@ -1924,6 +1964,41 @@ public class Unit {
 
 	
 	
+	
+	
+	@Override
+	public boolean isCarryingBoulder(Unit unit) throws ModelException {
+		return unit.isCarryingBoulder();
+	}
+	
+	@Override
+	public boolean isCarryingLog(Unit unit) throws ModelException {
+		return unit.isCarryingLog();
+	}
+	
+	@Override
+	public Faction getFaction(Unit unit) throws ModelException {
+		return unit.getFaction();
+	}
+	
+	@Override
+	public boolean isAlive(Unit unit) throws ModelException {
+		return unit.isAlive();
+	}
+	
+	@Override
+	public void workAt(Unit unit, int x, int y, int z) throws ModelException {
+		unit.workAt(x, y, z);
+	}
+	
+	@Override
+	public int getExperiencePoints(Unit unit) throws ModelException {
+		return unit.getExperiencePoints();
+	}
+	
+	
+	
+	
 	/**
 	 * Variable registering whether or not this unit is terminated.
 	 */
@@ -2119,7 +2194,6 @@ public class Unit {
 	/* ISVALID POSITION etc IN WORLD IPV IN UNIT, ITEM AFZONDERLIJK???????
 	 * 
 	 */
-	/* BOULDER, LOG ASSOCIATIONS
 	/* ISVALIDFACTION/UNITS IPV CANHAVEAS????????????
 	/* tests */
 	/* LOOP INVARIANTS etc */

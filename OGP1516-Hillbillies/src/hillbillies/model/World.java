@@ -12,20 +12,35 @@ import hillbillies.model.Log;
 import hillbillies.model.Unit;
 
 import hillbillies.model.Faction.*;
+import hillbillies.model.World.TerrainType;
 
 import java.util.*;
 
+
+
+// DEFENSIVELY!!!!!!!!!!!
+
+
+
+
 /**
- * A class of worlds containing up to 100 units and 5 factions.
+ * A class of worlds containing up to 100 units and 5 factions, and a number of items.
  * 
- * @invar	The units in each worlds must be proper units for that world.
+ * @invar	The units in each world must be proper units for that world.
  * 			| hasProperUnits()
  * 
  * @invar	The factions associated with each world must be proper factions for
  * 			that world.
  * 			| hasProperFactions()
  * 
- * @author rubencartuyvels
+ * @invar	The logs in each world must be proper logs for that world.
+ * 			| hasProperLogs()
+ * 
+ * @invar	The boulders in each world must be proper boulders for that world.
+ * 			| hasProperBoulders()
+ * 
+ * @version		1.2
+ * @author 		rubencartuyvels
  */
 public class World {
 	
@@ -42,6 +57,16 @@ public class World {
 	}
 	
 	private int[][][] terrainTypes;
+	
+	/**
+	 * Return the terrain type array of this game world.
+	 */
+	@Basic @Raw
+	public int[][][] getTerrainTypes() {
+		return this.terrainTypes;
+	}
+	
+	
 	private final TerrainChangeListener modelListener;
 	private final ConnectedToBorder connectedToBorderChecker;
 	
@@ -108,6 +133,34 @@ public class World {
 		return true;
 	}
 	
+	/**
+	 * Check whether the given coordinates are valid for this world.
+	 * 
+	 * @param coordinates
+	 * 			The coordinates to be checked.
+	 * 
+	 * @return True if and only if the coordinates array is effective, if it
+	 * 			consists of an array with 3 double elements and if each coordinate
+	 * 			is between 0 and the upper limit of that dimension.
+	 * 		| result = ( (coordinates instanceof int[])
+	 * 		|		&& (coordinates.length == 3)
+	 * 		| 		&& !(coordinates[0] < 0.0 || coordinates[0] >= getNbCubesX())
+	 * 		|		&& !(coordinates[1] < 0.0 || coordinates[1] >= getNbCubesY())
+	 * 		|		&& !(coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
+	 */
+	@Model
+	private boolean canHaveAsCoordinates(int[] coordinates) {
+		if (!(coordinates instanceof int[]) || coordinates.length != 3 )
+			return false;
+		if (coordinates[0] < 0.0 || coordinates[0] >= getNbCubesX())
+			return false;
+		if (coordinates[1] < 0.0 || coordinates[1] >= getNbCubesY())
+			return false;
+		if (coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
+			return false;
+		return true;
+	}
+	
 	@Basic
 	public int getNbCubesX() {
 		return this.terrainTypes.length;
@@ -131,9 +184,12 @@ public class World {
 	}
 	
 	
-	public TerrainType getCubeTypeAt(int x, int y, int z) {
+	public TerrainType getCubeTypeAt(int x, int y, int z) throws IllegalPositionException {
+		if (!canHaveAsCoordinates(new int[]{x,y,z}) )
+			throw new IllegalPositionException(new int[]{x,y,z});
 		return TerrainType.byOrdinal(this.terrainTypes[x][y][z]);
 	}
+	
 	
 	private boolean isValidTerrainType(TerrainType type) {
 		return TerrainType.contains("type");
@@ -228,6 +284,7 @@ public class World {
 			this.addUnit(unit);
 			if (this.getNbFactions() < 5) {
 				Faction faction = new Faction();
+				addFaction(faction);
 				faction.addUnit(unit);
 			} else {
 				this.factions.first().addUnit(unit);
@@ -982,11 +1039,11 @@ public class World {
 		if (dice < 0.25) {
 			if (getCubeTypeAt(x,y,z) == TerrainType.ROCK) {
 				Boulder boulder = new Boulder(x, y, z, this);
-				this.boulders.add(boulder);
+				addBoulder(boulder);
 			}
 			else if (getCubeTypeAt(x,y,z) == TerrainType.TREE) {
 				Log log = new Log(x, y, z, this);
-				this.logs.add(log);
+				addLog(log);
 			}
 		}
 		setCubeTypeAt(x, y, z, TerrainType.AIR);

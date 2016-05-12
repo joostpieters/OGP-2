@@ -11,27 +11,30 @@ import be.kuleuven.cs.som.annotate.Raw;
 
 /**
  * 
+ * @invar	Each item must have a proper world in which it belongs
+ * 			| hasProperWorld()
+ * 
  * @author	rubencartuyvels
  * @version	1.2
  */
 public class Item {
 	
 	/**
+	 * Initialize this new item, not yet attached to a world.
 	 * 
 	 * @param x
 	 * @param y
 	 * @param z
-	 * @param world
 	 */
 	@Raw
-	public Item(int x, int y, int z, World world) {
+	public Item(int x, int y, int z/*, World world*/) {
 		double xD = this.world.getCubeLength()/2 + (double) x;
 		double yD = this.world.getCubeLength()/2 + (double) y;
 		double zD = this.world.getCubeLength()/2 + (double) z;
 		
 		
 		// ??????????????????????????? world
-		this.world = world;
+		//this.world = world;
 		setPosition(new double[] {xD, yD, zD});
 	}
 	
