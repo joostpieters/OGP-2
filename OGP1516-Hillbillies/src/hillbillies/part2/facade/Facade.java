@@ -106,12 +106,12 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public boolean isAlive(Unit unit) throws ModelException {
-		return unit.isAlive();
+		return !unit.isTerminated();
 	}
 	
 	@Override
 	public void workAt(Unit unit, int x, int y, int z) throws ModelException {
-		unit.workAt(x, y, z);
+		unit.workAt(new int[]{x, y, z});
 	}
 	
 	@Override

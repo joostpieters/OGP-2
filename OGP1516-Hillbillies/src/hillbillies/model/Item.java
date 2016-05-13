@@ -5,6 +5,8 @@ import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
 import hillbillies.model.World.TerrainType;
 
+import java.util.Random;
+
 
 
 // IS VALID POSITION ETC
@@ -18,19 +20,14 @@ import hillbillies.model.World.TerrainType;
  * @author	rubencartuyvels
  * @version	1.2
  */
-public class Item {
+public class Item extends TimeSubject {
 	
 	/**
 	 * Initialize this new item, not yet attached to a world.
-	 * 
-	 * @param x
-	 * @param y
-	 * @param z
-	 * 
-	 * @throws	IllegalPositionException
 	 */
 	@Raw
-	public Item(int[] initialPosition/*, World world*/) throws IllegalPositionException {
+	public Item(int[] initialPosition/*, World world*/) throws IllegalPositionException,
+															IllegalArgumentException {
 		
 		if (!getWorld().canHaveAsCoordinates(initialPosition)) 
 			throw new IllegalPositionException(initialPosition);
@@ -39,51 +36,17 @@ public class Item {
 		
 		double[] position = new double[3];
 		for (int i=0; i<initialPosition.length; i++) {
-			position[i] = initialPosition[i] + this.getWorld().getCubeLength()/2;
+			position[i] = initialPosition[i] + World.getCubeLength()/2;
 		}
 		
-		// ??????????????????????????? world
-		//this.world = world;
+		int weight = random.nextInt(41) + 10;
+		if (!canHaveAsWeight(weight))
+			throw new IllegalArgumentException();
+		this.weight = weight;
+		
 		setPosition(position);
 	}
 	
-	/**
-	 * Variable registering the world to which this item belongs.
-	 */
-	private World world = null;
-	
-	/**
-	 * Variable registering the position in a game world of this item.
-	 */
-	private double[] position = new double[3];
-	
-	
-	
-	/**
-	 * Check whether the given position is a valid position for an item.
-	 * 
-	 * @param 	position
-	 * 			The position to be checked.
-	 * 
-	 * @return True if and only if the position is effective, if it
-	 * 			consists of an array with 3 double elements, and if 
-	 * 			each element is between 0.0 and 50.0.
-	 * 		| result = ( (position instanceof double[])
-	 * 		|		&& (position.length == 3)
-	 * 		| 		&& (for each coordinate in position:
-	 * 		|			coordinate > 0.0 && coordinate < 50.0)
-	 */
-	//@Model
-	private static boolean isValidPosition(double[] position) {
-		boolean valid = true;
-		if (!(position instanceof double[]) || position.length != 3 )
-			valid = false;
-		for (double coordinate: position) {
-			if (coordinate < 0.0 || coordinate >= 50.0)
-				valid = false;
-		}
-		return valid;
-	}
 	
 	
 	/**
@@ -102,43 +65,79 @@ public class Item {
 	 */
 	@Raw
 	private void setPosition(double[] position) throws IllegalPositionException {
-		if (! isValidPosition(position) )
+		if (! canHaveAsPosition(position) )
 			throw new IllegalPositionException(position);
 		this.position[0] = position[0];
 		this.position[1] = position[1];
 		this.position[2] = position[2];
 	}
 	
-	/**
-	 * Return the exact position of the item in its game world.
-	 */
-	@Basic @Raw
-	public double[] getPosition() {
-		return this.position;
-	}
 	
-	/**
-	 * Return the position of the cube in the game world occupied by 
-	 * the item.
-	 */
-	@Raw
-	public int[] getIntPosition() {
-		int[] intPosition = new int[3];
-		for (int i=0; i<getPosition().length; i++) {
-			intPosition[i] = (int) getPosition()[i];
+	
+	public void advanceTime (double dt) {
+		if (! isValidDT(dt)) {
+			throw new IllegalArgumentException();
 		}
-		return intPosition;
+		
+		if (!isNeighbouringSolid(getCubeCoordinate()))
+			fall();
+		
+		if (isFalling()) {
+			controlFalling(dt);
+		}
 	}
 	
 	
-	/**
-	 * Return the world to which this item belongs. Returns a null refererence
-	 * if this item does not belong to any world.
-	 */
-	@Basic @Raw
-	public World getWorld() {
-		return this.world;
+	private void fall() {
+		if (!isFalling()) {
+			setPosition(World.getCubeCenter(getCubeCoordinate()));
+			setFalling(true);
+		}
 	}
+	
+	public boolean isFalling() {
+		return this.isFalling;
+	}
+	
+	public void setFalling(boolean value) {
+		this.isFalling = value;
+	}
+	
+	private boolean isFalling = false;
+	
+	private void controlFalling(double dt) throws IllegalPositionException {
+		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate()[2] == 0) {
+			setFalling(false);
+			
+		}
+		else {
+			updatePosition(dt);
+		}
+	}
+	
+	
+	
+	private boolean canHaveAsWeight(int value) {
+		return (value >= getMinimumWeight() && value <= getMaximumWeight());
+	}
+	
+	public int getWeight() {
+		return this.weight;
+	}
+	
+	private int getMinimumWeight() {
+		return Item.minimumWeight;
+	}
+	
+	private int getMaximumWeight() {
+		return Item.maximumWeight;
+	}
+	
+	private final int weight;
+	private static final int minimumWeight = 10;
+	private static final int maximumWeight = 50;
+	
+	
 	
 	/**
 	 * Check whether this item can be attached to a given world.
@@ -199,30 +198,6 @@ public class Item {
 		if ( (world == null) && (getWorld() != null) && (getWorld().hasAsItem(this)) )
 			throw new IllegalArgumentException();
 		this.world = world;
-	}
-	
-	
-	/**
-	 * Variable registering whether or not this item is terminated.
-	 */
-	private boolean isTerminated = false;
-	
-	/**
-	 * Check whether this item is terminated.
-	 */
-	@Basic @Raw
-	public boolean isTerminated() {
-		return this.isTerminated;
-	}
-	
-	/**
-	 * Terminate this item.
-	 * 
-	 * @post	This item is terminated.
-	 * 			| new.isTerminated()
-	 */
-	public void terminate() {
-		this.isTerminated = true;
 	}
 	
 	

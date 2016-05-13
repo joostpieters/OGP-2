@@ -208,21 +208,31 @@ public class World {
 		if (!canHaveAsCoordinates(coordinates) )
 			throw new IllegalPositionException(coordinates);
 		
-		Set<int[]> neighbours = new HashSet<int[]>();
-		for (int i = -1; i<2; i++) {
-			for (int k = -1; k<2; k++) {
-				for (int l = -1; l<2; l++) {
-					int[] neighbour = new int[]{coordinates[0]+i,coordinates[1]+k,coordinates[2]+l};
-					if (canHaveAsCoordinates(neighbour))
-						neighbours.add(neighbour);
-				}
-			}
-		}
+		Set<int[]> neighbours = getNeighbours(coordinates);
 		for (int[] neighbour: neighbours) {
 			if (!getCubeTypeAt(neighbour).isPassable())
 				return true;
 		}
 		return false;
+	}
+	
+	public Set<int[]> getNeighbours(int[] coordinates) {
+		Set<int[]> neighbours = new HashSet<int[]>();
+		for (int i = -1; i<2; i++) {
+			for (int k = -1; k<2; k++) {
+				for (int l = -1; l<2; l++) {
+					int[] neighbour = new int[]{coordinates[0]+i,coordinates[1]+k,coordinates[2]+l};
+					if (canHaveAsCoordinates(neighbour) && neighbour != coordinates)
+						neighbours.add(neighbour);
+				}
+			}
+		}
+		return neighbours;
+	}
+	
+	public boolean isNeighbouring(int[] coordinates, int[] neighbourCoordinates) {
+		Set<int[]> neighbours = getNeighbours(coordinates);
+		return (neighbours.contains(neighbourCoordinates));
 	}
 	
 	
@@ -939,24 +949,39 @@ public class World {
 	
 	
 	// NODIG?????????
-	public Set<Item> getObjectsAt(int x, int y, int z) {
+	public Set<Item> getObjectsAt(int[] cubeCoordinates) {
 		Set<Item> items = new HashSet<Item>();
 		
 		for (Boulder boulder: this.boulders) {
-			if (boulder != null && (boulder.getIntPosition() == (new int[] {x, y, z}) )) {
+			if (boulder != null && (boulder.getCubeCoordinate() == (cubeCoordinates)) ) {
 				items.add(boulder);
 			}
 		}
 		for (Log log: this.logs) {
-			if (log != null && (log.getIntPosition() == (new int[] {x, y, z}) )) {
+			if (log != null && (log.getCubeCoordinate() == (cubeCoordinates) )) {
 				items.add(log);
 			}
 		}
 		return items;
 	}
 	
+	public boolean containsBoulder(int[] cubeCoordinates) {
+		Set<Item> items = getObjectsAt(cubeCoordinates);
+		for (Item item: items) {
+			if (item instanceof Boulder)
+				return true;
+		}
+		return false;
+	}
 	
-	
+	public boolean containsLog(int[] cubeCoordinates) {
+		Set<Item> items = getObjectsAt(cubeCoordinates);
+		for (Item item: items) {
+			if (item instanceof Log)
+				return true;
+		}
+		return false;
+	}
 	
 	
 	/* *********************************************************
@@ -1053,7 +1078,7 @@ public class World {
 					int[] coordinate = new int[]{x,y,z};
 					if(!getCubeTypeAt(coordinate).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
 
-						collapse(coordinate);
+						collapse(coordinate, 0.25);
 						this.modelListener.notifyTerrainChanged(x, y, z);
 						caveIn(coordinate);
 					}
@@ -1069,16 +1094,16 @@ public class World {
 				coordinate[1], coordinate[2]);
 		for (int[] cube: changed) {
 			if (!getCubeTypeAt(cube).isPassable() ) {
-				collapse(cube);
+				collapse(cube, 0.25);
 				this.modelListener.notifyTerrainChanged(cube[0], cube[1], cube[2]);
 				caveIn(cube);
 			}
 		}
 	}
 	
-	private void collapse(int[] coordinate) {
+	public void collapse(int[] coordinate, double diceTreshold) {
 		double dice = random.nextDouble();
-		if (dice < 0.25) {
+		if (dice < diceTreshold) {
 			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
 				Boulder boulder = new Boulder(coordinate, this);
 				addBoulder(boulder);

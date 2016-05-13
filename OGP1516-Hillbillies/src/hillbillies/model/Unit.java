@@ -55,7 +55,7 @@ import java.lang.*;
  *@author Ruben Cartuyvels
  *@version	1.4
  */
-public class Unit {
+public class Unit extends TimeSubject {
 	
 	/**
 	 * Initialize a new unit with the given attributes, not yet attached to
@@ -171,55 +171,7 @@ public class Unit {
 		this.setState(State.EMPTY);
 	}
 
-	/**
-	 * Converts a position given in integers to a position given in double values.
-	 * 	This is an auxiliary method.
-	 * 
-	 * @param intPosition
-	 * 			The position given in integer values.
-	 * @return the position provided as parameter converted to the java
-	 * 			double primitive type.
-	 * @throws IllegalArgumentException
-	 * 			The parameter is not an array of integers.
-	 * 			| ! intPosition instanceof int[]
-	 * 			| || intPosition.length != 3
-	 */
-	private static double[] convertPositionToDouble(int[] intPosition) 
-			throws IllegalArgumentException {
-
-		if ( !(intPosition instanceof int[]) || intPosition.length != 3)
-			throw new IllegalArgumentException();
-		double[] doublePosition = new double[3];
-		for (int i=0; i<3; i++) {
-			doublePosition[i] = (double) intPosition[i];
-		}
-		return doublePosition;
-	}
-
-	/**
-	 * Converts a position given in doubles to a position given in integer values.
-	 * 	This is an auxiliary method.
-	 * 
-	 * @param doublePosition
-	 * 			The position given in double values.
-	 * @return the position provided as parameter converted to the java
-	 * 			integer primitive type.
-	 * @throws IllegalArgumentException
-	 * 			The parameter is not an array of doubles.
-	 * 			| ! doublePosition instanceof double[]
-	 * 			| || doublePosition.length != 3
-	 */
-	private static int[] convertPositionToInt(double[] doublePosition) 
-			throws IllegalArgumentException {
-
-		if ( !(doublePosition instanceof double[]) || doublePosition.length != 3)
-			throw new IllegalArgumentException();
-		int[] intPosition = new int[3];
-		for (int i=0; i<3; i++) {
-			intPosition[i] = (int) Math.floor(doublePosition[i]);
-		}
-		return intPosition;
-	}
+	
 
 	
 	/**
@@ -230,8 +182,9 @@ public class Unit {
 	 * 
 	 * @return True if and only if the position is effective, if it
 	 * 			consists of an array with 3 double elements, if each coordinate
-	 * 			is between 0 and the upper limit of that dimension and if
-	 * 			the terrain type of that world cube is passable.
+	 * 			is between 0 and the upper limit of that dimension, if
+	 * 			the terrain type of that world cube is passable and if the world cube
+	 * 			is neighbour to a solid cube.
 	 * 		| result = ( (position instanceof double[])
 	 * 		|		&& (position.length == 3)
 	 * 		| 		&& !(position[0] < 0.0 || position[0] >= getWorld().getNbCubesX())
@@ -239,22 +192,13 @@ public class Unit {
 	 * 		|		&& !(position[2] < 0.0 || position[2] >= getWorld().getNbCubesZ())
 	 * 		|		&& TerrainType.byOrdinal(getWorld().getTerrainTypes()
 	 * 		|				[intPosition[0]][intPosition[1]][intPosition[2]]).isPassable()
+	 * 		|		&& isNeighbouringSolid(convertPositionToInt(position)) )
 	 */
-	@Model
-	private boolean canHaveAsPosition(double[] position) {
-		if (!(position instanceof double[]) || position.length != 3 )
+	protected boolean canHaveAsPosition(double[] position) {
+		boolean value = super.canHaveAsPosition(position);
+		if (!isNeighbouringSolid(convertPositionToInt(position)) )
 			return false;
-		if (position[0] < 0.0 || position[0] >= getWorld().getNbCubesX())
-			return false;
-		if (position[1] < 0.0 || position[1] >= getWorld().getNbCubesY())
-			return false;
-		if (position[2] < 0.0 || position[2] >= getWorld().getNbCubesZ())
-			return false;
-		int[] intPosition = convertPositionToInt(position);
-		if (!TerrainType.byOrdinal(getWorld().getTerrainTypes()
-				[intPosition[0]][intPosition[1]][intPosition[2]]).isPassable() )
-			return false;
-		return true;
+		return value;
 	}
 	
 	
@@ -286,23 +230,6 @@ public class Unit {
 	
 	
 	/**
-	 * Return the position of the cube in the game world occupied by 
-	 * the unit.
-	 */
-	@Raw
-	public int[] getCubeCoordinate() {
-		return convertPositionToInt(getPosition());
-	}
-	
-	/**
-	 * Return the exact position of the unit in its game world.
-	 */
-	@Basic @Raw
-	public double[] getPosition() {
-		return this.position;
-	}
-
-	/**
 	 * Set the position of the unit to the given position.
 	 * 
 	 * @param position
@@ -325,11 +252,7 @@ public class Unit {
 		this.position[2] = position[2];
 	}
 
-	/**
-	 * Variable registering the position of the unit in the game world.
-	 */
-	private double position[] = new double[3];
-
+	
 	/**
 	 * Return the current name of the unit.
 	 */
@@ -730,21 +653,6 @@ public class Unit {
 	private final int minStaminaPoints;
 
 
-
-	/**
-	 * Check if a given value is a valid game time dt value.
-	 * 
-	 * @param dt
-	 * 			The value to be checked.
-	 * @return true if and only if the value is larger than or equal to
-	 * 			zero and smaller than 0.2.
-	 * 		| result =  (dt >= 0 && dt < 0.2 )
-	 */
-	@Model
-	private static boolean isValidDT(double dt) {
-		return (dt <= 0.2 && dt >= 0.0);
-	}
-
 	/**
 	 * Advance the game time and manage activities of the unit.
 	 * 
@@ -764,7 +672,7 @@ public class Unit {
 			setTimeAfterResting(getTimeAfterResting() + dt);
 		}
 		
-		if (!isNeighbouringSolid())
+		if (!isNeighbouringSolid(getCubeCoordinate()))
 			fall();
 		
 		if (isFalling()) {
@@ -800,9 +708,11 @@ public class Unit {
 	}
 	
 	private void fall() {
-		setStartFallingCube(getCubeCoordinate());
-		setPosition(World.getCubeCenter(getCubeCoordinate()));
-		setState(State.FALLING);
+		if (!isFalling()) {
+			setStartFallingCube(getCubeCoordinate());
+			setPosition(World.getCubeCenter(getCubeCoordinate()));
+			setState(State.FALLING);
+		}
 	}
 	
 	public boolean isFalling() {
@@ -810,7 +720,7 @@ public class Unit {
 	}
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid() || getCubeCoordinate()[2] == 0) {
+		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate()[2] == 0) {
 			
 			int lostHP = getStartFallingCube()[2] - getCubeCoordinate()[2];
 			setStartFallingCube();
@@ -836,14 +746,6 @@ public class Unit {
 	}
 	
 	private int[] startFallingCube = null;
-	
-	private boolean isNeighbouringSolid() {
-		return getWorld().isNeighbouringSolid(getCubeCoordinate());
-	}
-	
-	private boolean isAboveSolid() {
-		return getWorld().isAboveSolid(getCubeCoordinate());
-	}
 	
 	
 	
@@ -906,7 +808,7 @@ public class Unit {
 	 */
 	private void controlMoving(double dt) throws IllegalPositionException {
 		
-		if (!isNeighbouringSolid())
+		if (!isNeighbouringSolid(getCubeCoordinate()))
 			fall();
 		
 		else if (!isAttacked()) {
@@ -976,7 +878,6 @@ public class Unit {
 			startMoving();
 
 			double[] newPosition = new double[3];
-			//double[] doubleCubeDirection = convertPositionToDouble(cubeDirection/*.clone()*/);
 			double[] direction = new double[3];
 
 			for (int i=0; i<3; i++) {
@@ -1258,7 +1159,7 @@ public class Unit {
 	private double[] getVelocity() throws IllegalPositionException {
 		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
 				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
-		if (getState()==State.FALLING)
+		if (isFalling())
 			return new double[]{0.0,0.0,-3.0};
 		
 		double d = getDistanceTo(getPosition(), getDestination());
@@ -1458,6 +1359,51 @@ public class Unit {
 			startWorking();
 		}
 	}
+	
+	
+	public void workAt(int[] targetCube) throws IllegalTargetException {
+		if (! (getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
+				|| getCubeCoordinate() == targetCube))
+			throw new IllegalTargetException(getCubeCoordinate(), targetCube);
+		
+		if (isCarryingItem()) {
+			dropItem();
+		} else if ((getWorld().getCubeTypeAt(targetCube)==TerrainType.WORKSHOP)
+					&& getWorld().containsLog(targetCube)
+					&& getWorld().containsBoulder(targetCube)) {
+			improveEquipment();
+		} else if (getWorld().containsBoulder(targetCube)) {
+			pickUpItem();
+		} else if (getWorld().containsLog(targetCube)) {
+			pickupItem();
+		} else if (getWorld().getCubeTypeAt(targetCube) == TerrainType.TREE
+						|| getWorld().getCubeTypeAt(targetCube) == TerrainType.ROCK) {
+			getWorld().collapse(targetCube, 1.00);
+		}
+		
+	}
+	
+	private void pickUpBoulder(Boulder boulder) {
+		this.carriedBoulder = boulder;
+	}
+	
+	public boolean isCarryingItem() {
+		return (isCarryingBoulder() || isCarryingLog());
+	}
+	
+	public boolean isCarryingBoulder() {
+		return (carriedBoulder != null);
+	}
+	
+	private Boulder carriedBoulder = null;
+	
+	
+	public boolean isCarryingLog() {
+		return (carriedLog != null);
+	}
+	
+	private Log carriedLog = null;
+	
 
 
 	/**
@@ -2027,47 +1973,6 @@ public class Unit {
 	 */
 	private boolean defaultBehavior;
 	
-	/**
-	 * Variable registering a random generator.
-	 */
-	private static final Random random = new Random();
-
-	/**
-	 * Returns the length of a cube of the game world.
-	 */
-	/*private static double getCubeLength() {
-		return cubeLength;
-	}*/
-
-	/**
-	 * Variable registering the length of a cube of the game world.
-	 */
-	//private final static double cubeLength = 1.0;
-
-	
-	
-	
-	
-	@Override
-	public boolean isCarryingBoulder(Unit unit) throws ModelException {
-		return unit.isCarryingBoulder();
-	}
-	
-	@Override
-	public boolean isCarryingLog(Unit unit) throws ModelException {
-		return unit.isCarryingLog();
-	}
-	
-	@Override
-	public boolean isAlive(Unit unit) throws ModelException {
-		return unit.isAlive();
-	}
-	
-	@Override
-	public void workAt(Unit unit, int x, int y, int z) throws ModelException {
-		unit.workAt(x, y, z);
-	}
-	
 	
 	@Basic @Raw
 	public int getExperiencePoints() {
@@ -2077,28 +1982,6 @@ public class Unit {
 	private int xp;
 	
 	
-	/**
-	 * Variable registering whether or not this unit is terminated.
-	 */
-	private boolean isTerminated = false;
-	
-	/**
-	 * Check whether this unit is terminated.
-	 */
-	@Basic @Raw
-	public boolean isTerminated() {
-		return this.isTerminated;
-	}
-	
-	/**
-	 * Terminate this unit.
-	 * 
-	 * @post	This unit is terminated.
-	 * 			| new.isTerminated()
-	 */
-	public void terminate() {
-		this.isTerminated = true;
-	}
 	
 	
 	
@@ -2108,20 +1991,6 @@ public class Unit {
 	 *
 	 **********************************************************/
 	
-	/**
-	 * Variable registering the world to which this unit belongs.
-	 */
-	private World world = null;
-	
-	
-	/**
-	 * Return the world to which this unit belongs. Returns a null refererence
-	 * if this unit does not belong to any world.
-	 */
-	@Basic @Raw
-	public World getWorld() {
-		return this.world;
-	}
 	
 	/**
 	 * Check whether this unit can be attached to a given world.
