@@ -52,7 +52,7 @@ public class World {
 	 */
 	private final static double cubeLength = 1.0;
 	
-	public double getCubeLength() {
+	public static double getCubeLength() {
 		return cubeLength;
 	}
 	
@@ -148,17 +148,25 @@ public class World {
 	 * 		|		&& !(coordinates[1] < 0.0 || coordinates[1] >= getNbCubesY())
 	 * 		|		&& !(coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
 	 */
-	@Model
-	private boolean canHaveAsCoordinates(int[] coordinates) {
+	public boolean canHaveAsCoordinates(int[] coordinates) {
 		if (!(coordinates instanceof int[]) || coordinates.length != 3 )
 			return false;
-		if (coordinates[0] < 0.0 || coordinates[0] >= getNbCubesX())
+		if (coordinates[0] < 0 || coordinates[0] >= getNbCubesX())
 			return false;
-		if (coordinates[1] < 0.0 || coordinates[1] >= getNbCubesY())
+		if (coordinates[1] < 0 || coordinates[1] >= getNbCubesY())
 			return false;
-		if (coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
+		if (coordinates[2] < 0 || coordinates[2] >= getNbCubesZ())
 			return false;
 		return true;
+	}
+	
+	
+	public static double[] getCubeCenter(int[] cubeCoordinate) {
+		double[] cubeCenter = new double[3];
+		for (int i=0; i<cubeCoordinate.length; i++) {
+			cubeCenter[i] = cubeCoordinate[i] + getCubeLength()/2;
+		}
+		return cubeCenter;
 	}
 	
 	@Basic
@@ -177,22 +185,55 @@ public class World {
 	}
 	
 	
-	public void setCubeTypeAt(int x, int y, int z, TerrainType type) {
+	public void setCubeTypeAt(int[] coordinate, TerrainType type) {
 		if (!isValidTerrainType(type))
 			throw new IllegalArgumentException();
-		this.terrainTypes[x][y][z] = type.getNumber();
+		this.terrainTypes[coordinate[0]][coordinate[1]][coordinate[2]] = type.getNumber();
 	}
 	
 	
-	public TerrainType getCubeTypeAt(int x, int y, int z) throws IllegalPositionException {
-		if (!canHaveAsCoordinates(new int[]{x,y,z}) )
-			throw new IllegalPositionException(new int[]{x,y,z});
-		return TerrainType.byOrdinal(this.terrainTypes[x][y][z]);
+	public TerrainType getCubeTypeAt(int[] coordinate) throws IllegalPositionException {
+		if (!canHaveAsCoordinates(coordinate) )
+			throw new IllegalPositionException(coordinate);
+		return TerrainType.byOrdinal(this.terrainTypes[coordinate[0]][coordinate[1]][coordinate[2]]);
 	}
 	
 	
 	private boolean isValidTerrainType(TerrainType type) {
 		return TerrainType.contains("type");
+	}
+	
+	// POSITION of COORDINATE class
+	public boolean isNeighbouringSolid(int[] coordinates) {
+		if (!canHaveAsCoordinates(coordinates) )
+			throw new IllegalPositionException(coordinates);
+		
+		Set<int[]> neighbours = new HashSet<int[]>();
+		for (int i = -1; i<2; i++) {
+			for (int k = -1; k<2; k++) {
+				for (int l = -1; l<2; l++) {
+					int[] neighbour = new int[]{coordinates[0]+i,coordinates[1]+k,coordinates[2]+l};
+					if (canHaveAsCoordinates(neighbour))
+						neighbours.add(neighbour);
+				}
+			}
+		}
+		for (int[] neighbour: neighbours) {
+			if (!getCubeTypeAt(neighbour).isPassable())
+				return true;
+		}
+		return false;
+	}
+	
+	
+	public boolean isAboveSolid(int[] coordinates) {
+		if (!canHaveAsCoordinates(coordinates) )
+			throw new IllegalPositionException(coordinates);
+		
+		if (!getCubeTypeAt(new int[]{coordinates[0],coordinates[1],coordinates[2]-1}).isPassable())
+			return true;
+		
+		return false;
 	}
 	
 	
@@ -264,8 +305,8 @@ public class World {
 					x = random.nextInt(getNbCubesX()+1);
 					y = random.nextInt(getNbCubesY()+1);
 					z = random.nextInt(getNbCubesZ()+1);
-					if (getCubeTypeAt(x, y, z).isPassable() && (
-							!getCubeTypeAt(x, y, z-1).isPassable() || z == 0))
+					if (getCubeTypeAt(new int[]{x, y, z}).isPassable() && (
+							!getCubeTypeAt(new int[]{x, y, z-1}).isPassable() || z == 0))
 						break;
 				}
 				catch (IllegalPositionException exc){
@@ -1009,12 +1050,12 @@ public class World {
 		for (int x = 0; x < terrainTypes.length; x++) {
 			for (int y = 0; y < terrainTypes[0].length; y++) {
 				for (int z = 0; z < terrainTypes[0][0].length; z++) {
-					
-					if(!getCubeTypeAt(x, y, z).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
+					int[] coordinate = new int[]{x,y,z};
+					if(!getCubeTypeAt(coordinate).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
 
-						collapse(x, y, z);
+						collapse(coordinate);
 						this.modelListener.notifyTerrainChanged(x, y, z);
-						caveIn(x,y,z);
+						caveIn(coordinate);
 					}
 					
 					
@@ -1023,30 +1064,31 @@ public class World {
 		}
 	}
 	
-	private void caveIn(int x, int y, int z) {
-		List<int[]> changed = getConnectedToBorderChecker().changeSolidToPassable(x, y, z);
+	private void caveIn(int[] coordinate) {
+		List<int[]> changed = getConnectedToBorderChecker().changeSolidToPassable(coordinate[0],
+				coordinate[1], coordinate[2]);
 		for (int[] cube: changed) {
-			if (!getCubeTypeAt(cube[0], cube[1], cube[2]).isPassable() ) {
-				collapse(cube[0], cube[1], cube[2]);
+			if (!getCubeTypeAt(cube).isPassable() ) {
+				collapse(cube);
 				this.modelListener.notifyTerrainChanged(cube[0], cube[1], cube[2]);
-				caveIn(cube[0], cube[1], cube[2]);
+				caveIn(cube);
 			}
 		}
 	}
 	
-	private void collapse(int x, int y, int z) {
+	private void collapse(int[] coordinate) {
 		double dice = random.nextDouble();
 		if (dice < 0.25) {
-			if (getCubeTypeAt(x,y,z) == TerrainType.ROCK) {
-				Boulder boulder = new Boulder(x, y, z, this);
+			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
+				Boulder boulder = new Boulder(coordinate, this);
 				addBoulder(boulder);
 			}
-			else if (getCubeTypeAt(x,y,z) == TerrainType.TREE) {
-				Log log = new Log(x, y, z, this);
+			else if (getCubeTypeAt(coordinate) == TerrainType.TREE) {
+				Log log = new Log(coordinate, this);
 				addLog(log);
 			}
 		}
-		setCubeTypeAt(x, y, z, TerrainType.AIR);
+		setCubeTypeAt(coordinate, TerrainType.AIR);
 	}
 	
 	

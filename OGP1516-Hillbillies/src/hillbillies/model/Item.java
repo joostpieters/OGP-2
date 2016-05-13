@@ -3,6 +3,7 @@ package hillbillies.model;
 import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
+import hillbillies.model.World.TerrainType;
 
 
 
@@ -25,17 +26,25 @@ public class Item {
 	 * @param x
 	 * @param y
 	 * @param z
+	 * 
+	 * @throws	IllegalPositionException
 	 */
 	@Raw
-	public Item(int x, int y, int z/*, World world*/) {
-		double xD = this.world.getCubeLength()/2 + (double) x;
-		double yD = this.world.getCubeLength()/2 + (double) y;
-		double zD = this.world.getCubeLength()/2 + (double) z;
+	public Item(int[] initialPosition/*, World world*/) throws IllegalPositionException {
 		
+		if (!getWorld().canHaveAsCoordinates(initialPosition)) 
+			throw new IllegalPositionException(initialPosition);
+		if (getWorld().getCubeTypeAt(initialPosition).isPassable() )
+			throw new IllegalPositionException(initialPosition);
+		
+		double[] position = new double[3];
+		for (int i=0; i<initialPosition.length; i++) {
+			position[i] = initialPosition[i] + this.getWorld().getCubeLength()/2;
+		}
 		
 		// ??????????????????????????? world
 		//this.world = world;
-		setPosition(new double[] {xD, yD, zD});
+		setPosition(position);
 	}
 	
 	/**

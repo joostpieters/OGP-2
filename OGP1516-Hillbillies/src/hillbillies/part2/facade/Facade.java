@@ -56,12 +56,12 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 
 	@Override
 	public int getCubeType(World world, int x, int y, int z) throws ModelException {
-		return world.getCubeTypeAt(x, y, z).getNumber();
+		return world.getCubeTypeAt(new int[]{x,y,z}).getNumber();
 	}
 
 	@Override
 	public void setCubeType(World world, int x, int y, int z, int value) throws ModelException {
-		world.setCubeTypeAt(x, y, z, TerrainType.byOrdinal(value));
+		world.setCubeTypeAt(new int[]{x,y,z}, TerrainType.byOrdinal(value));
 	}
 
 	@Override

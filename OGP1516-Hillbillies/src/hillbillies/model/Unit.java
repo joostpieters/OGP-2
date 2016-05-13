@@ -293,7 +293,7 @@ public class Unit {
 	public int[] getCubeCoordinate() {
 		return convertPositionToInt(getPosition());
 	}
-
+	
 	/**
 	 * Return the exact position of the unit in its game world.
 	 */
@@ -763,12 +763,19 @@ public class Unit {
 		if (!isResting()) {
 			setTimeAfterResting(getTimeAfterResting() + dt);
 		}
+		
+		if (!isNeighbouringSolid())
+			fall();
+		
+		if (isFalling()) {
+			controlFalling(dt);
+		}
 
-		if (getTimeAfterResting() >= 180.0) {
+		else if (getTimeAfterResting() >= 180.0) {
 			startResting();
 		}
 
-		if (isResting()) {
+		else if (isResting()) {
 			controlResting(dt);
 		}
 		else if (isMoving()) {
@@ -791,7 +798,55 @@ public class Unit {
 		}
 
 	}
-
+	
+	private void fall() {
+		setStartFallingCube(getCubeCoordinate());
+		setPosition(World.getCubeCenter(getCubeCoordinate()));
+		setState(State.FALLING);
+	}
+	
+	public boolean isFalling() {
+		return (getState() == State.FALLING);
+	}
+	
+	private void controlFalling(double dt) throws IllegalPositionException {
+		if(isAboveSolid() || getCubeCoordinate()[2] == 0) {
+			
+			int lostHP = getStartFallingCube()[2] - getCubeCoordinate()[2];
+			setStartFallingCube();
+			this.updateCurrentHitPoints(getCurrentHitPoints() - lostHP);
+			setState(State.EMPTY);
+			
+		}
+		else {
+			updatePosition(dt);
+		}
+	}
+	
+	private void setStartFallingCube(int[] coordinate) {
+		this.startFallingCube = coordinate;
+	}
+	
+	private void setStartFallingCube() {
+		this.startFallingCube = null;
+	}
+	
+	private int[] getStartFallingCube() {
+		return this.startFallingCube;
+	}
+	
+	private int[] startFallingCube = null;
+	
+	private boolean isNeighbouringSolid() {
+		return getWorld().isNeighbouringSolid(getCubeCoordinate());
+	}
+	
+	private boolean isAboveSolid() {
+		return getWorld().isAboveSolid(getCubeCoordinate());
+	}
+	
+	
+	
 	/**
 	 * Manage the waiting of the unit, i.e. when the state of the unit is equal to empty.
 	 * 
@@ -850,8 +905,11 @@ public class Unit {
 	 * @param dt
 	 */
 	private void controlMoving(double dt) throws IllegalPositionException {
-
-		if (!isAttacked()) {
+		
+		if (!isNeighbouringSolid())
+			fall();
+		
+		else if (!isAttacked()) {
 			
 			if (isSprinting()) {
 				updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
@@ -914,7 +972,7 @@ public class Unit {
 		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
 			throw new IllegalArgumentException();
 
-		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1) {
+		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
 			startMoving();
 
 			double[] newPosition = new double[3];
@@ -924,7 +982,7 @@ public class Unit {
 			for (int i=0; i<3; i++) {
 				newPosition[i] = Math.floor(getPosition()[i] )
 						+ (double) cubeDirection[i];
-				newPosition[i] += this.getWorld().getCubeLength()/2.0;
+				newPosition[i] += World.getCubeLength()/2.0;
 				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
@@ -936,7 +994,7 @@ public class Unit {
 				throw new IllegalPositionException(newPosition);
 			}
 			
-			this.movingDirection = direction;
+			//this.movingDirection = direction;
 			setOrientation((float) Math.atan2(getVelocity()[1], getVelocity()[0] ));
 		}
 	}
@@ -1162,6 +1220,24 @@ public class Unit {
 	private double[] getMovingDirection() {
 		return this.movingDirection;
 	}
+	
+	/**
+	 * Set the moving direction of the unit.
+	 * 
+	 * @param	direction
+	 * 			The direction to set the moving direction to.
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The given direction is not a valid direction.
+	 * 			| ! direction instanceof double[]
+	 * 			| 		|| direction.length != 3
+	 */
+	@Raw
+	private void setMovingDirection(double[] direction) throws IllegalArgumentException {
+		if (!(direction instanceof double[]) || direction.length != 3 )
+			throw new IllegalArgumentException();
+		this.movingDirection = direction;
+	}
 
 	/**
 	 * Variable registering the moving direction of the unit.
@@ -1182,6 +1258,9 @@ public class Unit {
 	private double[] getVelocity() throws IllegalPositionException {
 		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
 				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
+		if (getState()==State.FALLING)
+			return new double[]{0.0,0.0,-3.0};
+		
 		double d = getDistanceTo(getPosition(), getDestination());
 		double[] v = new double[3];
 		for (int i=0; i<3; ++i) {
@@ -1259,7 +1338,7 @@ public class Unit {
 	 * 			| new.isSprinting() == true
 	 */
 	public void startSprinting() {
-		if (isMoving() && getCurrentStaminaPoints() > 0) {
+		if (isMoving() && getCurrentStaminaPoints() > 0 && !isFalling()) {
 			this.isSprinting = true;
 		}
 	}
@@ -1375,7 +1454,7 @@ public class Unit {
 	 * 
 	 */
 	public void work()  {
-		if (!isMoving() && getState() != State.RESTING_1) {
+		if (!isMoving() && getState() != State.RESTING_1 && !isFalling()) {
 			startWorking();
 		}
 	}
@@ -1416,13 +1495,15 @@ public class Unit {
 	 * @param dt
 	 */
 	private void controlAttacking(double dt) throws IllegalTimeException {
-		setTimeToCompletion((float) (getTimeToCompletion() - dt));
-		if (getTimeToCompletion() < 0.0) {
-
-			//getDefender().setAttacked(true);
-			getDefender().defend(this);
-			getDefender().setAttacked(false);
-			setState(State.EMPTY);
+		if (!isFalling()) {
+			setTimeToCompletion((float) (getTimeToCompletion() - dt));
+			if (getTimeToCompletion() < 0.0) {
+	
+				//getDefender().setAttacked(true);
+				getDefender().defend(this);
+				getDefender().setAttacked(false);
+				setState(State.EMPTY);
+			}
 		}
 	}
 
@@ -1455,7 +1536,7 @@ public class Unit {
 		if (!canAttack(defender))
 			throw new IllegalVictimException(this, defender);
 
-		if (!isMoving()) {
+		if (!isMoving() && !isFalling()) {
 			startAttacking();
 
 			// Orientation update
@@ -1615,8 +1696,10 @@ public class Unit {
 		double[] newPosition = this.getPosition();
 		newPosition[0] += 2*random.nextDouble() - 1.0;
 		newPosition[1] += 2*random.nextDouble() - 1.0;
+		
 		if (!canHaveAsPosition(newPosition)) 
 			throw new IllegalPositionException(newPosition);
+		
 		this.setPosition(newPosition);
 	}
 
@@ -1760,7 +1843,7 @@ public class Unit {
 	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
 
-		if (!isAttacked() && !isAttacking()) {
+		if (!isAttacked() && !isAttacking() && !isFalling()) {
 
 			if (getState() == State.RESTING_1) {
 				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
@@ -1795,7 +1878,6 @@ public class Unit {
 			if (getCurrentHitPoints() == getMaxHitPoints() &&
 					getCurrentStaminaPoints() == getMaxStaminaPoints()) {
 				setState(State.EMPTY);
-				//System.out.println(getState());
 			}
 		}
 	}
@@ -1805,7 +1887,7 @@ public class Unit {
 	 * 
 	 */
 	public void rest() throws IllegalTimeException {
-		if (!isMoving()) {
+		if (!isMoving() && !isFalling()) {
 			startResting();
 		}
 	}
@@ -1977,11 +2059,6 @@ public class Unit {
 	}
 	
 	@Override
-	public Faction getFaction(Unit unit) throws ModelException {
-		return unit.getFaction();
-	}
-	
-	@Override
 	public boolean isAlive(Unit unit) throws ModelException {
 		return unit.isAlive();
 	}
@@ -1991,12 +2068,13 @@ public class Unit {
 		unit.workAt(x, y, z);
 	}
 	
-	@Override
-	public int getExperiencePoints(Unit unit) throws ModelException {
-		return unit.getExperiencePoints();
+	
+	@Basic @Raw
+	public int getExperiencePoints() {
+		return this.xp;
 	}
 	
-	
+	private int xp;
 	
 	
 	/**
