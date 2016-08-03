@@ -55,7 +55,7 @@ import java.lang.*;
  *@author Ruben Cartuyvels
  *@version	1.4
  */
-public class Unit extends TimeSubject {
+public class Unit extends GameObject {
 	
 	/**
 	 * Initialize a new unit with the given attributes, not yet attached to
@@ -243,14 +243,14 @@ public class Unit extends TimeSubject {
 	 * 			The given position is not valid.
 	 * 		| !canHaveAsPosition(position)
 	 */
-	@Raw
+	/*@Raw
 	private void setPosition(double[] position) throws IllegalPositionException {
 		if (! canHaveAsPosition(position) )
 			throw new IllegalPositionException(position);
 		this.position[0] = position[0];
 		this.position[1] = position[1];
 		this.position[2] = position[2];
-	}
+	}*/
 
 	
 	/**
@@ -356,6 +356,7 @@ public class Unit extends TimeSubject {
 	 * Variable registering the weight of the unit.
 	 */
 	private int weight;
+	
 
 	/**
 	 * Return the units strength.
@@ -1105,13 +1106,13 @@ public class Unit extends TimeSubject {
 	 * 		added by the velocity times the time span.
 	 * 		| new.getPosition() == this.getPosition() + this.getVelocity()*dt
 	 */
-	private void updatePosition(double dt) throws IllegalPositionException {
+	/*private void updatePosition(double dt) throws IllegalPositionException {
 		double[] newPosition = new double[3];
 		for (int i=0; i<3; i++) {
 			newPosition[i] = getPosition()[i] + getVelocity()[i]*dt;
 		}
 		setPosition(newPosition);
-	}
+	}*/
 
 
 	/**
@@ -1156,7 +1157,7 @@ public class Unit extends TimeSubject {
 	 * 			|				/getDistanceToDestination(getPosition())
 	 */
 	@Model
-	private double[] getVelocity() throws IllegalPositionException {
+	protected double[] getVelocity() throws IllegalPositionException {
 		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
 				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
 		if (isFalling())
@@ -1368,42 +1369,94 @@ public class Unit extends TimeSubject {
 		
 		if (isCarryingItem()) {
 			dropItem();
-		} else if ((getWorld().getCubeTypeAt(targetCube)==TerrainType.WORKSHOP)
-					&& getWorld().containsLog(targetCube)
-					&& getWorld().containsBoulder(targetCube)) {
-			improveEquipment();
-		} else if (getWorld().containsBoulder(targetCube)) {
-			pickUpItem();
-		} else if (getWorld().containsLog(targetCube)) {
-			pickupItem();
-		} else if (getWorld().getCubeTypeAt(targetCube) == TerrainType.TREE
-						|| getWorld().getCubeTypeAt(targetCube) == TerrainType.ROCK) {
-			getWorld().collapse(targetCube, 1.00);
+		} else {
+			Set<Item> items = getWorld().getObjectsAt(getCubeCoordinate());
+			
+			if ((getWorld().getCubeTypeAt(targetCube)==TerrainType.WORKSHOP)
+						&& getWorld().containsLog(items)
+						&& getWorld().containsBoulder(items)) {
+				improveEquipment(items);
+				
+			} else if (getWorld().containsBoulder(items)) {
+				pickUpItem(getWorld().getBoulderAt(getCubeCoordinate(),items));
+				
+			} else if (getWorld().containsLog(items)) {
+				pickUpItem(getWorld().getLogAt(getCubeCoordinate(),items));
+				
+			} else if (getWorld().getCubeTypeAt(targetCube) == TerrainType.TREE
+							|| getWorld().getCubeTypeAt(targetCube) == TerrainType.ROCK) {
+				getWorld().collapse(targetCube, 1.00);
+			}
 		}
 		
 	}
 	
-	private void pickUpBoulder(Boulder boulder) {
-		this.carriedBoulder = boulder;
+	private void dropItem() {
+		getCarriedItem().setPosition(getPosition());
+		getWorld().addItem(getCarriedItem());
+		subTotalWeight(getCarriedItem());
+		carriedItem = null;
 	}
 	
-	public boolean isCarryingItem() {
-		return (isCarryingBoulder() || isCarryingLog());
+	
+	private void pickUpItem(Item item) {
+		this.carriedItem = item;
+		addTotalWeight(item);
+		getWorld().removeItem(item);
 	}
+	
+	private void addTotalWeight(Item item) {
+		this.totalWeight = this.getWeight() + item.getWeight();
+	}
+	
+	private void subTotalWeight(Item item) {
+		this.totalWeight = this.getWeight() - item.getWeight();
+	}
+	
+	private int getTotalWeight() {
+		return this.totalWeight;
+	}
+	
+	private int totalWeight = getWeight();
 	
 	public boolean isCarryingBoulder() {
-		return (carriedBoulder != null);
+		return (carriedItem instanceof Boulder);
 	}
-	
-	private Boulder carriedBoulder = null;
-	
+		
 	
 	public boolean isCarryingLog() {
-		return (carriedLog != null);
+		return (carriedItem instanceof Log);
 	}
 	
-	private Log carriedLog = null;
 	
+	public boolean isCarryingItem() {
+		return (carriedItem != null);
+	}
+	
+	private Item getCarriedItem() {
+		return this.carriedItem;
+	}
+	
+	private Item carriedItem = null;
+	
+	
+	private void improveEquipment(Set<Item> items) {
+		boolean logT = false, boulderT = false;
+		Iterator<Item> it = items.iterator();
+		
+		while ((!logT || !boulderT) && it.hasNext()) {
+			if (it.next() instanceof Boulder && !boulderT) {
+				it.next().terminate();
+				boulderT = true;
+			} else if (it.next() instanceof Log && !logT) {
+				it.next().terminate();
+				logT = true;
+			}
+		}
+		
+		setWeight(getWeight() + 1);
+		setToughness(getToughness() +1);
+	}
 
 
 	/**

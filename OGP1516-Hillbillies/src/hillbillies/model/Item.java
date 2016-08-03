@@ -20,7 +20,7 @@ import java.util.Random;
  * @author	rubencartuyvels
  * @version	1.2
  */
-public class Item extends TimeSubject {
+public class Item extends GameObject {
 	
 	/**
 	 * Initialize this new item, not yet attached to a world.
@@ -40,7 +40,7 @@ public class Item extends TimeSubject {
 		}
 		
 		int weight = random.nextInt(41) + 10;
-		if (!canHaveAsWeight(weight))
+		if (!isValidWeight(weight))
 			throw new IllegalArgumentException();
 		this.weight = weight;
 		
@@ -63,14 +63,14 @@ public class Item extends TimeSubject {
 	 * 			The given position is not valid.
 	 * 		| !isValidPosition(position)
 	 */
-	@Raw
-	private void setPosition(double[] position) throws IllegalPositionException {
+	/*@Raw
+	protected void setPosition(double[] position) throws IllegalPositionException {
 		if (! canHaveAsPosition(position) )
 			throw new IllegalPositionException(position);
 		this.position[0] = position[0];
 		this.position[1] = position[1];
 		this.position[2] = position[2];
-	}
+	}*/
 	
 	
 	
@@ -115,9 +115,20 @@ public class Item extends TimeSubject {
 		}
 	}
 	
+	@Model
+	protected double[] getVelocity() /*throws IllegalPositionException*/ {
+		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
+				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
+		if (isFalling())
+			return new double[]{0.0,0.0,-3.0};
+		
+		return new double[]{0.0,0.0,0.0};
+	}
 	
 	
-	private boolean canHaveAsWeight(int value) {
+	// Moet isValidWeight zijn!
+	
+	private static boolean isValidWeight(int value) {
 		return (value >= getMinimumWeight() && value <= getMaximumWeight());
 	}
 	
@@ -125,17 +136,17 @@ public class Item extends TimeSubject {
 		return this.weight;
 	}
 	
-	private int getMinimumWeight() {
-		return Item.minimumWeight;
+	private static int getMinimumWeight() {
+		return Item.MIN_WEIGHT;
 	}
 	
-	private int getMaximumWeight() {
-		return Item.maximumWeight;
+	private static int getMaximumWeight() {
+		return Item.MAX_WEIGHT;
 	}
 	
 	private final int weight;
-	private static final int minimumWeight = 10;
-	private static final int maximumWeight = 50;
+	private static final int MIN_WEIGHT = 10;
+	private static final int MAX_WEIGHT = 50;
 	
 	
 	

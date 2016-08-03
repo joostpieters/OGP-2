@@ -947,8 +947,30 @@ public class World {
 	}
 	
 	
+	public void removeItem(Item item) {
+		if (hasAsItem(item)) {
+			if (item instanceof Boulder) {
+				this.boulders.remove(item);
+				item.setWorld(null);
+			}
+			if (item instanceof Log) {
+				this.logs.remove(item);
+				item.setWorld(null);
+			}
+		}
+	}
 	
-	// NODIG?????????
+	public void addItem(Item item) {
+		
+		if (item instanceof Boulder) {
+			this.addBoulder((Boulder) item);
+		}
+		if (item instanceof Log) {
+			this.addLog((Log) item);
+		}
+	}
+	
+	
 	public Set<Item> getObjectsAt(int[] cubeCoordinates) {
 		Set<Item> items = new HashSet<Item>();
 		
@@ -965,8 +987,39 @@ public class World {
 		return items;
 	}
 	
-	public boolean containsBoulder(int[] cubeCoordinates) {
-		Set<Item> items = getObjectsAt(cubeCoordinates);
+	/*public Item getItemAt(int[] cubeCoordinates, Set<Item> items) {
+		for (Item item: items) {
+			return item;
+		}
+		return null;
+	}*/
+	
+	public Item getBoulderAt(int[] cubeCoordinates, Set<Item> items) {
+		for (Item item: items) {
+			if (item instanceof Boulder)
+				return item;
+		}
+		return null;
+	}
+	
+	public Item getLogAt(int[] cubeCoordinates, Set<Item> items) {
+		for (Item item: items) {
+			if (item instanceof Log)
+				return item;
+		}
+		return null;
+	}
+	
+	public boolean containsItem(Set<Item> items) {
+		//Set<Item> items = getObjectsAt(cubeCoordinates);
+		if (!items.isEmpty()) {
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean containsBoulder(Set<Item> items) {
+		//Set<Item> items = getObjectsAt(cubeCoordinates);
 		for (Item item: items) {
 			if (item instanceof Boulder)
 				return true;
@@ -974,8 +1027,8 @@ public class World {
 		return false;
 	}
 	
-	public boolean containsLog(int[] cubeCoordinates) {
-		Set<Item> items = getObjectsAt(cubeCoordinates);
+	public boolean containsLog(Set<Item> items) {
+		//Set<Item> items = getObjectsAt(cubeCoordinates);
 		for (Item item: items) {
 			if (item instanceof Log)
 				return true;
