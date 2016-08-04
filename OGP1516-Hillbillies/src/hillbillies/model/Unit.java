@@ -159,8 +159,8 @@ public class Unit extends GameObject {
 			setWeight(weight);
 		else setWeight((getStrength()+getAgility())/2 +1);
 
-		this.minHitPoints = 0;
-		this.minStaminaPoints = 0;
+		this.MIN_HP = 0;
+		this.MIN_SP = 0;
 		
 		updateCurrentHitPoints(getMaxHitPoints());
 		updateCurrentStaminaPoints(getMaxStaminaPoints());
@@ -170,8 +170,40 @@ public class Unit extends GameObject {
 		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
 		this.setState(State.EMPTY);
 	}
-
 	
+
+	@Raw
+	public Unit (String name, int weight, int agility, int strength, int toughness,
+			boolean enableDefaultBehavior) 
+					throws IllegalPositionException, IllegalNameException {
+
+		setName(name);
+		
+		// isValidINITIALAgility!!! not isValidAgility !!!!!!!!!!!!
+		if (isValidAgility(agility))
+			setAgility(agility);
+		else setAgility(25);
+		if (isValidStrength(strength)) 
+			setStrength(strength);
+		else setStrength(25);
+		if (isValidToughness(toughness))
+			setToughness(toughness);
+		else setToughness(25);
+		if (canHaveAsWeight(weight)) 
+			setWeight(weight);
+		else setWeight((getStrength()+getAgility())/2 +1);
+
+		this.MIN_HP = 0;
+		this.MIN_SP = 0;
+		
+		updateCurrentHitPoints(getMaxHitPoints());
+		updateCurrentStaminaPoints(getMaxStaminaPoints());
+
+		setOrientation((float)(Math.PI/2.0));
+
+		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
+		this.setState(State.EMPTY);
+	}
 
 	
 	/**
@@ -196,8 +228,10 @@ public class Unit extends GameObject {
 	 */
 	protected boolean canHaveAsPosition(double[] position) {
 		boolean value = super.canHaveAsPosition(position);
-		if (!isNeighbouringSolid(convertPositionToInt(position)) )
+		if (!isNeighbouringSolid(convertPositionToInt(position)) ) {
+			System.out.println("Hallo");
 			return false;
+		}
 		return value;
 	}
 	
@@ -515,7 +549,7 @@ public class Unit extends GameObject {
 	 */
 	@Basic @Immutable @Raw
 	private int getMinHitPoints() {
-		return this.minHitPoints;
+		return this.MIN_HP;
 	}
 
 	/**
@@ -570,7 +604,7 @@ public class Unit extends GameObject {
 	/**
 	 * Variable registering the minimum number of hitpoints of the unit.
 	 */
-	private final int minHitPoints;
+	private final int MIN_HP;
 
 
 	/**
@@ -594,7 +628,7 @@ public class Unit extends GameObject {
 	 */
 	@Basic @Immutable @Raw
 	private int getMinStaminaPoints() {
-		return this.minStaminaPoints;
+		return this.MIN_SP;
 	}
 
 
@@ -651,7 +685,7 @@ public class Unit extends GameObject {
 	/**
 	 * Variable registering the minimum number of stamina points of the unit.
 	 */
-	private final int minStaminaPoints;
+	private final int MIN_SP;
 
 
 	/**
@@ -669,11 +703,15 @@ public class Unit extends GameObject {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
+		if (getCurrentHitPoints() == 0) {
+			dropItem();
+			terminate();
+		}
 		if (!isResting()) {
 			setTimeAfterResting(getTimeAfterResting() + dt);
 		}
 		
-		if (!isNeighbouringSolid(getCubeCoordinate()))
+		if (!isNeighbouringSolid(getCubeCoordinate()) && !isFalling())
 			fall();
 		
 		if (isFalling()) {
@@ -761,10 +799,8 @@ public class Unit extends GameObject {
 			double dice = random.nextDouble();
 			if (dice < 1.0/3.0) {
 
-				int[] destCube = new int[3];
-				for (int i=0; i<3; i++) {
-					destCube[i] = random.nextInt(49);
-				}
+				int[] destCube = getWorld().getRandomNeighbouringSolidCube(); //NIET ALTIJD
+				// BEREIKBAAR!!!!!!!!!!!!!!!
 				moveTo(destCube);
 
 			}
@@ -921,11 +957,11 @@ public class Unit extends GameObject {
 		if (!canHaveAsPosition(convertPositionToDouble(destCube))) {
 			throw new IllegalPositionException(destCube);
 		}
-
+		
+		setDestCubeLT(destCube);
+		this.destCubeLTReached = false;
+		
 		if (getState() != State.RESTING_1) {
-			setDestCubeLT(destCube);
-			this.destCubeLTReached = false;
-			
 			moveTowards(destCube);
 		}
 	}
@@ -934,31 +970,77 @@ public class Unit extends GameObject {
 	
 	private void moveTowards(int[] destCube) {
 			
-			int[] startCube;
-			int[] nextCubeDirections;
 						
 			if ((getCubeCoordinate() != destCube)) {
-				int x, y, z;
-				startCube = getCubeCoordinate();
 				
-				if (startCube[0] == destCube[0])  x = 0;
-				else if (startCube[0] < destCube[0]) x = 1;
-				else x = -1;
-
-				if (startCube[1] == destCube[1])  y = 0;
-				else if (startCube[1] < destCube[1]) y = 1;
-				else y = -1;
-
-				if (startCube[2] == destCube[2])  z = 0;
-				else if (startCube[2] < destCube[2]) z = 1;
-				else z = -1;
+				//int n = 0;
+				int[] startCube = getCubeCoordinate();
 				
-				nextCubeDirections = new int[]{x,y,z};
-				moveToAdjacent(nextCubeDirections);
+				Queue<Tuple> path = new LinkedList<Tuple>();
+				
+				while(!startCube.equals(getDestCubeLT())) {
+					
+					path.add(new Tuple(getDestCubeLT(), 0));
+					
+					while(!Tuple.containsCube(path, startCube) && Tuple.hasNext(path)) {
+						Tuple nextTuple = Tuple.getNext(path);
+						search(nextTuple, path);
+						nextTuple.isChecked = true;
+					}
+					
+					if (Tuple.containsCube(path, startCube)) {
+						Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
+						
+						moveToAdjacent(nextTuple.cube);
+						startCube = getCubeCoordinate();
+					}
+					else {
+						break; 
+					}
+				}
+				
 			}
 	}
-
 	
+	
+	private void search(Tuple startTuple, Queue<Tuple> path) {
+		
+		List<int[]> cubes = new ArrayList<int[]>();
+		
+		Set<int[]> neighbours = getWorld().getNeighbours(startTuple.cube);
+		for (int[] neighbour: neighbours) {
+			if (getWorld().getCubeTypeAt(neighbour).isPassable()
+					
+					&& getWorld().isNeighbouringSolid(neighbour)
+					
+					&& !Tuple.containsCubeWithSmallerN(path, neighbour, startTuple)
+					) {
+				cubes.add(neighbour);
+			}
+		}
+		
+		for (int[] cube: cubes) {
+			path.add(new Tuple(cube, startTuple.n + 1));
+		}
+	}
+	
+	
+	public Tuple getNeighbourWSmallestN(Queue<Tuple> path, int[] cube) {
+		Set<int[]> neighbours = getWorld().getNeighbours(cube);
+		Tuple result = null;
+		boolean first = false;
+		
+		for (Tuple tuple: path) {
+			if (!first && neighbours.contains(tuple.cube)) {
+				result = tuple;
+				first = true;
+			}
+			if (neighbours.contains(tuple.cube) && tuple.n < result.n) {
+				result = tuple;
+			}
+		}
+		return result;
+	}
 	
 	/**
 	 * Returns the destination of the unit.
@@ -1187,9 +1269,9 @@ public class Unit extends GameObject {
 	@Model
 	private double getBaseSpeed() {
 		if (isSprinting())
-			return 3.0*(getStrength()+getAgility())/(2.0*getWeight());
+			return 3.0*(getStrength()+getAgility())/(2.0*getTotalWeight());
 		else
-			return 1.5*(getStrength()+getAgility())/(2.0*getWeight());
+			return 1.5*(getStrength()+getAgility())/(2.0*getTotalWeight());
 	}
 
 	/**
@@ -1392,10 +1474,12 @@ public class Unit extends GameObject {
 	}
 	
 	private void dropItem() {
-		getCarriedItem().setPosition(getPosition());
-		getWorld().addItem(getCarriedItem());
-		subTotalWeight(getCarriedItem());
-		carriedItem = null;
+		if (isCarryingItem()) {
+			getCarriedItem().setPosition(getPosition());
+			getWorld().addItem(getCarriedItem());
+			subTotalWeight(getCarriedItem());
+			carriedItem = null;
+		}
 	}
 	
 	
@@ -1483,7 +1567,7 @@ public class Unit extends GameObject {
 	private void startAttacking() throws IllegalTimeException {
 		setTimeToCompletion(1.0f);
 		setState(State.ATTACKING);
-		getDefender().setAttacked(true);
+		
 	}
 
 
@@ -1547,6 +1631,7 @@ public class Unit extends GameObject {
 
 
 			this.defender = defender;
+			getDefender().setAttacked(true);
 		}
 	}
 
@@ -1560,6 +1645,9 @@ public class Unit extends GameObject {
 	 * @return	True if and only if the given unit occupies the same
 	 * 			or a neighboring cube of the game world.
 	 * 			| result = (abs(getCubeCoordinate() - victim.getCubeCoordinate()) <= 1)
+	 * 
+	 * AND NOT SAME FACTION
+	 * 
 	 */
 	@Model
 	private boolean canAttack(Unit victim) {
@@ -1569,6 +1657,8 @@ public class Unit extends GameObject {
 			if ( Math.abs(attackerPos[i] - victimPos[i]) > 1)
 				return false;
 		}
+		if (getFaction() == victim.getFaction())
+			return false;
 		return true;
 	}
 
@@ -1581,6 +1671,9 @@ public class Unit extends GameObject {
 		return this.timeToCompletion;
 	}
 
+	
+	// ISVALIDTIME!!!!!!!!
+	
 	/**
 	 * Checks if a given value is a valid time to completion value.
 	 * 

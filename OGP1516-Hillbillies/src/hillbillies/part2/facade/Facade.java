@@ -270,12 +270,12 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public void moveTo(Unit unit, int[] cube) throws ModelException {
-		try {
+		//try {
 			unit.moveTo(cube);
-		}
-		catch (RuntimeException exc) {
+		//}
+		/*catch (RuntimeException exc) {
 			throw new ModelException();
-		}
+		}*/
 	}
 		
 	@Override

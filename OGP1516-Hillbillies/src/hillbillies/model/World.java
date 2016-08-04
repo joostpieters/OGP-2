@@ -149,14 +149,18 @@ public class World {
 	 * 		|		&& !(coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
 	 */
 	public boolean canHaveAsCoordinates(int[] coordinates) {
-		if (!(coordinates instanceof int[]) || coordinates.length != 3 )
-			return false;
-		if (coordinates[0] < 0 || coordinates[0] >= getNbCubesX())
-			return false;
-		if (coordinates[1] < 0 || coordinates[1] >= getNbCubesY())
-			return false;
-		if (coordinates[2] < 0 || coordinates[2] >= getNbCubesZ())
-			return false;
+		//assert(!(coordinates instanceof int[]) || coordinates.length != 3);
+		
+		if (!(coordinates instanceof int[]) || coordinates.length != 3 ) {
+			System.out.println("FOUT"); 
+			return false; }
+		if (coordinates[0] < 0 /*|| coordinates[0] >= getNbCubesX()*/) {
+			System.out.println("FOUT2"); 
+			return false; }
+		if (coordinates[1] < 0 || coordinates[1] >= getNbCubesY()) {
+			System.out.println("FOUT3"); return false; }
+		if (coordinates[2] < 0 || coordinates[2] >= getNbCubesZ()) {
+			System.out.println("FOUT4"); return false; }
 		return true;
 	}
 	
@@ -246,6 +250,25 @@ public class World {
 		return false;
 	}
 	
+	public int[] getRandomNeighbouringSolidCube() {
+		int x, y, z;
+		int[] position;
+		while(true) {
+			try {
+				x = random.nextInt(getNbCubesX());
+				y = random.nextInt(getNbCubesY());
+				z = random.nextInt(getNbCubesZ());
+				position = new int[]{x, y, z};
+				if (getCubeTypeAt(position).isPassable() && (
+						!getCubeTypeAt(new int[]{x, y, z-1}).isPassable() || z == 0))
+					break;
+			}
+			catch (IllegalPositionException exc){
+				continue;
+			}
+		}
+		return position;
+	}
 	
 	public void advanceTime(double dt) {
 		if (!isValidDT(dt))
@@ -309,30 +332,20 @@ public class World {
 	 */
 	public Unit spawnUnit() {
 		if (getAllUnits().size() < 100) {
-			int x, y, z;
-			while(true) {
-				try {
-					x = random.nextInt(getNbCubesX()+1);
-					y = random.nextInt(getNbCubesY()+1);
-					z = random.nextInt(getNbCubesZ()+1);
-					if (getCubeTypeAt(new int[]{x, y, z}).isPassable() && (
-							!getCubeTypeAt(new int[]{x, y, z-1}).isPassable() || z == 0))
-						break;
-				}
-				catch (IllegalPositionException exc){
-					continue;
-				}
-			}
-			int[] position = new int[]{x, y, z};
+			int[] position = getRandomNeighbouringSolidCube();
 			
+			double[] doublePosition = getCubeCenter(position);
 			
 			int agility = random.nextInt(76) + 25;
 			int strength = random.nextInt(76) + 25;
 			int toughness = random.nextInt(76) + 25;
 			int weight = (strength+agility)/2 + random.nextInt(100 - (strength+agility)/2);
-			Unit unit = new Unit("Name", position, weight, agility, strength, toughness, true);
+			Unit unit = new Unit("Name", weight, agility, strength, toughness, true);
 			
 			this.addUnit(unit);
+			
+			unit.setPosition(doublePosition);
+			
 			if (this.getNbFactions() < 5) {
 				Faction faction = new Faction();
 				addFaction(faction);
