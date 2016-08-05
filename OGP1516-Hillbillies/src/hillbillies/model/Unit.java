@@ -911,9 +911,16 @@ public class Unit extends GameObject {
 		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
 			throw new IllegalArgumentException();
 
-		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
-			startMoving();
-
+		System.out.println("Movetoadjacent");
+		System.out.println(!isMoving());
+//		System.out.println(!isAttacked());
+//		System.out.println(getState() != State.RESTING_1);
+//		System.out.println(!isFalling());
+		
+		if (/*!isMoving() &&*/ !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
+			/*startMoving();*/
+			
+			System.out.println("if MTA");
 			double[] newPosition = new double[3];
 			double[] direction = new double[3];
 
@@ -972,6 +979,7 @@ public class Unit extends GameObject {
 	private void moveTowards(int[] destCube) {
 						
 			if ((getCubeCoordinate() != destCube)) {
+				startMoving();
 				
 				int[] startCube = getCubeCoordinate();
 				
@@ -1001,12 +1009,16 @@ public class Unit extends GameObject {
 					if (Tuple.containsCube(path, startCube)) {
 						System.out.println("if MT");
 						Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
+						
 						System.out.println(nextTuple.toString());
+						System.out.println(Arrays.toString(startCube));
 						
 						int[] cubeDirection = new int[3];
 						for (int i=0; i<cubeDirection.length; i++) {
 							cubeDirection[i] = nextTuple.cube[i] - startCube[i];
 						}
+						
+						System.out.println(Arrays.toString(cubeDirection));
 						
 						System.out.println("MTA MT");
 						moveToAdjacent(cubeDirection);
