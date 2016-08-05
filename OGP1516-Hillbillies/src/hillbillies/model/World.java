@@ -152,15 +152,17 @@ public class World {
 		//assert(!(coordinates instanceof int[]) || coordinates.length != 3);
 		
 		if (!(coordinates instanceof int[]) || coordinates.length != 3 ) {
-			System.out.println("FOUT"); 
+			//System.out.println("FOUT"); 
 			return false; }
-		if (coordinates[0] < 0 /*|| coordinates[0] >= getNbCubesX()*/) {
-			System.out.println("FOUT2"); 
+		if (coordinates[0] < 0 || coordinates[0] >= getNbCubesX()) {
+			//System.out.println("FOUT2"); 
 			return false; }
 		if (coordinates[1] < 0 || coordinates[1] >= getNbCubesY()) {
-			System.out.println("FOUT3"); return false; }
+			//System.out.println("FOUT3"); 
+			return false; }
 		if (coordinates[2] < 0 || coordinates[2] >= getNbCubesZ()) {
-			System.out.println("FOUT4"); return false; }
+			//System.out.println("FOUT4"); 
+			return false; }
 		return true;
 	}
 	
@@ -214,8 +216,9 @@ public class World {
 		
 		Set<int[]> neighbours = getNeighbours(coordinates);
 		for (int[] neighbour: neighbours) {
-			if (!getCubeTypeAt(neighbour).isPassable())
-				return true;
+			if (canHaveAsCoordinates(neighbour))
+				if (!getCubeTypeAt(neighbour).isPassable())
+					return true;
 		}
 		return false;
 	}

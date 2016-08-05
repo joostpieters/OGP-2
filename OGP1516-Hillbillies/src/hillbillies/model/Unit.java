@@ -167,7 +167,7 @@ public class Unit extends GameObject {
 
 		setOrientation((float)(Math.PI/2.0));
 
-		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
+		this.setDefaultBehaviorEnabled(false);
 		this.setState(State.EMPTY);
 	}
 	
@@ -201,7 +201,7 @@ public class Unit extends GameObject {
 
 		setOrientation((float)(Math.PI/2.0));
 
-		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
+		this.setDefaultBehaviorEnabled(false);
 		this.setState(State.EMPTY);
 	}
 
@@ -962,6 +962,7 @@ public class Unit extends GameObject {
 		this.destCubeLTReached = false;
 		
 		if (getState() != State.RESTING_1) {
+			System.out.println("Movetowards");
 			moveTowards(destCube);
 		}
 	}
@@ -969,32 +970,50 @@ public class Unit extends GameObject {
 	
 	
 	private void moveTowards(int[] destCube) {
-			
 						
 			if ((getCubeCoordinate() != destCube)) {
 				
-				//int n = 0;
 				int[] startCube = getCubeCoordinate();
 				
 				Queue<Tuple> path = new LinkedList<Tuple>();
 				
-				while(!startCube.equals(getDestCubeLT())) {
-					
+				while(!startCube.equals(destCube)) {
+					System.out.println("1st loop MT");
 					path.add(new Tuple(getDestCubeLT(), 0));
 					
+					/*for (Tuple tuple: path) {
+						System.out.println(tuple.toString());
+					}*/
+					
 					while(!Tuple.containsCube(path, startCube) && Tuple.hasNext(path)) {
+						
+						System.out.println("2nd loop MT");
 						Tuple nextTuple = Tuple.getNext(path);
 						search(nextTuple, path);
 						nextTuple.isChecked = true;
+						//System.out.println("2nd loop MT    gggg");
+						//System.out.println(Arrays.toString(startCube));
+						//break;
 					}
 					
+					System.out.println("after while MT");
+					
 					if (Tuple.containsCube(path, startCube)) {
+						System.out.println("if MT");
 						Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
+						System.out.println(nextTuple.toString());
 						
-						moveToAdjacent(nextTuple.cube);
+						int[] cubeDirection = new int[3];
+						for (int i=0; i<cubeDirection.length; i++) {
+							cubeDirection[i] = nextTuple.cube[i] - startCube[i];
+						}
+						
+						System.out.println("MTA MT");
+						moveToAdjacent(cubeDirection);
 						startCube = getCubeCoordinate();
 					}
 					else {
+						System.out.println("else MT");
 						break; 
 					}
 				}
@@ -1003,25 +1022,30 @@ public class Unit extends GameObject {
 	}
 	
 	
-	private void search(Tuple startTuple, Queue<Tuple> path) {
+	private void search(Tuple currentTuple, Queue<Tuple> path) {
 		
 		List<int[]> cubes = new ArrayList<int[]>();
 		
-		Set<int[]> neighbours = getWorld().getNeighbours(startTuple.cube);
+		Set<int[]> neighbours = getWorld().getNeighbours(currentTuple.cube);
 		for (int[] neighbour: neighbours) {
 			if (getWorld().getCubeTypeAt(neighbour).isPassable()
 					
 					&& getWorld().isNeighbouringSolid(neighbour)
 					
-					&& !Tuple.containsCubeWithSmallerN(path, neighbour, startTuple)
+					&& !Tuple.containsCubeWithSmallerN(path, neighbour, currentTuple)
 					) {
+				//System.out.println("if S");
 				cubes.add(neighbour);
 			}
 		}
 		
 		for (int[] cube: cubes) {
-			path.add(new Tuple(cube, startTuple.n + 1));
+			path.add(new Tuple(cube, currentTuple.n + 1));
 		}
+		/*for (Tuple tuple: path) {
+			System.out.print(tuple.toString());
+		}
+		System.out.println("");*/
 	}
 	
 	
@@ -1030,13 +1054,13 @@ public class Unit extends GameObject {
 		Tuple result = null;
 		boolean first = false;
 		
-		for (Tuple tuple: path) {
-			if (!first && neighbours.contains(tuple.cube)) {
-				result = tuple;
+		for (int[] neighbour: neighbours) {
+			if (!first && Tuple.containsCube(path, neighbour)) {
+				result = Tuple.getCubeTuple(path, neighbour);
 				first = true;
 			}
-			if (neighbours.contains(tuple.cube) && tuple.n < result.n) {
-				result = tuple;
+			else if (Tuple.containsCube(path, neighbour) && Tuple.getCubeTuple(path, neighbour).n < result.n) {
+				result = Tuple.getCubeTuple(path, neighbour);
 			}
 		}
 		return result;
