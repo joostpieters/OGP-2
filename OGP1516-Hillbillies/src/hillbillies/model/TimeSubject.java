@@ -114,7 +114,7 @@ public abstract class TimeSubject {
 	/**
 	 * Variable registering whether or not this item is terminated.
 	 */
-	private boolean isTerminated = false;
+	protected boolean isTerminated = false;
 	
 	/**
 	 * Check whether this item is terminated.
@@ -133,7 +133,6 @@ public abstract class TimeSubject {
 	public void terminate() {
 		this.isTerminated = true;
 	}
-	
 	
 	
 	

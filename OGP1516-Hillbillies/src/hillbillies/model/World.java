@@ -231,8 +231,6 @@ public class World {
 	
 	public boolean isNeighbouring(Coordinate coordinates, Coordinate neighbourCoordinates) {
 		Set<Coordinate> neighbours = getNeighbours(coordinates);
-		System.out.println(neighbours.toString());
-		System.out.println(neighbours.contains(neighbourCoordinates));
 		return (neighbours.contains(neighbourCoordinates));
 	}
 	
@@ -267,6 +265,11 @@ public class World {
 			}
 		}
 		return position;
+	}
+	
+	
+	public Coordinate getRandomNeighbouringCube(Coordinate coordinate) {
+		return getNeighbours(coordinate).iterator().next();
 	}
 	
 	public void advanceTime(double dt) {
@@ -1100,6 +1103,8 @@ public class World {
 				this.factions.remove(faction);
 			}
 		}
+		
+		
 		for (Log log: this.logs) {
 			if (!log.isTerminated()) {
 				log.setWorld(null);

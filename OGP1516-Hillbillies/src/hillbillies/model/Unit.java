@@ -706,43 +706,45 @@ public class Unit extends GameObject {
 			dropItem();
 			terminate();
 		}
-		if (!isResting()) {
-			setTimeAfterResting(getTimeAfterResting() + dt);
-		}
-		
-		if (!isNeighbouringSolid(getCubeCoordinate()) && !isFalling())
-			fall();
-		
-		if (isFalling()) {
-			controlFalling(dt);
-		}
-
-		else if (getTimeAfterResting() >= 180.0) {
-			startResting();
-		}
-
-		else if (isResting()) {
-			controlResting(dt);
-		}
-		else if (isMoving()) {
-			controlMoving(dt);
-		}
-		else if (getState() == State.EMPTY) {
-			if (!(isDestCubeLTReached(dt))
-						&& !getCubeCoordinate().equals(getDestCubeLT()) ) {
-				
-				moveTo(getDestCubeLT());
-				//System.out.println("advt stEM LTnr");
+		else {
+			controlXP();
+			
+			if (!isResting()) {
+				setTimeAfterResting(getTimeAfterResting() + dt);
 			}
-			controlWaiting(dt);
-		}
-		else if (isAttacking()) {
-			controlAttacking(dt);
-		}
-		else if (isWorking()) {
-			controlWorking(dt);
-		}
 
+			if (!isNeighbouringSolid(getCubeCoordinate()) && !isFalling())
+				fall();
+
+			if (isFalling()) {
+				controlFalling(dt);
+			}
+
+			else if (getTimeAfterResting() >= 180.0) {
+				startResting();
+			}
+
+			else if (isResting()) {
+				controlResting(dt);
+			}
+			else if (isMoving()) {
+				controlMoving(dt);
+			}
+			else if (getState() == State.EMPTY) {
+				if (!(isDestCubeLTReached(dt))
+						&& !getCubeCoordinate().equals(getDestCubeLT()) ) {
+
+					moveTo(getDestCubeLT());
+				}
+				controlWaiting(dt);
+			}
+			else if (isAttacking()) {
+				controlAttacking(dt);
+			}
+			else if (isWorking()) {
+				controlWorking(dt);
+			}
+		}
 	}
 	
 	private void fall() {
@@ -760,7 +762,7 @@ public class Unit extends GameObject {
 	private void controlFalling(double dt) throws IllegalPositionException {
 		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate().get(2) == 0) {
 			
-			int lostHP = getStartFallingCube().get(2) - getCubeCoordinate().get(2);
+			int lostHP = 10*(getStartFallingCube().get(2) - getCubeCoordinate().get(2));
 			setStartFallingCube();
 			this.updateCurrentHitPoints(getCurrentHitPoints() - lostHP);
 			setState(State.EMPTY);
@@ -796,18 +798,24 @@ public class Unit extends GameObject {
 
 		if (isDefaultBehaviorEnabled()) {
 			double dice = random.nextDouble();
-			if (dice < 1.0/3.0) {
-
-				Coordinate destCube = getWorld().getRandomNeighbouringSolidCube(); //NIET ALTIJD
-				// BEREIKBAAR!!!!!!!!!!!!!!!
+			if (dice < 1.0/4.0) {
+				
+				Coordinate destCube;
+				do {
+				destCube = getWorld().getRandomNeighbouringSolidCube();
+				} while (!isReachable(destCube));
+				
 				moveTo(destCube);
 
 			}
-			else if (dice >1.0/3.0 && dice < 2.0/3.0) {
-				startWorking();
+			else if (dice >1.0/4.0 && dice < 2.0/4.0) {
+				workAt(this.getWorld().getRandomNeighbouringCube(getCubeCoordinate()));
+			}
+			else if (dice >2.0/4.0 && dice < 3.0/4.0 && enemiesInRange()) {
+				attack(getEnemyInRange());
 			}
 			else {
-				startResting();
+				rest();
 			}
 			if (isMoving()) {
 				if (dice < 0.5) {
@@ -863,6 +871,7 @@ public class Unit extends GameObject {
 			else if (reached(dt)) {
 
 				setPosition(World.getCubeCenter(getDestination()));
+				addXP(1);
 				
 				if (getCubeCoordinate().equals(getDestCubeLT()) ) {
 					
@@ -961,25 +970,12 @@ public class Unit extends GameObject {
 		
 		if (getState() != State.RESTING_1) {
 			
-			Queue<Tuple> path = new LinkedList<Tuple>();
 			Coordinate startCube = getCubeCoordinate();
+			Queue<Tuple> path = computePath(getDestCubeLT());
 			
-			path.add(new Tuple(getDestCubeLT(), 0));
+			if (path == null) this.destCubeLTReached = true;
 			
-			int iterations = 0;
-			while(!Tuple.containsCube(path, startCube) && Tuple.hasNext(path) && iterations < 301) {
-				
-				Tuple nextTuple = Tuple.getNext(path);
-				search(nextTuple, path);
-				nextTuple.isChecked = true;
-				iterations++;
-				
-				if (iterations == 301) {
-					this.destCubeLTReached = true;
-				}
-			}
-			
-			if (Tuple.containsCube(path, startCube)) {
+			else if (Tuple.containsCube(path, startCube)) {
 				Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
 				
 				moveTowards(nextTuple.cube);
@@ -988,6 +984,26 @@ public class Unit extends GameObject {
 		}
 	}
 	
+	private Queue<Tuple> computePath(Coordinate destCube) {
+		Queue<Tuple> path = new LinkedList<Tuple>();
+		path.add(new Tuple(destCube, 0));
+		
+		int iterations = 0;
+		while(!Tuple.containsCube(path, getCubeCoordinate()) 
+				&& Tuple.hasNext(path) && iterations < 301) {
+			
+			Tuple nextTuple = Tuple.getNext(path);
+			search(nextTuple, path);
+			nextTuple.isChecked = true;
+			iterations++;
+			
+			if (iterations == 301) {
+				//this.destCubeLTReached = true;
+				return null;
+			}
+		}
+		return path;
+	}
 	
 	
 	private void moveTowards(Coordinate destCube) {
@@ -1046,6 +1062,10 @@ public class Unit extends GameObject {
 			}
 		}
 		return result;
+	}
+	
+	private boolean isReachable(Coordinate destCube) {
+		return (computePath(destCube) == null);
 	}
 	
 	/**
@@ -1431,7 +1451,37 @@ public class Unit extends GameObject {
 	private void controlWorking(double dt) throws IllegalTimeException {
 		setTimeToCompletion((float) (getTimeToCompletion() - dt));
 		if (getTimeToCompletion() < 0.0) {
+			
 			setState(State.EMPTY);
+			
+			if (isCarryingItem()) {
+				dropItem();
+				addXP(10);
+				
+			} else {
+				Set<Item> items = getWorld().getObjectsAt(getCubeCoordinate());
+				
+				if ((getWorld().getCubeTypeAt(getTargetCube())==TerrainType.WORKSHOP)
+							&& getWorld().containsLog(items)
+							&& getWorld().containsBoulder(items)) {
+					improveEquipment(items);
+					addXP(10);
+					
+				} else if (getWorld().containsBoulder(items)) {
+					pickUpItem(getWorld().getBoulderFrom(items));
+					addXP(10);
+					
+				} else if (getWorld().containsLog(items)) {
+					pickUpItem(getWorld().getLogFrom(items));
+					addXP(10);
+					
+				} else if (getWorld().getCubeTypeAt(getTargetCube()) == TerrainType.TREE
+								|| getWorld().getCubeTypeAt(getTargetCube()) == TerrainType.ROCK) {
+					getWorld().collapse(getTargetCube(), 1.00);
+					addXP(10);
+				}
+			}
+			
 		}
 	}
 
@@ -1451,37 +1501,32 @@ public class Unit extends GameObject {
 	
 	public void workAt(Coordinate targetCube) throws IllegalTargetException {
 		
-		if (! (getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
+		/*if (! (getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
 				|| getCubeCoordinate().equals(targetCube)))
 			
-			throw new IllegalTargetException(getCubeCoordinate(), targetCube);
+			throw new IllegalTargetException(getCubeCoordinate(), targetCube);*/
 		
 		if (!isMoving() && getState() != State.RESTING_1 && !isFalling()) {
+			
+			setTargetCube(targetCube);
 			startWorking();
 			
-			if (isCarryingItem()) {
-				dropItem();
-			} else {
-				Set<Item> items = getWorld().getObjectsAt(getCubeCoordinate());
-				
-				if ((getWorld().getCubeTypeAt(targetCube)==TerrainType.WORKSHOP)
-							&& getWorld().containsLog(items)
-							&& getWorld().containsBoulder(items)) {
-					improveEquipment(items);
-					
-				} else if (getWorld().containsBoulder(items)) {
-					pickUpItem(getWorld().getBoulderFrom(items));
-					
-				} else if (getWorld().containsLog(items)) {
-					pickUpItem(getWorld().getLogFrom(items));
-					
-				} else if (getWorld().getCubeTypeAt(targetCube) == TerrainType.TREE
-								|| getWorld().getCubeTypeAt(targetCube) == TerrainType.ROCK) {
-					getWorld().collapse(targetCube, 1.00);
-				}
-			}
 		}
 	}
+	
+	private void setTargetCube(Coordinate target) {
+		if (!getWorld().canHaveAsCoordinates(target)
+				|| !(getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
+				|| getCubeCoordinate().equals(targetCube)) )
+			throw new IllegalTargetException(getCubeCoordinate(), targetCube);
+		this.targetCube = target;
+	}
+	
+	private Coordinate getTargetCube() {
+		return this.targetCube;
+	}
+	
+	private Coordinate targetCube = null;
 	
 	private void dropItem() {
 		if (isCarryingItem()) {
@@ -1596,6 +1641,8 @@ public class Unit extends GameObject {
 				getDefender().defend(this);
 				getDefender().setAttacked(false);
 				setState(State.EMPTY);
+				
+				//addXP(20);
 			}
 		}
 	}
@@ -1670,6 +1717,26 @@ public class Unit extends GameObject {
 		if (getFaction() == victim.getFaction())
 			return false;
 		return true;
+	}
+	
+	
+	private boolean enemiesInRange() {
+		Iterator<Unit> it = getWorld().getAllUnits().iterator();
+		while (it.hasNext()) {
+			if (canAttack(it.next()))
+				return true;
+		}
+		return false;
+	}
+	
+	
+	private Unit getEnemyInRange() {
+		Iterator<Unit> it = getWorld().getAllUnits().iterator();
+		while (it.hasNext()) {
+			if (canAttack(it.next()))
+				return it.next();
+		}
+		return null;
 	}
 
 
@@ -1751,7 +1818,12 @@ public class Unit extends GameObject {
 			boolean blocked = this.block(attacker);
 			if (!blocked) {
 				this.takeDamage(attacker);
+				attacker.addXP(20);
+			} else {
+				addXP(20);
 			}
+		} else {
+			addXP(20);
 		}
 	}
 
@@ -2130,12 +2202,69 @@ public class Unit extends GameObject {
 	private boolean defaultBehavior;
 	
 	
+	private void controlXP() {
+		while (getTXP() > 10) {
+			subTXP(10);
+			double dice = random.nextDouble();
+			
+			if (dice < 1.0/3.0 && isValidStrength(getStrength() + 1)) {
+				setStrength(getStrength() + 1);
+				
+				if (!isValidStrength(getStrength() + 1)) {
+					if (isValidAgility(getAgility() + 1)) {
+						setAgility(getAgility() + 1);
+					} else if (isValidToughness(getToughness() + 1)) {
+						setToughness(getToughness() + 1);
+					}
+				}
+			}
+			else if (dice > 1.0/3.0 && dice < 2.0/3.0
+					&& isValidAgility(getAgility() + 1)) {
+				setAgility(getAgility() + 1);
+				
+				if (!isValidAgility(getAgility() + 1)) {
+					if (isValidStrength(getStrength() + 1)) {
+						setStrength(getStrength() + 1);
+					} else if (isValidToughness(getToughness() + 1)) {
+						setToughness(getToughness() + 1);
+					}
+				}
+			}
+			else if (isValidToughness(getToughness() + 1)) {
+				setToughness(getToughness() + 1);
+				
+				if (!isValidToughness(getToughness() + 1)) {
+					if (isValidStrength(getStrength() + 1)) {
+						setStrength(getStrength() + 1);
+					} else if (isValidAgility(getAgility() + 1)) {
+						setAgility(getAgility() + 1);
+					}
+				}
+			}
+		}
+	}
+	
 	@Basic @Raw
 	public int getExperiencePoints() {
 		return this.xp;
 	}
 	
+	private void addXP(int x) {
+		this.xp += x;
+		this.tempXp += x;
+	}
+	
 	private int xp;
+	
+	public int getTXP() {
+		return this.tempXp;
+	}
+	
+	private void subTXP(int x) {
+		this.tempXp -= x;
+	}
+	
+	private int tempXp;
 	
 	
 	
@@ -2292,6 +2421,11 @@ public class Unit extends GameObject {
 			throw new IllegalArgumentException();
 		this.faction = faction;
 	}
+	
+	
+	/*public void terminate() {
+		this.isTerminated = true;
+	}*/
 	
 	
 	/* ISVALID POSITION etc IN WORLD IPV IN UNIT, ITEM AFZONDERLIJK???????
