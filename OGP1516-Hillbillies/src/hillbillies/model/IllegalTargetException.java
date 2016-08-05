@@ -13,7 +13,7 @@ public class IllegalTargetException extends RuntimeException {
 	 * 
 	 * ...
 	 */
-	public IllegalTargetException(int[] positionCube, int[] targetCube) {
+	public IllegalTargetException(Coordinate positionCube, Coordinate targetCube) {
 		this.positionCube = positionCube;
 		this.targetCube = targetCube;
 	}
@@ -23,8 +23,8 @@ public class IllegalTargetException extends RuntimeException {
 		return position;
 	}*/
 	
-	private final int[] positionCube;
-	private final int[] targetCube;
+	private final Coordinate positionCube;
+	private final Coordinate targetCube;
 	
 	
 }

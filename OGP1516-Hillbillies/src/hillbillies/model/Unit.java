@@ -226,10 +226,9 @@ public class Unit extends GameObject {
 	 * 		|				[intPosition[0]][intPosition[1]][intPosition[2]]).isPassable()
 	 * 		|		&& isNeighbouringSolid(convertPositionToInt(position)) )
 	 */
-	protected boolean canHaveAsPosition(double[] position) {
+	protected boolean canHaveAsPosition(Coordinate position) {
 		boolean value = super.canHaveAsPosition(position);
-		if (!isNeighbouringSolid(convertPositionToInt(position)) ) {
-			System.out.println("Hallo");
+		if (!isNeighbouringSolid(position) ) {
 			return false;
 		}
 		return value;
@@ -730,9 +729,9 @@ public class Unit extends GameObject {
 		}
 		else if (getState() == State.EMPTY) {
 			if (!(isDestCubeLTReached(dt))
-						&& !Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
+						&& !getCubeCoordinate().equals(getDestCubeLT()) ) {
 				
-				moveTowards(getDestCubeLT());
+				moveTo(getDestCubeLT());
 				//System.out.println("advt stEM LTnr");
 			}
 			controlWaiting(dt);
@@ -759,9 +758,9 @@ public class Unit extends GameObject {
 	}
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate()[2] == 0) {
+		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate().get(2) == 0) {
 			
-			int lostHP = getStartFallingCube()[2] - getCubeCoordinate()[2];
+			int lostHP = getStartFallingCube().get(2) - getCubeCoordinate().get(2);
 			setStartFallingCube();
 			this.updateCurrentHitPoints(getCurrentHitPoints() - lostHP);
 			setState(State.EMPTY);
@@ -772,7 +771,7 @@ public class Unit extends GameObject {
 		}
 	}
 	
-	private void setStartFallingCube(int[] coordinate) {
+	private void setStartFallingCube(Coordinate coordinate) {
 		this.startFallingCube = coordinate;
 	}
 	
@@ -780,11 +779,11 @@ public class Unit extends GameObject {
 		this.startFallingCube = null;
 	}
 	
-	private int[] getStartFallingCube() {
+	private Coordinate getStartFallingCube() {
 		return this.startFallingCube;
 	}
 	
-	private int[] startFallingCube = null;
+	private Coordinate startFallingCube = null;
 	
 	
 	
@@ -799,7 +798,7 @@ public class Unit extends GameObject {
 			double dice = random.nextDouble();
 			if (dice < 1.0/3.0) {
 
-				int[] destCube = getWorld().getRandomNeighbouringSolidCube(); //NIET ALTIJD
+				Coordinate destCube = getWorld().getRandomNeighbouringSolidCube(); //NIET ALTIJD
 				// BEREIKBAAR!!!!!!!!!!!!!!!
 				moveTo(destCube);
 
@@ -863,13 +862,10 @@ public class Unit extends GameObject {
 			}
 			else if (reached(dt)) {
 
-				setPosition(getDestination());
+				setPosition(World.getCubeCenter(getDestination()));
 				
-				if (Arrays.equals(getCubeCoordinate(), getDestCubeLT()) ) {
-					/*System.out.println("ben er");
-					System.out.println(Arrays.toString(getCubeCoordinate()));
-					System.out.println("EQ");
-					System.out.println(Arrays.toString(getDestCubeLT()));*/
+				if (getCubeCoordinate().equals(getDestCubeLT()) ) {
+					
 					this.destCubeLTReached = true;
 					if (isSprinting()) stopSprinting();
 				}
@@ -911,16 +907,10 @@ public class Unit extends GameObject {
 		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
 			throw new IllegalArgumentException();
 
-		System.out.println("Movetoadjacent");
-		System.out.println(!isMoving());
-//		System.out.println(!isAttacked());
-//		System.out.println(getState() != State.RESTING_1);
-//		System.out.println(!isFalling());
-		
-		if (/*!isMoving() &&*/ !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
-			/*startMoving();*/
+
+		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
+			startMoving();
 			
-			System.out.println("if MTA");
 			double[] newPosition = new double[3];
 			double[] direction = new double[3];
 
@@ -932,7 +922,7 @@ public class Unit extends GameObject {
 			}
 			
 			try {
-				setDestination(newPosition);
+				setDestination(convertPositionToCoordinate(newPosition));
 			}
 			catch (IllegalPositionException e) {
 				setState(State.EMPTY);
@@ -958,10 +948,11 @@ public class Unit extends GameObject {
 	 * 			The given destination cube is not valid.
 	 * 			| !canHaveAsPosition(convertPositionToDouble(destCube))
 	 */
-	public void moveTo(int[] destCube) throws IllegalPositionException,
+	public void moveTo(Coordinate destCube) throws IllegalPositionException,
 						IllegalArgumentException {
-
-		if (!canHaveAsPosition(convertPositionToDouble(destCube))) {
+		
+		//System.out.println(Arrays.toString(convertPositionToDouble(destCube)));
+		if (!canHaveAsPosition(destCube)) {
 			throw new IllegalPositionException(destCube);
 		}
 		
@@ -969,66 +960,49 @@ public class Unit extends GameObject {
 		this.destCubeLTReached = false;
 		
 		if (getState() != State.RESTING_1) {
-			System.out.println("Movetowards");
-			moveTowards(destCube);
+			
+			Queue<Tuple> path = new LinkedList<Tuple>();
+			Coordinate startCube = getCubeCoordinate();
+			
+			path.add(new Tuple(getDestCubeLT(), 0));
+			
+			int iterations = 0;
+			while(!Tuple.containsCube(path, startCube) && Tuple.hasNext(path) && iterations < 301) {
+				
+				Tuple nextTuple = Tuple.getNext(path);
+				search(nextTuple, path);
+				nextTuple.isChecked = true;
+				iterations++;
+				
+				if (iterations == 301) {
+					this.destCubeLTReached = true;
+				}
+			}
+			
+			if (Tuple.containsCube(path, startCube)) {
+				Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
+				
+				moveTowards(nextTuple.cube);
+			}
+			
 		}
 	}
 	
 	
 	
-	private void moveTowards(int[] destCube) {
+	private void moveTowards(Coordinate destCube) {
 						
 			if ((getCubeCoordinate() != destCube)) {
-				startMoving();
+				//startMoving();
 				
-				int[] startCube = getCubeCoordinate();
+				Coordinate startCube = getCubeCoordinate();
 				
-				Queue<Tuple> path = new LinkedList<Tuple>();
-				
-				while(!startCube.equals(destCube)) {
-					System.out.println("1st loop MT");
-					path.add(new Tuple(getDestCubeLT(), 0));
-					
-					/*for (Tuple tuple: path) {
-						System.out.println(tuple.toString());
-					}*/
-					
-					while(!Tuple.containsCube(path, startCube) && Tuple.hasNext(path)) {
-						
-						System.out.println("2nd loop MT");
-						Tuple nextTuple = Tuple.getNext(path);
-						search(nextTuple, path);
-						nextTuple.isChecked = true;
-						//System.out.println("2nd loop MT    gggg");
-						//System.out.println(Arrays.toString(startCube));
-						//break;
-					}
-					
-					System.out.println("after while MT");
-					
-					if (Tuple.containsCube(path, startCube)) {
-						System.out.println("if MT");
-						Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
-						
-						System.out.println(nextTuple.toString());
-						System.out.println(Arrays.toString(startCube));
-						
-						int[] cubeDirection = new int[3];
-						for (int i=0; i<cubeDirection.length; i++) {
-							cubeDirection[i] = nextTuple.cube[i] - startCube[i];
-						}
-						
-						System.out.println(Arrays.toString(cubeDirection));
-						
-						System.out.println("MTA MT");
-						moveToAdjacent(cubeDirection);
-						startCube = getCubeCoordinate();
-					}
-					else {
-						System.out.println("else MT");
-						break; 
-					}
+				int[] cubeDirection = new int[3];
+				for (int i=0; i<cubeDirection.length; i++) {
+					cubeDirection[i] = destCube.get(i) - startCube.get(i);
 				}
+				
+				moveToAdjacent(cubeDirection);
 				
 			}
 	}
@@ -1036,10 +1010,10 @@ public class Unit extends GameObject {
 	
 	private void search(Tuple currentTuple, Queue<Tuple> path) {
 		
-		List<int[]> cubes = new ArrayList<int[]>();
+		List<Coordinate> cubes = new LinkedList<Coordinate>();
 		
-		Set<int[]> neighbours = getWorld().getNeighbours(currentTuple.cube);
-		for (int[] neighbour: neighbours) {
+		Set<Coordinate> neighbours = getWorld().getNeighbours(currentTuple.cube);
+		for (Coordinate neighbour: neighbours) {
 			if (getWorld().getCubeTypeAt(neighbour).isPassable()
 					
 					&& getWorld().isNeighbouringSolid(neighbour)
@@ -1051,22 +1025,18 @@ public class Unit extends GameObject {
 			}
 		}
 		
-		for (int[] cube: cubes) {
+		for (Coordinate cube: cubes) {
 			path.add(new Tuple(cube, currentTuple.n + 1));
 		}
-		/*for (Tuple tuple: path) {
-			System.out.print(tuple.toString());
-		}
-		System.out.println("");*/
 	}
 	
 	
-	public Tuple getNeighbourWSmallestN(Queue<Tuple> path, int[] cube) {
-		Set<int[]> neighbours = getWorld().getNeighbours(cube);
+	private Tuple getNeighbourWSmallestN(Queue<Tuple> path, Coordinate cube) {
+		Set<Coordinate> neighbours = getWorld().getNeighbours(cube);
 		Tuple result = null;
 		boolean first = false;
 		
-		for (int[] neighbour: neighbours) {
+		for (Coordinate neighbour: neighbours) {
 			if (!first && Tuple.containsCube(path, neighbour)) {
 				result = Tuple.getCubeTuple(path, neighbour);
 				first = true;
@@ -1082,7 +1052,7 @@ public class Unit extends GameObject {
 	 * Returns the destination of the unit.
 	 */
 	@Basic @Model
-	public double[] getDestination() {
+	public Coordinate getDestination() {
 		return this.destination;
 	}
 
@@ -1100,20 +1070,18 @@ public class Unit extends GameObject {
 	 * 			The given destination is not a valid position.
 	 * 		| !canHaveAsPosition(newDestination)
 	 */
-	private void setDestination(double[] newDestination) throws IllegalPositionException {
+	private void setDestination(Coordinate newDestination) throws IllegalPositionException {
 		if (!canHaveAsPosition(newDestination)) {
 			throw new IllegalPositionException(newDestination);
 		}
-		for (int i=0; i<3; i++) {
-			this.destination[i] = newDestination[i];
-		}
+		this.destination = newDestination;
 	}
 
 	/**
 	 * Returns the long term destination of the unit.
 	 */
 	@Basic
-	public int[] getDestCubeLT() {
+	public Coordinate getDestCubeLT() {
 		return this.destCubeLT;
 	}
 	
@@ -1148,9 +1116,9 @@ public class Unit extends GameObject {
 	 * 		| !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
 	 * 				|| destCubeLT == null )
 	 */
-	private void setDestCubeLT(int[] destCubeLT) throws IllegalPositionException {
-		if ( !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
-									|| destCubeLT == new int[]{-1,-1,-1}) )
+	private void setDestCubeLT(Coordinate destCubeLT) throws IllegalPositionException {
+		if ( !canHaveAsPosition(destCubeLT) 
+									/*|| destCubeLT == new int[]{-1,-1,-1}*/ )
 			throw new IllegalPositionException(destCubeLT);
 		this.destCubeLT = destCubeLT;
 	}
@@ -1159,12 +1127,12 @@ public class Unit extends GameObject {
 	/**
 	 * Variable registering the destination of the unit in the game world.
 	 */
-	private double[] destination = new double[3]; //{0.0,0.0,0.0};
+	private Coordinate destination = new Coordinate(0,0,0);
 
 	/**
 	 * Variable registering the long term destination of the unit in the game world.
 	 */
-	private int[] destCubeLT = new int[3];
+	private Coordinate destCubeLT = new Coordinate(0,0,0);
 	
 	/**
 	 * Variable registering whether the long term destination had been reached.
@@ -1182,7 +1150,7 @@ public class Unit extends GameObject {
 	 * 			| result = (getDistanceToDestination(getPosition()) < getCurrentSpeed()*dt)
 	 */
 	private boolean reached(double dt) throws IllegalPositionException {
-		return (getDistanceTo(getPosition(), getDestination()) < getCurrentSpeed()*dt);
+		return (getDistanceTo(getPosition(), World.getCubeCenter(getDestination())) < getCurrentSpeed()*dt);
 	}
 
 
@@ -1205,7 +1173,7 @@ public class Unit extends GameObject {
 	 */
 	@Model
 	private double getDistanceTo(double[] position, double[] position2) throws IllegalPositionException {
-		if (!canHaveAsPosition(position))
+		if (!canHaveAsPosition(convertPositionToCoordinate(position)))
 			throw new IllegalPositionException(position);
 
 		return Math.sqrt(Math.pow(position[0]-position2[0],2)
@@ -1281,10 +1249,10 @@ public class Unit extends GameObject {
 		if (isFalling())
 			return new double[]{0.0,0.0,-3.0};
 		
-		double d = getDistanceTo(getPosition(), getDestination());
+		double d = getDistanceTo(getPosition(), World.getCubeCenter(getDestination()));
 		double[] v = new double[3];
 		for (int i=0; i<3; ++i) {
-			v[i] = getCurrentSpeed()*(getDestination()[i]-getPosition()[i])/d;//getMovingDirection()[i]/d;
+			v[i] = getCurrentSpeed()*(World.getCubeCenter(getDestination())[i]-getPosition()[i])/d;//getMovingDirection()[i]/d;
 		}
 		return v;
 	}
@@ -1332,9 +1300,9 @@ public class Unit extends GameObject {
 	 */
 	public double getCurrentSpeed() {
 		if (isMoving()) {
-			if ((getDestination()[2] - getPosition()[2]) > 0.0)
+			if ((World.getCubeCenter(getDestination())[2] - getPosition()[2]) > 0.0)
 				return 0.5*getBaseSpeed();
-			else if ((getDestination()[2] - getPosition()[2]) < 0.0)
+			else if ((World.getCubeCenter(getDestination())[2] - getPosition()[2]) < 0.0)
 				return 1.2*getBaseSpeed();
 			else
 				return getBaseSpeed();
@@ -1473,6 +1441,7 @@ public class Unit extends GameObject {
 	 * @post	necessary???
 	 * 
 	 */
+	@Deprecated
 	public void work()  {
 		if (!isMoving() && getState() != State.RESTING_1 && !isFalling()) {
 			startWorking();
@@ -1480,33 +1449,38 @@ public class Unit extends GameObject {
 	}
 	
 	
-	public void workAt(int[] targetCube) throws IllegalTargetException {
+	public void workAt(Coordinate targetCube) throws IllegalTargetException {
+		
 		if (! (getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
-				|| getCubeCoordinate() == targetCube))
+				|| getCubeCoordinate().equals(targetCube)))
+			
 			throw new IllegalTargetException(getCubeCoordinate(), targetCube);
 		
-		if (isCarryingItem()) {
-			dropItem();
-		} else {
-			Set<Item> items = getWorld().getObjectsAt(getCubeCoordinate());
+		if (!isMoving() && getState() != State.RESTING_1 && !isFalling()) {
+			startWorking();
 			
-			if ((getWorld().getCubeTypeAt(targetCube)==TerrainType.WORKSHOP)
-						&& getWorld().containsLog(items)
-						&& getWorld().containsBoulder(items)) {
-				improveEquipment(items);
+			if (isCarryingItem()) {
+				dropItem();
+			} else {
+				Set<Item> items = getWorld().getObjectsAt(getCubeCoordinate());
 				
-			} else if (getWorld().containsBoulder(items)) {
-				pickUpItem(getWorld().getBoulderAt(getCubeCoordinate(),items));
-				
-			} else if (getWorld().containsLog(items)) {
-				pickUpItem(getWorld().getLogAt(getCubeCoordinate(),items));
-				
-			} else if (getWorld().getCubeTypeAt(targetCube) == TerrainType.TREE
-							|| getWorld().getCubeTypeAt(targetCube) == TerrainType.ROCK) {
-				getWorld().collapse(targetCube, 1.00);
+				if ((getWorld().getCubeTypeAt(targetCube)==TerrainType.WORKSHOP)
+							&& getWorld().containsLog(items)
+							&& getWorld().containsBoulder(items)) {
+					improveEquipment(items);
+					
+				} else if (getWorld().containsBoulder(items)) {
+					pickUpItem(getWorld().getBoulderFrom(items));
+					
+				} else if (getWorld().containsLog(items)) {
+					pickUpItem(getWorld().getLogFrom(items));
+					
+				} else if (getWorld().getCubeTypeAt(targetCube) == TerrainType.TREE
+								|| getWorld().getCubeTypeAt(targetCube) == TerrainType.ROCK) {
+					getWorld().collapse(targetCube, 1.00);
+				}
 			}
 		}
-		
 	}
 	
 	private void dropItem() {
@@ -1687,10 +1661,10 @@ public class Unit extends GameObject {
 	 */
 	@Model
 	private boolean canAttack(Unit victim) {
-		int[] attackerPos = this.getCubeCoordinate();
-		int[] victimPos = victim.getCubeCoordinate();
-		for (int i = 0; i < attackerPos.length; i++) {
-			if ( Math.abs(attackerPos[i] - victimPos[i]) > 1)
+		Coordinate attackerPos = this.getCubeCoordinate();
+		Coordinate victimPos = victim.getCubeCoordinate();
+		for (int i = 0; i < attackerPos.getCoordinates().length; i++) {
+			if ( Math.abs(attackerPos.get(i) - victimPos.get(i)) > 1)
 				return false;
 		}
 		if (getFaction() == victim.getFaction())
@@ -1825,7 +1799,7 @@ public class Unit extends GameObject {
 		newPosition[0] += 2*random.nextDouble() - 1.0;
 		newPosition[1] += 2*random.nextDouble() - 1.0;
 		
-		if (!canHaveAsPosition(newPosition)) 
+		if (!canHaveAsPosition(convertPositionToCoordinate(newPosition))) 
 			throw new IllegalPositionException(newPosition);
 		
 		this.setPosition(newPosition);

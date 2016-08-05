@@ -31,7 +31,7 @@ public abstract class TimeSubject {
 		return (dt <= 0.2 && dt >= 0.0);
 	}
 	
-	protected boolean canHaveAsPosition(double[] position) {
+	/*protected boolean canHaveAsPosition(double[] position) {
 		if (!(position instanceof double[]) || position.length != 3 )
 			return false;
 		if (position[0] < 0.0 || position[0] >= getWorld().getNbCubesX())
@@ -44,6 +44,19 @@ public abstract class TimeSubject {
 		if (!TerrainType.byOrdinal(getWorld().getTerrainTypes()
 				[intPosition[0]][intPosition[1]][intPosition[2]]).isPassable() )
 			return false;
+		return true;
+	}*/
+	
+	
+	protected boolean canHaveAsPosition(Coordinate coordinates) {
+		
+		if (!getWorld().canHaveAsCoordinates(coordinates)) {
+			return false; }
+
+		if (!TerrainType.byOrdinal(getWorld().getTerrainTypes()
+				[coordinates.get(0)][coordinates.get(1)][coordinates.get(2)]).isPassable() )
+			return false;
+		
 		return true;
 	}
 	
@@ -62,8 +75,8 @@ public abstract class TimeSubject {
 	 * the unit.
 	 */
 	@Raw
-	public int[] getCubeCoordinate() {
-		return convertPositionToInt(getPosition());
+	public Coordinate getCubeCoordinate() {
+		return convertPositionToCoordinate(getPosition());
 	}
 	
 	/**
@@ -74,11 +87,11 @@ public abstract class TimeSubject {
 	
 	
 	
-	protected boolean isNeighbouringSolid(int[] cubeCoordinate) {
+	protected boolean isNeighbouringSolid(Coordinate cubeCoordinate) {
 		return getWorld().isNeighbouringSolid(cubeCoordinate);
 	}
 	
-	protected boolean isAboveSolid(int[] cubeCoordinate) {
+	protected boolean isAboveSolid(Coordinate cubeCoordinate) {
 		return getWorld().isAboveSolid(cubeCoordinate);
 	}
 	
@@ -173,6 +186,26 @@ public abstract class TimeSubject {
 			intPosition[i] = (int) Math.floor(doublePosition[i]);
 		}
 		return intPosition;
+	}
+	
+	
+	protected static Coordinate convertPositionToCoordinate(double[] doublePosition) 
+			throws IllegalArgumentException {
+
+		if ( !(doublePosition instanceof double[]) || doublePosition.length != 3)
+			throw new IllegalArgumentException();
+		
+		return new Coordinate((int) doublePosition[0], 
+				(int) doublePosition[1], (int) doublePosition[2]);
+		
+	}
+	
+	
+	protected static double[] convertCoordinateToDouble(Coordinate coordinate) 
+			throws IllegalArgumentException {
+
+		return new double[]{coordinate.get(0), coordinate.get(1), coordinate.get(2)};
+		
 	}
 	
 }

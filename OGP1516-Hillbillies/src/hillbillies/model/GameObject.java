@@ -17,7 +17,7 @@ public abstract class GameObject extends TimeSubject {
 	}
 	
 	protected void setPosition(double[] position) throws IllegalPositionException {
-		if (! canHaveAsPosition(position) )
+		if (! canHaveAsPosition(convertPositionToCoordinate(position)) )
 			throw new IllegalPositionException(position);
 		this.position[0] = position[0];
 		this.position[1] = position[1];

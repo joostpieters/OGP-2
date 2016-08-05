@@ -148,29 +148,21 @@ public class World {
 	 * 		|		&& !(coordinates[1] < 0.0 || coordinates[1] >= getNbCubesY())
 	 * 		|		&& !(coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
 	 */
-	public boolean canHaveAsCoordinates(int[] coordinates) {
-		//assert(!(coordinates instanceof int[]) || coordinates.length != 3);
-		
-		if (!(coordinates instanceof int[]) || coordinates.length != 3 ) {
-			//System.out.println("FOUT"); 
+	public boolean canHaveAsCoordinates(Coordinate coordinates) {
+		if (coordinates.get(0) < 0 || coordinates.get(0) >= getNbCubesX()) {
 			return false; }
-		if (coordinates[0] < 0 || coordinates[0] >= getNbCubesX()) {
-			//System.out.println("FOUT2"); 
+		if (coordinates.get(1) < 0 || coordinates.get(1) >= getNbCubesY()) {
 			return false; }
-		if (coordinates[1] < 0 || coordinates[1] >= getNbCubesY()) {
-			//System.out.println("FOUT3"); 
-			return false; }
-		if (coordinates[2] < 0 || coordinates[2] >= getNbCubesZ()) {
-			//System.out.println("FOUT4"); 
+		if (coordinates.get(2) < 0 || coordinates.get(2) >= getNbCubesZ()) {
 			return false; }
 		return true;
 	}
 	
 	
-	public static double[] getCubeCenter(int[] cubeCoordinate) {
+	public static double[] getCubeCenter(Coordinate cubeCoordinate) {
 		double[] cubeCenter = new double[3];
-		for (int i=0; i<cubeCoordinate.length; i++) {
-			cubeCenter[i] = cubeCoordinate[i] + getCubeLength()/2;
+		for (int i=0; i<cubeCoordinate.getCoordinates().length; i++) {
+			cubeCenter[i] = cubeCoordinate.getCoordinates()[i] + getCubeLength()/2;
 		}
 		return cubeCenter;
 	}
@@ -191,17 +183,17 @@ public class World {
 	}
 	
 	
-	public void setCubeTypeAt(int[] coordinate, TerrainType type) {
+	public void setCubeTypeAt(Coordinate coordinate, TerrainType type) {
 		if (!isValidTerrainType(type))
 			throw new IllegalArgumentException();
-		this.terrainTypes[coordinate[0]][coordinate[1]][coordinate[2]] = type.getNumber();
+		this.terrainTypes[coordinate.get(0)][coordinate.get(1)][coordinate.get(2)] = type.getNumber();
 	}
 	
 	
-	public TerrainType getCubeTypeAt(int[] coordinate) throws IllegalPositionException {
+	public TerrainType getCubeTypeAt(Coordinate coordinate) throws IllegalPositionException {
 		if (!canHaveAsCoordinates(coordinate) )
 			throw new IllegalPositionException(coordinate);
-		return TerrainType.byOrdinal(this.terrainTypes[coordinate[0]][coordinate[1]][coordinate[2]]);
+		return TerrainType.byOrdinal(this.terrainTypes[coordinate.get(0)][coordinate.get(1)][coordinate.get(2)]);
 	}
 	
 	
@@ -210,12 +202,12 @@ public class World {
 	}
 	
 	// POSITION of COORDINATE class
-	public boolean isNeighbouringSolid(int[] coordinates) {
+	public boolean isNeighbouringSolid(Coordinate coordinates) {
 		if (!canHaveAsCoordinates(coordinates) )
 			throw new IllegalPositionException(coordinates);
 		
-		Set<int[]> neighbours = getNeighbours(coordinates);
-		for (int[] neighbour: neighbours) {
+		Set<Coordinate> neighbours = getNeighbours(coordinates);
+		for (Coordinate neighbour: neighbours) {
 			if (canHaveAsCoordinates(neighbour))
 				if (!getCubeTypeAt(neighbour).isPassable())
 					return true;
@@ -223,13 +215,13 @@ public class World {
 		return false;
 	}
 	
-	public Set<int[]> getNeighbours(int[] coordinates) {
-		Set<int[]> neighbours = new HashSet<int[]>();
+	public Set<Coordinate> getNeighbours(Coordinate coordinates) {
+		Set<Coordinate> neighbours = new HashSet<Coordinate>();
 		for (int i = -1; i<2; i++) {
 			for (int k = -1; k<2; k++) {
 				for (int l = -1; l<2; l++) {
-					int[] neighbour = new int[]{coordinates[0]+i,coordinates[1]+k,coordinates[2]+l};
-					if (canHaveAsCoordinates(neighbour) && neighbour != coordinates)
+					Coordinate neighbour = new Coordinate(coordinates.get(0)+i,coordinates.get(1)+k,coordinates.get(2)+l);
+					if (canHaveAsCoordinates(neighbour) && !neighbour.equals(coordinates))
 						neighbours.add(neighbour);
 				}
 			}
@@ -237,33 +229,37 @@ public class World {
 		return neighbours;
 	}
 	
-	public boolean isNeighbouring(int[] coordinates, int[] neighbourCoordinates) {
-		Set<int[]> neighbours = getNeighbours(coordinates);
+	public boolean isNeighbouring(Coordinate coordinates, Coordinate neighbourCoordinates) {
+		Set<Coordinate> neighbours = getNeighbours(coordinates);
+		System.out.println(neighbours.toString());
+		System.out.println(neighbours.contains(neighbourCoordinates));
 		return (neighbours.contains(neighbourCoordinates));
 	}
 	
 	
-	public boolean isAboveSolid(int[] coordinates) {
+	public boolean isAboveSolid(Coordinate coordinates) {
 		if (!canHaveAsCoordinates(coordinates) )
 			throw new IllegalPositionException(coordinates);
 		
-		if (!getCubeTypeAt(new int[]{coordinates[0],coordinates[1],coordinates[2]-1}).isPassable())
+		if (!getCubeTypeAt(new Coordinate(coordinates.get(0), 
+					coordinates.get(1), coordinates.get(2)-1)).isPassable() )
 			return true;
 		
 		return false;
 	}
 	
-	public int[] getRandomNeighbouringSolidCube() {
+	public Coordinate getRandomNeighbouringSolidCube() {
 		int x, y, z;
-		int[] position;
+		Coordinate position;
 		while(true) {
 			try {
 				x = random.nextInt(getNbCubesX());
 				y = random.nextInt(getNbCubesY());
 				z = random.nextInt(getNbCubesZ());
-				position = new int[]{x, y, z};
+				position = new Coordinate(x, y, z);
+				
 				if (getCubeTypeAt(position).isPassable() && (
-						!getCubeTypeAt(new int[]{x, y, z-1}).isPassable() || z == 0))
+						!getCubeTypeAt(new Coordinate(x, y, z-1)).isPassable() || z == 0))
 					break;
 			}
 			catch (IllegalPositionException exc){
@@ -335,7 +331,7 @@ public class World {
 	 */
 	public Unit spawnUnit() {
 		if (getAllUnits().size() < 100) {
-			int[] position = getRandomNeighbouringSolidCube();
+			Coordinate position = getRandomNeighbouringSolidCube();
 			
 			double[] doublePosition = getCubeCenter(position);
 			
@@ -987,16 +983,16 @@ public class World {
 	}
 	
 	
-	public Set<Item> getObjectsAt(int[] cubeCoordinates) {
+	public Set<Item> getObjectsAt(Coordinate cubeCoordinates) {
 		Set<Item> items = new HashSet<Item>();
 		
 		for (Boulder boulder: this.boulders) {
-			if (boulder != null && (boulder.getCubeCoordinate() == (cubeCoordinates)) ) {
+			if (boulder != null && (boulder.getCubeCoordinate().equals(cubeCoordinates)) ) {
 				items.add(boulder);
 			}
 		}
 		for (Log log: this.logs) {
-			if (log != null && (log.getCubeCoordinate() == (cubeCoordinates) )) {
+			if (log != null && (log.getCubeCoordinate().equals(cubeCoordinates) )) {
 				items.add(log);
 			}
 		}
@@ -1010,7 +1006,7 @@ public class World {
 		return null;
 	}*/
 	
-	public Item getBoulderAt(int[] cubeCoordinates, Set<Item> items) {
+	public Item getBoulderFrom(Set<Item> items) {
 		for (Item item: items) {
 			if (item instanceof Boulder)
 				return item;
@@ -1018,7 +1014,7 @@ public class World {
 		return null;
 	}
 	
-	public Item getLogAt(int[] cubeCoordinates, Set<Item> items) {
+	public Item getLogFrom(Set<Item> items) {
 		for (Item item: items) {
 			if (item instanceof Log)
 				return item;
@@ -1145,9 +1141,10 @@ public class World {
 			for (int y = 0; y < terrainTypes[0].length; y++) {
 				for (int z = 0; z < terrainTypes[0][0].length; z++) {
 					int[] coordinate = new int[]{x,y,z};
-					if(!getCubeTypeAt(coordinate).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
+					Coordinate cubeCoordinate = new Coordinate(x, y, z);
+					if(!getCubeTypeAt(cubeCoordinate).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
 
-						collapse(coordinate, 0.25);
+						collapse(cubeCoordinate, 0.25);
 						this.modelListener.notifyTerrainChanged(x, y, z);
 						caveIn(coordinate);
 					}
@@ -1162,15 +1159,16 @@ public class World {
 		List<int[]> changed = getConnectedToBorderChecker().changeSolidToPassable(coordinate[0],
 				coordinate[1], coordinate[2]);
 		for (int[] cube: changed) {
-			if (!getCubeTypeAt(cube).isPassable() ) {
-				collapse(cube, 0.25);
+			Coordinate cubeCoordinate = new Coordinate(cube[0], cube[1], cube[2]);
+			if (!getCubeTypeAt(cubeCoordinate).isPassable() ) {
+				collapse(cubeCoordinate, 0.25);
 				this.modelListener.notifyTerrainChanged(cube[0], cube[1], cube[2]);
 				caveIn(cube);
 			}
 		}
 	}
 	
-	public void collapse(int[] coordinate, double diceTreshold) {
+	public void collapse(Coordinate coordinate, double diceTreshold) {
 		double dice = random.nextDouble();
 		if (dice < diceTreshold) {
 			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {

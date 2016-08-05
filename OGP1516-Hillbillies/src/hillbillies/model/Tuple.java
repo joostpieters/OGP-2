@@ -3,13 +3,13 @@ import java.util.*;
 
 public class Tuple {
 
-	public Tuple(int[] cube, int n) { 
+	public Tuple(Coordinate cube, int n) { 
 		this.cube = cube; 
 		this.n = n; 
 		this.isChecked = false;
 	} 
 
-	public static boolean containsCubeWithSmallerN(Queue<Tuple> path, int[] cube, Tuple startTuple) {
+	public static boolean containsCubeWithSmallerN(Queue<Tuple> path, Coordinate cube, Tuple startTuple) {
 		for (Tuple tuple: path) {
 			if (tuple.cube.equals(cube) && tuple.n < startTuple.n) {
 				return true;
@@ -18,18 +18,18 @@ public class Tuple {
 		return false;
 	}
 	
-	public static boolean containsCube(Queue<Tuple> path, int[] cube) {
+	public static boolean containsCube(Queue<Tuple> path, Coordinate cube) {
 		for (Tuple tuple: path) {
-			if (Arrays.equals(tuple.cube, cube)) {
+			if (tuple.cube.equals(cube)) {
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	public static Tuple getCubeTuple(Queue<Tuple> path, int[] cube) {
+	public static Tuple getCubeTuple(Queue<Tuple> path, Coordinate cube) {
 		for (Tuple tuple: path) {
-			if (Arrays.equals(tuple.cube, cube)) {
+			if (tuple.cube.equals(cube)) {
 				return tuple;
 			}
 		}
@@ -54,12 +54,12 @@ public class Tuple {
 	}
 	
 	public String toString() {
-		return "(" + Arrays.toString(cube) + "," + n + "," + isChecked + ")";
+		return "(" + this.cube.toString() + "," + n + "," + isChecked + ")";
 	}
 	
 	public boolean isChecked = false;
 	
-	public final int[] cube;
+	public final Coordinate cube;
 
 	public final int n; 
 	

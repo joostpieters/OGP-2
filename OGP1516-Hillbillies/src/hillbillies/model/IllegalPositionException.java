@@ -31,6 +31,11 @@ public class IllegalPositionException extends RuntimeException {
 		this.position = null;
 	}
 	
+	public IllegalPositionException(Coordinate position) {
+		this.positionInt = position.getCoordinates();
+		this.position = null;
+	}
+	
 	public double[] getPosition() {
 		return position;
 	}

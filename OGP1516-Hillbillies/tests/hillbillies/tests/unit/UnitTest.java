@@ -183,28 +183,28 @@ public class UnitTest {
 	
 	@Test
 	public void moveTo_Legal() throws Exception {
-		int[] dest = new int[]{10,10,10};
+		Coordinate dest = new Coordinate(10,10,10);
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 	}
 	
 	@Test
 	public void moveTo_Legal_Low() throws Exception {
-		int[] dest = new int[]{0,0,0};
+		Coordinate dest = new Coordinate(0,0,0);
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 	}
 	
 	@Test
 	public void moveTo_Legal_High() throws Exception {
-		int[] dest = new int[]{49, 49, 49};
+		Coordinate dest = new Coordinate(49,49,49);
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 	}
 	
 	@Test
 	public void moveTo_Legal_Interrupt() throws Exception {
-		int[] dest = new int[]{49, 49, 49};
+		Coordinate dest = new Coordinate(49,49,49);
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 		unit.rest();
@@ -213,22 +213,17 @@ public class UnitTest {
 	
 	@Test(expected = IllegalPositionException.class)
 	public void moveTo_OOB_High() throws Exception {
-		int[] dest = new int[]{50, 49, 49};
+		Coordinate dest = new Coordinate(50,49,49);
 		unit.moveTo(dest);
 	}
 	
 	
 	@Test(expected = IllegalPositionException.class)
 	public void moveTo_OOB_Low() throws Exception {
-		int[] dest = new int[]{0, 0, -1};
+		Coordinate dest = new Coordinate(0,0,-1);
 		unit.moveTo(dest);
 	}
 	
-	@Test(expected = IllegalPositionException.class)
-	public void moveTo_OOB_Short() throws Exception {
-		int[] dest = new int[]{0, 0};
-		unit.moveTo(dest);
-	}
 	
 	
 	/**
@@ -238,21 +233,21 @@ public class UnitTest {
 	
 	@Test
 	public void getCurrentSpeed_Legal_Flat() {
-		unit.moveTo(new int[]{20,20,5});
+		unit.moveTo(new Coordinate(20,20,5));
 		assertEquals(unit.getCurrentSpeed(), 1.5*(unit.getStrength()+
 					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
 	}
 	
 	@Test
 	public void getCurrentSpeed_Legal_Up() {
-		unit.moveTo(new int[]{20,20,20});
+		unit.moveTo(new Coordinate(20,20,20));
 		assertEquals(unit.getCurrentSpeed(), 0.5*1.5*(unit.getStrength()+
 					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
 	}
 	
 	@Test
 	public void getCurrentSpeed_Legal_Down() {
-		unit.moveTo(new int[]{20,20,0});
+		unit.moveTo(new Coordinate(20,20,0));
 		assertEquals(unit.getCurrentSpeed(), 1.2*1.5*(unit.getStrength()+
 					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
 	}

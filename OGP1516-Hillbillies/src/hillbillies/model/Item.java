@@ -26,7 +26,7 @@ public class Item extends GameObject {
 	 * Initialize this new item, not yet attached to a world.
 	 */
 	@Raw
-	public Item(int[] initialPosition/*, World world*/) throws IllegalPositionException,
+	public Item(Coordinate initialPosition/*, World world*/) throws IllegalPositionException,
 															IllegalArgumentException {
 		
 		if (!getWorld().canHaveAsCoordinates(initialPosition)) 
@@ -35,8 +35,8 @@ public class Item extends GameObject {
 			throw new IllegalPositionException(initialPosition);
 		
 		double[] position = new double[3];
-		for (int i=0; i<initialPosition.length; i++) {
-			position[i] = initialPosition[i] + World.getCubeLength()/2;
+		for (int i=0; i<initialPosition.getCoordinates().length; i++) {
+			position[i] = initialPosition.get(i) + World.getCubeLength()/2;
 		}
 		
 		int weight = random.nextInt(41) + 10;
@@ -106,7 +106,7 @@ public class Item extends GameObject {
 	private boolean isFalling = false;
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate()[2] == 0) {
+		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate().getCoordinates()[2] == 0) {
 			setFalling(false);
 			
 		}

@@ -1,13 +1,8 @@
 package hillbillies.part2.facade;
 
-import hillbillies.model.Unit;
-import hillbillies.model.World;
+import hillbillies.model.*;
 import hillbillies.model.World.TerrainType;
 import hillbillies.part2.listener.TerrainChangeListener;
-import hillbillies.model.IllegalPositionException;
-import hillbillies.model.IllegalTimeException;
-import hillbillies.model.Log;
-
 import java.util.Set;
 
 import hillbillies.model.Boulder;
@@ -56,12 +51,12 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 
 	@Override
 	public int getCubeType(World world, int x, int y, int z) throws ModelException {
-		return world.getCubeTypeAt(new int[]{x,y,z}).getNumber();
+		return world.getCubeTypeAt(new Coordinate(x,y,z)).getNumber();
 	}
 
 	@Override
 	public void setCubeType(World world, int x, int y, int z, int value) throws ModelException {
-		world.setCubeTypeAt(new int[]{x,y,z}, TerrainType.byOrdinal(value));
+		world.setCubeTypeAt(new Coordinate(x,y,z), TerrainType.byOrdinal(value));
 	}
 
 	@Override
@@ -111,7 +106,7 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public void workAt(Unit unit, int x, int y, int z) throws ModelException {
-		unit.workAt(new int[]{x, y, z});
+		unit.workAt(new Coordinate(x, y, z));
 	}
 	
 	@Override
@@ -139,7 +134,7 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public int[] getCubeCoordinate(Unit unit) {
-		return unit.getCubeCoordinate();
+		return unit.getCubeCoordinate().getCoordinates();
 	}
 	
 	@Override
@@ -270,12 +265,12 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public void moveTo(Unit unit, int[] cube) throws ModelException {
-		//try {
-			unit.moveTo(cube);
-		//}
-		/*catch (RuntimeException exc) {
+		try {
+			unit.moveTo(new Coordinate(cube));
+		}
+		catch (RuntimeException exc) {
 			throw new ModelException();
-		}*/
+		}
 	}
 		
 	@Override
@@ -283,10 +278,10 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 		return unit.isWorking();
 	}
 	
-	@Override @Deprecated
-	public void work(Unit unit) throws ModelException {
+	//@Override @Deprecated
+	/*public void work(Unit unit) throws ModelException {
 		unit.work();
-	}
+	}*/
 
 	@Override
 	public void fight(Unit attacker, Unit defender) throws ModelException {

@@ -1,9 +1,7 @@
 package hillbillies.part1.facade;
 
-import hillbillies.model.Unit;
-import hillbillies.model.IllegalPositionException;
-import hillbillies.model.IllegalTimeException;
-import hillbillies.model.IllegalNameException;
+
+import hillbillies.model.*;
 import ogp.framework.util.ModelException;
 
 
@@ -30,7 +28,7 @@ public class Facade implements /*hillbillies.part1.facade.*/IFacade {
 
 	@Override
 	public int[] getCubeCoordinate(Unit unit) {
-		return unit.getCubeCoordinate();
+		return unit.getCubeCoordinate().getCoordinates();
 	}
 
 	@Override
@@ -163,7 +161,7 @@ public class Facade implements /*hillbillies.part1.facade.*/IFacade {
 	@Override
 	public void moveTo(Unit unit, int[] cube) throws ModelException {
 		try {
-			unit.moveTo(cube);
+			unit.moveTo(new Coordinate(cube));
 		}
 		catch (RuntimeException exc) {
 			throw new ModelException();
