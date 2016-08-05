@@ -167,7 +167,7 @@ public class Unit extends GameObject {
 
 		setOrientation((float)(Math.PI/2.0));
 
-		this.setDefaultBehaviorEnabled(false);
+		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
 		this.setState(State.EMPTY);
 	}
 	
@@ -201,7 +201,7 @@ public class Unit extends GameObject {
 
 		setOrientation((float)(Math.PI/2.0));
 
-		this.setDefaultBehaviorEnabled(false);
+		this.setDefaultBehaviorEnabled(enableDefaultBehavior);
 		this.setState(State.EMPTY);
 	}
 
@@ -1515,6 +1515,14 @@ public class Unit extends GameObject {
 	}
 	
 	private void setTargetCube(Coordinate target) {
+		
+		if (!getWorld().canHaveAsCoordinates(target))
+			System.out.println(1);
+		if (!(getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
+				|| getCubeCoordinate().equals(targetCube) ))
+			System.out.println(2);
+		
+		
 		if (!getWorld().canHaveAsCoordinates(target)
 				|| !(getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
 				|| getCubeCoordinate().equals(targetCube)) )

@@ -231,6 +231,7 @@ public class World {
 	
 	public boolean isNeighbouring(Coordinate coordinates, Coordinate neighbourCoordinates) {
 		Set<Coordinate> neighbours = getNeighbours(coordinates);
+		System.out.println( (neighbours.contains(neighbourCoordinates)) );
 		return (neighbours.contains(neighbourCoordinates));
 	}
 	
@@ -269,7 +270,12 @@ public class World {
 	
 	
 	public Coordinate getRandomNeighbouringCube(Coordinate coordinate) {
-		return getNeighbours(coordinate).iterator().next();
+		Set<Coordinate> neighbours = getNeighbours(coordinate);
+		for (Coordinate neighbour: neighbours) {
+			System.out.println("Random neighbour selected");
+			return neighbour;
+		}
+		return null;
 	}
 	
 	public void advanceTime(double dt) {
