@@ -10,7 +10,7 @@ import hillbillies.model.Faction;
 import hillbillies.model.IllegalNameException;
 import ogp.framework.util.ModelException;
 
-public class Facade implements /*hillbillies.part2.facade.*/IFacade {
+public class Facade implements hillbillies.part2.facade.IFacade {
 	
 	
 	/* ********************************************
@@ -20,13 +20,13 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	@Override
 	public World createWorld(int[][][] terrainTypes, 
 				TerrainChangeListener modelListener) throws ModelException {
-		try {
+		//try {
 			World world = new World(terrainTypes, modelListener);
 			return world;
-		}
-		catch (RuntimeException exc) {
-			throw new ModelException();
-		}
+		//}
+		//catch (RuntimeException exc) {
+		//	throw new ModelException();
+		//}
 	}
 	
 	@Override
@@ -66,7 +66,12 @@ public class Facade implements /*hillbillies.part2.facade.*/IFacade {
 	
 	@Override
 	public Unit spawnUnit(World world, boolean enableDefaultBehavior) throws ModelException {
-		return world.spawnUnit();
+		return world.spawnUnit(enableDefaultBehavior);
+		/*try {
+			return world.spawnUnit();
+		} catch (RuntimeException e) {
+			throw new ModelException();
+		}*/
 	}
 	
 	@Override

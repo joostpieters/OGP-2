@@ -19,7 +19,7 @@ import java.util.*;
  * @author rubencartuyvels
  *
  */
-public class Faction {
+public class Faction /*implements Comparable<Faction>*/ {
 	
 	
 	/**
@@ -206,7 +206,7 @@ public class Faction {
 		if (unit.getFaction() != null)
 			throw new IllegalArgumentException();
 		if (getNbUnits() >= 50)
-			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
+			throw new MaxNbUnitsReachedException(); // ILLEGAL SIZE EXCEPTION??????
 		this.units.add(unit);
 		unit.setFaction(this);
 	}
@@ -320,19 +320,14 @@ public class Faction {
 	}
 	
 	
-	/* *********************************************************
-	 * 
-	 * 						COMPARATOR
-	 *
-	 **********************************************************/
+	/*public int compareTo(Faction f) {
+	    if (this.getNbUnits() == f.getNbUnits())
+	        return 0;
+	    else if (this.getNbUnits() > f.getNbUnits())
+	        return 1;
+	    else 
+	        return -1;
+	}*/
 	
-	
-	public static class NbUnitsComparator implements Comparator<Faction> {
-	    @Override
-	    public int compare(Faction a, Faction b) {
-	        return a.getNbUnits() < b.getNbUnits() ? -1 
-	        			: a.getNbUnits() == b.getNbUnits() ? 0 : 1;
-	    }
-	}
 }
 

@@ -14,6 +14,8 @@ import hillbillies.model.Unit;
 import hillbillies.model.Faction.*;
 import hillbillies.model.World.TerrainType;
 
+import hillbillies.model.*;
+
 import java.util.*;
 
 
@@ -44,39 +46,6 @@ import java.util.*;
  */
 public class World {
 	
-	private final static int maxUnits = 100;
-	private final static int maxFactions = 100;
-	
-	/**
-	 * Variable registering the length of a cube of the game world.
-	 */
-	private final static double cubeLength = 1.0;
-	
-	public static double getCubeLength() {
-		return cubeLength;
-	}
-	
-	private int[][][] terrainTypes;
-	
-	/**
-	 * Return the terrain type array of this game world.
-	 */
-	@Basic @Raw
-	public int[][][] getTerrainTypes() {
-		return this.terrainTypes;
-	}
-	
-	
-	private final TerrainChangeListener modelListener;
-	private final ConnectedToBorder connectedToBorderChecker;
-	
-	private static final Random random = new Random();
-	private boolean isTerminated = false;
-	
-	public boolean isTerminated() {
-		return this.isTerminated;
-	}
-	
 	/**
 	 * Initialize this new world with given terrain types for each cube of the
 	 * game world and a modelListener. The new world contains no units nor factions.
@@ -106,7 +75,56 @@ public class World {
 				getNbCubesY(), getNbCubesZ());
 		
 		this.caveInAll();
+		
+		for (int i=0; i<getMaxNbFactions(); i++) {
+			Faction faction = new Faction();
+			addFaction(faction);
+		}
+		
 	}
+	
+	
+	public static int getMaxNbUnits() {
+		return maxUnits;
+	}
+	
+	private final static int maxUnits = 100;
+	
+	public static int getMaxNbFactions() {
+		return maxFactions;
+	}
+	
+	private final static int maxFactions = 5;
+	
+	
+	public static double getCubeLength() {
+		return cubeLength;
+	}
+	
+	/**
+	 * Variable registering the length of a cube of the game world.
+	 */
+	private final static double cubeLength = 1.0;
+	
+	
+	/**
+	 * Return the terrain type array of this game world.
+	 */
+	@Basic @Raw
+	public int[][][] getTerrainTypes() {
+		return this.terrainTypes;
+	}
+	
+	private int[][][] terrainTypes;
+	
+	
+	private final TerrainChangeListener modelListener;
+	private final ConnectedToBorder connectedToBorderChecker;
+	
+	
+	private static final Random random = new Random();
+	
+	
 	
 	private boolean isValidTerrainTypes(int[][][] terrainTypes) {
 		
@@ -316,26 +334,6 @@ public class World {
 	 *
 	 **********************************************************/
 	
-	/**
-	 * Set collecting references to units that this world contains.
-	 * 
-	 * @invar	the set of units is effective.
-	 * 			| units != null
-	 * 
-	 * @invar	Each element in the set references a unit that this world
-	 * 			can have as unit.
-	 * 			| for each unit in units:
-	 * 			| 		canHaveAsUnit(unit)
-	 * 
-	 * @invar	Each unit in the set references this world as their world.
-	 * 			| for each unit in units:
-	 * 			|		unit.getWorld() == this
-	 * 
-	 * @invar	The number of units in the set is always smaller than or
-	 * 			equal to 100.
-	 * 			| units.size() <= 100
-	 */
-	private final Set<Unit> units = new HashSet<Unit>();
 	
 	/**
 	 * Spawn a unit with a random position in this world and random initial
@@ -343,33 +341,15 @@ public class World {
 	 * 
 	 * @return the spawned unit.
 	 */
-	public Unit spawnUnit() {
-		if (getAllUnits().size() < 100) {
-			Coordinate position = getRandomNeighbouringSolidCube();
-			
-			double[] doublePosition = getCubeCenter(position);
-			
-			int agility = random.nextInt(76) + 25;
-			int strength = random.nextInt(76) + 25;
-			int toughness = random.nextInt(76) + 25;
-			int weight = (strength+agility)/2 + random.nextInt(100 - (strength+agility)/2);
-			Unit unit = new Unit("Name", weight, agility, strength, toughness, true);
-			
-			this.addUnit(unit);
-			
-			unit.setPosition(doublePosition);
-			
-			if (this.getNbFactions() < 5) {
-				Faction faction = new Faction();
-				addFaction(faction);
-				faction.addUnit(unit);
-			} else {
-				this.factions.first().addUnit(unit);
-			}
-			
-			return unit;
+	public Unit spawnUnit(boolean enableDefaultBehavior) {
+		
+		if (getAllUnits().size() >= getMaxNbUnits()) {
+			throw new MaxNbUnitsReachedException();
 		}
-		return null;
+		
+		Unit unit = new Unit(this, enableDefaultBehavior);
+		addUnit(unit);
+		return unit;
 	}
 	
 	
@@ -434,13 +414,6 @@ public class World {
 	@Raw
 	public int getNbUnits() {
 		return this.units.size();
-		/*
-		int count = 0:
-		for (Object o: this.units) {
-			if (hasAsUnit(o))
-				count ++;
-		}
-		return count;*/
 	}
 	
 	/**
@@ -481,12 +454,16 @@ public class World {
 	public void addUnit(Unit unit)  throws IllegalArgumentException {
 		if (!canHaveAsUnit(unit))
 			throw new IllegalArgumentException();
-		if (unit.getWorld() != null)
-			throw new IllegalArgumentException();
+		//if (unit.getWorld() != null)
+		//	throw new IllegalArgumentException();
 		if (getNbUnits() >= 100)
 			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
+		
 		this.units.add(unit);
-		unit.setWorld(this);
+		//unit.setWorld(this);
+		
+		sortFactions();
+		this.factions.get(0).addUnit(unit);
 	}
 	
 	
@@ -510,32 +487,33 @@ public class World {
 	}
 	
 	
+	/**
+	 * Set collecting references to units that this world contains.
+	 * 
+	 * @invar	the set of units is effective.
+	 * 			| units != null
+	 * 
+	 * @invar	Each element in the set references a unit that this world
+	 * 			can have as unit.
+	 * 			| for each unit in units:
+	 * 			| 		canHaveAsUnit(unit)
+	 * 
+	 * @invar	Each unit in the set references this world as their world.
+	 * 			| for each unit in units:
+	 * 			|		unit.getWorld() == this
+	 * 
+	 * @invar	The number of units in the set is always smaller than or
+	 * 			equal to 100.
+	 * 			| units.size() <= 100
+	 */
+	private final Set<Unit> units = new HashSet<Unit>();
+	
+	
 	/* *********************************************************
 	 * 
 	 * 							FACTIONS
 	 *
 	 **********************************************************/
-	
-	/**
-	 * Set collecting references to factions that this world contains.
-	 * 
-	 * @invar	the set of factions is effective.
-	 * 			| factions != null
-	 * 
-	 * @invar	Each element in the set references a faction that this world
-	 * 			can have as faction.
-	 * 			| for each faction in factions:
-	 * 			| 		canHaveAsFaction(faction)
-	 * 
-	 * @invar	Each faction in the set references this world as their world.
-	 * 			| for each faction in factions:
-	 * 			|		faction.getWorld() == this
-	 * 
-	 * @invar	The number of active factions in the set is always smaller than or
-	 * 			equal to 5.
-	 * 			| factions.size() <= 5
-	 */
-	private final TreeSet<Faction> factions = new TreeSet<Faction>(new NbUnitsComparator());
 	
 	
 	/**
@@ -612,7 +590,11 @@ public class World {
 	 * 			| 	result.contains(faction) == this.hasAsFaction(faction)
 	 */
 	public Set<Faction> getAllFactions() {
-		return new TreeSet<Faction>(this.factions);
+		Set<Faction> allFactions = new HashSet<Faction>();
+		for (Faction faction: this.factions) {
+			allFactions.add(faction);
+		}
+		return allFactions;
 	}
 	
 	/**
@@ -643,6 +625,7 @@ public class World {
 			throw new IllegalArgumentException();
 		if (getNbFactions() >= 5)
 			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
+		
 		this.factions.add(faction);
 		faction.setWorld(this);
 	}
@@ -666,6 +649,33 @@ public class World {
 			faction.setWorld(null);
 		}
 	}
+	
+	
+	private void sortFactions() {
+		this.factions.sort(new NbUnitsComparator());
+	}
+	
+	
+	/**
+	 * Set collecting references to factions that this world contains.
+	 * 
+	 * @invar	the set of factions is effective.
+	 * 			| factions != null
+	 * 
+	 * @invar	Each element in the set references a faction that this world
+	 * 			can have as faction.
+	 * 			| for each faction in factions:
+	 * 			| 		canHaveAsFaction(faction)
+	 * 
+	 * @invar	Each faction in the set references this world as their world.
+	 * 			| for each faction in factions:
+	 * 			|		faction.getWorld() == this
+	 * 
+	 * @invar	The number of active factions in the set is always smaller than or
+	 * 			equal to 5.
+	 * 			| factions.size() <= 5
+	 */
+	private final List<Faction> factions = new ArrayList<Faction>();
 	
 	
 	/* *********************************************************
@@ -1013,12 +1023,6 @@ public class World {
 		return items;
 	}
 	
-	/*public Item getItemAt(int[] cubeCoordinates, Set<Item> items) {
-		for (Item item: items) {
-			return item;
-		}
-		return null;
-	}*/
 	
 	public Item getBoulderFrom(Set<Item> items) {
 		for (Item item: items) {
@@ -1060,6 +1064,124 @@ public class World {
 				return true;
 		}
 		return false;
+	}
+	
+	
+	
+	
+	/* *********************************************************
+	 * 
+	 * 							TERRAIN
+	 *
+	 **********************************************************/
+	
+	
+	
+	public boolean isSolidConnectedToBorder(int x, int y, int z) {
+		return getConnectedToBorderChecker().isSolidConnectedToBorder(x, y, z);
+	}
+	
+	
+	public void collapse(Coordinate coordinate, double diceTreshold) {
+		double dice = random.nextDouble();
+		if (dice < diceTreshold) {
+			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
+				setCubeTypeAt(coordinate, TerrainType.AIR);
+				Boulder boulder = new Boulder(coordinate, this);
+				addBoulder(boulder);
+			}
+			else if (getCubeTypeAt(coordinate) == TerrainType.TREE) {
+				setCubeTypeAt(coordinate, TerrainType.AIR);
+				Log log = new Log(coordinate, this);
+				addLog(log);
+			}
+		}
+	}
+	
+	
+	@Basic @Immutable
+	private ConnectedToBorder getConnectedToBorderChecker() {
+		return this.connectedToBorderChecker;
+	}
+	
+	
+	private void caveInAll() {
+		for (int x = 0; x < terrainTypes.length; x++) {
+			for (int y = 0; y < terrainTypes[0].length; y++) {
+				for (int z = 0; z < terrainTypes[0][0].length; z++) {
+					int[] coordinate = new int[]{x,y,z};
+					Coordinate cubeCoordinate = new Coordinate(x, y, z);
+					if(!getCubeTypeAt(cubeCoordinate).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
+
+						collapse(cubeCoordinate, 0.25);
+						this.modelListener.notifyTerrainChanged(x, y, z);
+						caveIn(coordinate);
+					}
+					
+					
+				}
+			}
+		}
+	}
+	
+	private void caveIn(int[] coordinate) {
+		List<int[]> changed = getConnectedToBorderChecker().changeSolidToPassable(coordinate[0],
+				coordinate[1], coordinate[2]);
+		for (int[] cube: changed) {
+			Coordinate cubeCoordinate = new Coordinate(cube[0], cube[1], cube[2]);
+			if (!getCubeTypeAt(cubeCoordinate).isPassable() ) {
+				collapse(cubeCoordinate, 0.25);
+				this.modelListener.notifyTerrainChanged(cube[0], cube[1], cube[2]);
+				caveIn(cube);
+			}
+		}
+	}
+	
+	
+	public enum TerrainType {
+		AIR(true, 0),
+		ROCK(false, 1),
+		TREE(false, 2),
+		WORKSHOP(true, 3);
+		
+		private TerrainType(boolean passable, int number) {
+			this.passable = passable;
+			this.number = number;
+		}
+		
+		@Basic
+		public boolean isPassable() {
+			return this.passable;
+		}
+		
+		@Basic
+		public int getNumber() {
+			return this.number;
+		}
+		
+		private final boolean passable;
+		private final int number;
+		
+		public static boolean contains(TerrainType test) {
+
+		    for (TerrainType c : TerrainType.values()) {
+		        if (c.equals(test)) {
+		            return true;
+		        }
+		    }
+
+		    return false;
+		}
+		
+		public static TerrainType byOrdinal(int ord) {
+	        for (TerrainType t : TerrainType.values()) {
+	            if (t.getNumber() == ord) {
+	                return t;
+	            }
+	        }
+	        return null;
+	    }
+		
 	}
 	
 	
@@ -1133,123 +1255,12 @@ public class World {
 	}
 	
 	
-	
-	
-	/* *********************************************************
-	 * 
-	 * 							TERRAIN
-	 *
-	 **********************************************************/
-	
-	
-	
-	@Basic @Immutable
-	private ConnectedToBorder getConnectedToBorderChecker() {
-		return this.connectedToBorderChecker;
-	}
-	
-	public boolean isSolidConnectedToBorder(int x, int y, int z) {
-		return getConnectedToBorderChecker().isSolidConnectedToBorder(x, y, z);
-	}
-	
-	public void caveInAll() {
-		for (int x = 0; x < terrainTypes.length; x++) {
-			for (int y = 0; y < terrainTypes[0].length; y++) {
-				for (int z = 0; z < terrainTypes[0][0].length; z++) {
-					int[] coordinate = new int[]{x,y,z};
-					Coordinate cubeCoordinate = new Coordinate(x, y, z);
-					if(!getCubeTypeAt(cubeCoordinate).isPassable() && !isSolidConnectedToBorder(x, y, z)) {
-
-						collapse(cubeCoordinate, 0.25);
-						this.modelListener.notifyTerrainChanged(x, y, z);
-						caveIn(coordinate);
-					}
-					
-					
-				}
-			}
-		}
-	}
-	
-	private void caveIn(int[] coordinate) {
-		List<int[]> changed = getConnectedToBorderChecker().changeSolidToPassable(coordinate[0],
-				coordinate[1], coordinate[2]);
-		for (int[] cube: changed) {
-			Coordinate cubeCoordinate = new Coordinate(cube[0], cube[1], cube[2]);
-			if (!getCubeTypeAt(cubeCoordinate).isPassable() ) {
-				collapse(cubeCoordinate, 0.25);
-				this.modelListener.notifyTerrainChanged(cube[0], cube[1], cube[2]);
-				caveIn(cube);
-			}
-		}
-	}
-	
-	public void collapse(Coordinate coordinate, double diceTreshold) {
-		double dice = random.nextDouble();
-		if (dice < diceTreshold) {
-			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
-				setCubeTypeAt(coordinate, TerrainType.AIR);
-				Boulder boulder = new Boulder(coordinate, this);
-				addBoulder(boulder);
-			}
-			else if (getCubeTypeAt(coordinate) == TerrainType.TREE) {
-				setCubeTypeAt(coordinate, TerrainType.AIR);
-				Log log = new Log(coordinate, this);
-				addLog(log);
-			}
-		}
+	public boolean isTerminated() {
+		return this.isTerminated;
 	}
 	
 	
-	public enum TerrainType {
-		AIR(true, 0),
-		ROCK(false, 1),
-		TREE(false, 2),
-		WORKSHOP(true, 3);
-		
-		private TerrainType(boolean passable, int number) {
-			this.passable = passable;
-			this.number = number;
-		}
-		
-		@Basic
-		public boolean isPassable() {
-			return this.passable;
-		}
-		
-		@Basic
-		public int getNumber() {
-			return this.number;
-		}
-		
-		private final boolean passable;
-		private final int number;
-		
-		public static boolean contains(TerrainType test) {
-
-		    for (TerrainType c : TerrainType.values()) {
-		        if (c.equals(test)) {
-		            return true;
-		        }
-		    }
-
-		    return false;
-		}
-		
-		/*public boolean equals(Object other) {
-			if (other instanceof TerrainType && this.equals(other))
-				return true;
-			return false;
-		}*/
-		
-		public static TerrainType byOrdinal(int ord) {
-	        for (TerrainType t : TerrainType.values()) {
-	            if (t.getNumber() == ord) {
-	                return t;
-	            }
-	        }
-	        return null;
-	    }
-		
-	}
+	private boolean isTerminated = false;
+	
+	
 }

@@ -5,7 +5,7 @@ import hillbillies.model.*;
 import ogp.framework.util.ModelException;
 
 
-public class Facade implements /*hillbillies.part1.facade.*/IFacade {
+public class Facade implements hillbillies.part1.facade.IFacade {
 	//public Facade() {}
 
 	@Override
