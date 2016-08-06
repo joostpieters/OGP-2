@@ -7,7 +7,7 @@ public class Boulder extends Item {
 	//private double[] position;
 	
 	public Boulder(Coordinate initialPosition, World world) {
-		super(initialPosition/*, world*/);
+		super(initialPosition, world);
 	}
 	
 }

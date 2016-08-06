@@ -6,7 +6,7 @@ public class Log extends Item {
 	//private double[] position;
 	
 	public Log(Coordinate initialPosition, World world) {
-		super(initialPosition/*, world*/);
+		super(initialPosition, world);
 	}
 	
 }

@@ -26,25 +26,37 @@ public class Item extends GameObject {
 	 * Initialize this new item, not yet attached to a world.
 	 */
 	@Raw
-	public Item(Coordinate initialPosition/*, World world*/) throws IllegalPositionException,
+	public Item(Coordinate initialPosition, World world) throws IllegalPositionException,
 															IllegalArgumentException {
 		
-		if (!getWorld().canHaveAsCoordinates(initialPosition)) 
+		/* if (!getWorld().canHaveAsCoordinates(initialPosition)) 
 			throw new IllegalPositionException(initialPosition);
 		if (getWorld().getCubeTypeAt(initialPosition).isPassable() )
 			throw new IllegalPositionException(initialPosition);
+			*/
+		// Gaat niet want world not niet set!
+		// Oplossing: world wél als argument en meteen als world setten
 		
-		double[] position = new double[3];
+		/*double[] position = new double[3];
 		for (int i=0; i<initialPosition.getCoordinates().length; i++) {
 			position[i] = initialPosition.get(i) + World.getCubeLength()/2;
-		}
+		}*/
+		
+		setWorld(world);
+		
+		double[] position = World.getCubeCenter(initialPosition);
 		
 		int weight = random.nextInt(41) + 10;
 		if (!isValidWeight(weight))
 			throw new IllegalArgumentException();
 		this.weight = weight;
 		
-		setPosition(position);
+		try {
+			setPosition(position);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 	
 	
@@ -204,8 +216,8 @@ public class Item extends GameObject {
 	 * 			|					&& (getWorld().hasAsItem(this))
 	 */
 	public void setWorld(World world) throws IllegalArgumentException {
-		if ( (world != null) && !world.hasAsItem(this) )
-			throw new IllegalArgumentException();
+		//if ( (world != null) && !world.hasAsItem(this) )
+			//throw new IllegalArgumentException();
 		if ( (world == null) && (getWorld() != null) && (getWorld().hasAsItem(this)) )
 			throw new IllegalArgumentException();
 		this.world = world;

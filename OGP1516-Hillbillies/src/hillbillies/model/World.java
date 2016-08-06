@@ -198,7 +198,7 @@ public class World {
 	
 	
 	private boolean isValidTerrainType(TerrainType type) {
-		return TerrainType.contains("type");
+		return TerrainType.contains(type);
 	}
 	
 	// POSITION of COORDINATE class
@@ -231,7 +231,8 @@ public class World {
 	
 	public boolean isNeighbouring(Coordinate coordinates, Coordinate neighbourCoordinates) {
 		Set<Coordinate> neighbours = getNeighbours(coordinates);
-		System.out.println( (neighbours.contains(neighbourCoordinates)) );
+		/*System.out.println(neighbourCoordinates.toString());
+		System.out.println( (neighbours.contains(neighbourCoordinates)) );*/
 		return (neighbours.contains(neighbourCoordinates));
 	}
 	
@@ -271,12 +272,16 @@ public class World {
 	
 	public Coordinate getRandomNeighbouringCube(Coordinate coordinate) {
 		Set<Coordinate> neighbours = getNeighbours(coordinate);
+		int dice = random.nextInt(neighbours.size());
+		int counter = 0;
 		for (Coordinate neighbour: neighbours) {
-			System.out.println("Random neighbour selected");
-			return neighbour;
+			if (counter == dice)
+				return neighbour;
+			counter++;
 		}
 		return null;
 	}
+	
 	
 	public void advanceTime(double dt) {
 		if (!isValidDT(dt))
@@ -939,7 +944,7 @@ public class World {
 	public void addBoulder(Boulder boulder)  throws IllegalArgumentException {
 		if (!canHaveAsItem(boulder))
 			throw new IllegalArgumentException();
-		if (boulder.getWorld() != null)
+		if (boulder.getWorld() != this)
 			throw new IllegalArgumentException();
 		this.boulders.add(boulder);
 		boulder.setWorld(this);
@@ -1183,15 +1188,16 @@ public class World {
 		double dice = random.nextDouble();
 		if (dice < diceTreshold) {
 			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
+				setCubeTypeAt(coordinate, TerrainType.AIR);
 				Boulder boulder = new Boulder(coordinate, this);
 				addBoulder(boulder);
 			}
 			else if (getCubeTypeAt(coordinate) == TerrainType.TREE) {
+				setCubeTypeAt(coordinate, TerrainType.AIR);
 				Log log = new Log(coordinate, this);
 				addLog(log);
 			}
 		}
-		setCubeTypeAt(coordinate, TerrainType.AIR);
 	}
 	
 	
@@ -1219,16 +1225,22 @@ public class World {
 		private final boolean passable;
 		private final int number;
 		
-		public static boolean contains(String test) {
+		public static boolean contains(TerrainType test) {
 
 		    for (TerrainType c : TerrainType.values()) {
-		        if (c.name().equals(test)) {
+		        if (c.equals(test)) {
 		            return true;
 		        }
 		    }
 
 		    return false;
 		}
+		
+		/*public boolean equals(Object other) {
+			if (other instanceof TerrainType && this.equals(other))
+				return true;
+			return false;
+		}*/
 		
 		public static TerrainType byOrdinal(int ord) {
 	        for (TerrainType t : TerrainType.values()) {

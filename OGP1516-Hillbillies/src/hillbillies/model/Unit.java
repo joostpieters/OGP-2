@@ -798,18 +798,15 @@ public class Unit extends GameObject {
 
 		if (isDefaultBehaviorEnabled()) {
 			double dice = random.nextDouble();
-			if (dice < 1.0/4.0) {
-				
-				Coordinate destCube;
-				do {
-				destCube = getWorld().getRandomNeighbouringSolidCube();
-				} while (!isReachable(destCube));
-				
+			
+			if (dice < 2.0/4.0) {
+				Coordinate destCube = getRandomReachableCube(getCubeCoordinate());
 				moveTo(destCube);
-
-			}
-			else if (dice >1.0/4.0 && dice < 2.0/4.0) {
-				workAt(this.getWorld().getRandomNeighbouringCube(getCubeCoordinate()));
+				
+			} else if (dice >1.0/4.0 && dice < 2.0/4.0) {
+				Coordinate targetCube = getWorld().getRandomNeighbouringCube(getCubeCoordinate());
+				workAt(targetCube);
+				
 			}
 			else if (dice >2.0/4.0 && dice < 3.0/4.0 && enemiesInRange()) {
 				attack(getEnemyInRange());
@@ -917,7 +914,7 @@ public class Unit extends GameObject {
 			throw new IllegalArgumentException();
 
 
-		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
+		if (/*!isMoving() &&*/ !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
 			startMoving();
 			
 			double[] newPosition = new double[3];
@@ -965,6 +962,7 @@ public class Unit extends GameObject {
 			throw new IllegalPositionException(destCube);
 		}
 		
+		//startMoving();
 		setDestCubeLT(destCube);
 		this.destCubeLTReached = false;
 		
@@ -978,6 +976,7 @@ public class Unit extends GameObject {
 			else if (Tuple.containsCube(path, startCube)) {
 				Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
 				
+				//startMoving();
 				moveTowards(nextTuple.cube);
 			}
 			
@@ -996,10 +995,11 @@ public class Unit extends GameObject {
 			search(nextTuple, path);
 			nextTuple.isChecked = true;
 			iterations++;
-			
-			if (iterations == 301) {
+
+			if (iterations >= 301) {
 				//this.destCubeLTReached = true;
-				return null;
+				path = null;
+				break;
 			}
 		}
 		return path;
@@ -1065,7 +1065,16 @@ public class Unit extends GameObject {
 	}
 	
 	private boolean isReachable(Coordinate destCube) {
-		return (computePath(destCube) == null);
+		return (computePath(destCube) != null);
+	}
+	
+	
+	private Coordinate getRandomReachableCube(Coordinate coordinate) {
+		Coordinate cube;
+		do {
+			cube = getWorld().getRandomNeighbouringSolidCube();
+		} while (!isReachable(cube));
+		return cube;
 	}
 	
 	/**
@@ -1449,17 +1458,24 @@ public class Unit extends GameObject {
 	 * @param dt
 	 */
 	private void controlWorking(double dt) throws IllegalTimeException {
-		setTimeToCompletion((float) (getTimeToCompletion() - dt));
-		if (getTimeToCompletion() < 0.0) {
+		if (getTimeToCompletion() > 0.0) {
+			try {
+				setTimeToCompletion((float) (getTimeToCompletion() - dt));
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+		else if (getTimeToCompletion() < 0.0) {
 			
-			setState(State.EMPTY);
+			setTimeToCompletion(0.0f);
 			
 			if (isCarryingItem()) {
 				dropItem();
 				addXP(10);
 				
 			} else {
-				Set<Item> items = getWorld().getObjectsAt(getCubeCoordinate());
+				Set<Item> items = getWorld().getObjectsAt(getTargetCube());
 				
 				if ((getWorld().getCubeTypeAt(getTargetCube())==TerrainType.WORKSHOP)
 							&& getWorld().containsLog(items)
@@ -1481,7 +1497,7 @@ public class Unit extends GameObject {
 					addXP(10);
 				}
 			}
-			
+			setState(State.EMPTY);
 		}
 	}
 
@@ -1501,11 +1517,6 @@ public class Unit extends GameObject {
 	
 	public void workAt(Coordinate targetCube) throws IllegalTargetException {
 		
-		/*if (! (getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
-				|| getCubeCoordinate().equals(targetCube)))
-			
-			throw new IllegalTargetException(getCubeCoordinate(), targetCube);*/
-		
 		if (!isMoving() && getState() != State.RESTING_1 && !isFalling()) {
 			
 			setTargetCube(targetCube);
@@ -1516,17 +1527,10 @@ public class Unit extends GameObject {
 	
 	private void setTargetCube(Coordinate target) {
 		
-		if (!getWorld().canHaveAsCoordinates(target))
-			System.out.println(1);
-		if (!(getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
-				|| getCubeCoordinate().equals(targetCube) ))
-			System.out.println(2);
-		
-		
 		if (!getWorld().canHaveAsCoordinates(target)
-				|| !(getWorld().isNeighbouring(getCubeCoordinate(), targetCube) 
-				|| getCubeCoordinate().equals(targetCube)) )
-			throw new IllegalTargetException(getCubeCoordinate(), targetCube);
+				|| !(getWorld().isNeighbouring(getCubeCoordinate(), target) 
+				|| getCubeCoordinate().equals(target)) )
+			throw new IllegalTargetException(getCubeCoordinate(), target);
 		this.targetCube = target;
 	}
 	
@@ -1538,6 +1542,7 @@ public class Unit extends GameObject {
 	
 	private void dropItem() {
 		if (isCarryingItem()) {
+			getCarriedItem().setWorld(getWorld());
 			getCarriedItem().setPosition(getPosition());
 			getWorld().addItem(getCarriedItem());
 			subTotalWeight(getCarriedItem());
@@ -1547,6 +1552,9 @@ public class Unit extends GameObject {
 	
 	
 	private void pickUpItem(Item item) {
+		
+		dropItem();
+		
 		this.carriedItem = item;
 		addTotalWeight(item);
 		getWorld().removeItem(item);
@@ -1770,7 +1778,7 @@ public class Unit extends GameObject {
 	 * 			| result = (Float.class.isInstance(value) && (value > -0.5))
 	 */
 	private static boolean canHaveAsTime(float value) {
-		return ( Float.class.isInstance(value) && (value > -0.5f) );
+		return ( Float.class.isInstance(value) && (value > -10.0f) );
 	}
 	
 	/**
