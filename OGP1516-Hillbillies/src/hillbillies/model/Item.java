@@ -60,38 +60,12 @@ public class Item extends GameObject {
 	}
 	
 	
-	
-	/**
-	 * Set the position of the item to the given position.
-	 * 
-	 * @param 	position
-	 * 			The new position coordinates for this item.
-	 * 
-	 * @post The new position of this item is equal to the
-	 * 		given position.
-	 * 		| new.getPosition() == position
-	 * 
-	 * @throws IllegalPositionException(position, this)
-	 * 			The given position is not valid.
-	 * 		| !isValidPosition(position)
-	 */
-	/*@Raw
-	protected void setPosition(double[] position) throws IllegalPositionException {
-		if (! canHaveAsPosition(position) )
-			throw new IllegalPositionException(position);
-		this.position[0] = position[0];
-		this.position[1] = position[1];
-		this.position[2] = position[2];
-	}*/
-	
-	
-	
 	public void advanceTime (double dt) {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
 		
-		if (!isAboveSolid(getCubeCoordinate()))
+		if (!isAboveSolid(getCoordinate()))
 			fall();
 		
 		if (isFalling()) {
@@ -102,7 +76,7 @@ public class Item extends GameObject {
 	
 	private void fall() {
 		if (!isFalling()) {
-			setPosition(World.getCubeCenter(getCubeCoordinate()));
+			setPosition(World.getCubeCenter(getCoordinate()));
 			setFalling(true);
 		}
 	}
@@ -118,7 +92,7 @@ public class Item extends GameObject {
 	private boolean isFalling = false;
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate().getCoordinates()[2] == 0) {
+		if(isAboveSolid(getCoordinate()) || getCoordinate().getCoordinates()[2] == 0) {
 			setFalling(false);
 			
 		}
@@ -127,19 +101,17 @@ public class Item extends GameObject {
 		}
 	}
 	
+	
 	@Model
-	protected double[] getVelocity() /*throws IllegalPositionException*/ {
-		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
-				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
+	protected double[] getVelocity() {
+		
 		if (isFalling())
 			return new double[]{0.0,0.0,-3.0};
 		
 		return new double[]{0.0,0.0,0.0};
 	}
 	
-	
-	// Moet isValidWeight zijn!
-	
+		
 	private static boolean isValidWeight(int value) {
 		return (value >= getMinimumWeight() && value <= getMaximumWeight());
 	}
@@ -149,16 +121,16 @@ public class Item extends GameObject {
 	}
 	
 	private static int getMinimumWeight() {
-		return Item.MIN_WEIGHT;
+		return Item.minWeight;
 	}
 	
 	private static int getMaximumWeight() {
-		return Item.MAX_WEIGHT;
+		return Item.maxWeight;
 	}
 	
 	private final int weight;
-	private static final int MIN_WEIGHT = 10;
-	private static final int MAX_WEIGHT = 50;
+	private static final int minWeight = 10;
+	private static final int maxWeight = 50;
 	
 	
 	
@@ -177,6 +149,7 @@ public class Item extends GameObject {
 	public boolean canHaveAsWorld(World world) {
 		return ( (world == null) || world.canHaveAsItem(this) );
 	}
+	
 	
 	/**
 	 * Check whether this item has a proper world in which it belongs.

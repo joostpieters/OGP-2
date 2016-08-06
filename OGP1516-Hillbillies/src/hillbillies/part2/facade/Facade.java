@@ -5,9 +5,6 @@ import hillbillies.model.World.TerrainType;
 import hillbillies.part2.listener.TerrainChangeListener;
 import java.util.Set;
 
-import hillbillies.model.Boulder;
-import hillbillies.model.Faction;
-import hillbillies.model.IllegalNameException;
 import ogp.framework.util.ModelException;
 
 public class Facade implements hillbillies.part2.facade.IFacade {
@@ -20,13 +17,14 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	@Override
 	public World createWorld(int[][][] terrainTypes, 
 				TerrainChangeListener modelListener) throws ModelException {
-		//try {
+		try {
 			World world = new World(terrainTypes, modelListener);
 			return world;
-		//}
-		//catch (RuntimeException exc) {
-		//	throw new ModelException();
-		//}
+		}
+		catch (RuntimeException exc) {
+			exc.printStackTrace();
+			throw new ModelException();
+		}
 	}
 	
 	@Override
@@ -46,7 +44,12 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	
 	@Override
 	public void advanceTime(World world, double dt) throws ModelException {
-		world.advanceTime(dt);
+		try {
+			world.advanceTime(dt);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw new ModelException();
+		}
 	}
 
 	@Override
@@ -56,27 +59,37 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 
 	@Override
 	public void setCubeType(World world, int x, int y, int z, int value) throws ModelException {
-		world.setCubeTypeAt(new Coordinate(x,y,z), TerrainType.byOrdinal(value));
+		try {
+			world.setCubeTypeAt(new Coordinate(x,y,z), TerrainType.byOrdinal(value));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ModelException();
+		}
 	}
 
 	@Override
 	public boolean isSolidConnectedToBorder(World world, int x, int y, int z) throws ModelException {
-		return world.isSolidConnectedToBorder(x, y,z);
+		return world.isSolidConnectedToBorder(x, y, z);
 	}
 	
 	@Override
 	public Unit spawnUnit(World world, boolean enableDefaultBehavior) throws ModelException {
-		return world.spawnUnit(enableDefaultBehavior);
-		/*try {
-			return world.spawnUnit();
+		try {
+			return world.spawnUnit(enableDefaultBehavior);
 		} catch (RuntimeException e) {
+			e.printStackTrace();
 			throw new ModelException();
-		}*/
+		}
 	}
 	
 	@Override
 	public void addUnit(Unit unit, World world) throws ModelException {
-		world.addUnit(unit);
+		try {
+			world.addUnit(unit);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw new ModelException();
+		}
 	}
 	
 	@Override
@@ -111,7 +124,12 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	
 	@Override
 	public void workAt(Unit unit, int x, int y, int z) throws ModelException {
-		unit.workAt(new Coordinate(x, y, z));
+		try {
+			unit.workAt(new Coordinate(x, y, z));
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw new ModelException();
+		}
 	}
 	
 	@Override
@@ -139,7 +157,7 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	
 	@Override
 	public int[] getCubeCoordinate(Unit unit) {
-		return unit.getCubeCoordinate().getCoordinates();
+		return unit.getCoordinate().getCoordinates();
 	}
 	
 	@Override
@@ -152,7 +170,8 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 		try {
 			unit.setName(newName);
 		}
-		catch (IllegalNameException exc) {
+		catch (RuntimeException exc) {
+			exc.printStackTrace();
 			throw new ModelException();
 		}
 	}
@@ -163,8 +182,14 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	}
 	
 	@Override
-	public void setWeight(Unit unit, int newValue) {
+	public void setWeight(Unit unit, int newValue) /*throws ModelException*/ {
 		unit.setWeight(newValue);
+		/*try {
+			unit.setWeight(newValue);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ModelException();
+		}*/
 	}
 
 	@Override
@@ -223,19 +248,20 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 			unit.advanceTime(dt);
 		}
 		catch (RuntimeException exc) {
+			exc.printStackTrace();
 			throw new ModelException();
 		}
 	}
 	
 	@Override
 	public void moveToAdjacent(Unit unit, int dx, int dy, int dz) throws ModelException {
-		unit.moveToAdjacent(new int[]{dx, dy, dz});
-		/*try {
+		try {
 			unit.moveToAdjacent(new int[]{dx, dy, dz});
 		}
-		catch (IllegalPositionException | IllegalArgumentException | IllegalTimeException exc) {
+		catch (RuntimeException exc) {
+			exc.printStackTrace();
 			throw new ModelException();
-		}*/
+		}
 	}
 	
 	@Override
@@ -274,6 +300,7 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 			unit.moveTo(new Coordinate(cube));
 		}
 		catch (RuntimeException exc) {
+			exc.printStackTrace();
 			throw new ModelException();
 		}
 	}
@@ -283,17 +310,14 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 		return unit.isWorking();
 	}
 	
-	//@Override @Deprecated
-	/*public void work(Unit unit) throws ModelException {
-		unit.work();
-	}*/
-
+	
 	@Override
 	public void fight(Unit attacker, Unit defender) throws ModelException {
 		try {
 			attacker.attack(defender);
 		}
 		catch (RuntimeException exc) {
+			exc.printStackTrace();
 			throw new ModelException();
 		}
 	}
@@ -309,6 +333,7 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 			unit.rest();
 		}
 		catch (RuntimeException exc) {
+			exc.printStackTrace();
 			throw new ModelException();
 		}
 	}

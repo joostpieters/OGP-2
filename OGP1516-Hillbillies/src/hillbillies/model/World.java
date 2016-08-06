@@ -19,12 +19,6 @@ import hillbillies.model.*;
 import java.util.*;
 
 
-
-// DEFENSIVELY!!!!!!!!!!!
-
-
-
-
 /**
  * A class of worlds containing up to 100 units and 5 factions, and a number of items.
  * 
@@ -84,13 +78,13 @@ public class World {
 	}
 	
 	
-	public static int getMaxNbUnits() {
+	private static int getMaxNbUnits() {
 		return maxUnits;
 	}
 	
 	private final static int maxUnits = 100;
 	
-	public static int getMaxNbFactions() {
+	private static int getMaxNbFactions() {
 		return maxFactions;
 	}
 	
@@ -344,7 +338,7 @@ public class World {
 	public Unit spawnUnit(boolean enableDefaultBehavior) {
 		
 		if (getAllUnits().size() >= getMaxNbUnits()) {
-			throw new MaxNbUnitsReachedException();
+			throw new IllegalNbException();
 		}
 		
 		Unit unit = new Unit(this, enableDefaultBehavior);
@@ -451,16 +445,15 @@ public class World {
 	 * @throws	IllegalArgumentException
 	 * 			The maximum number of units in this world has already been reached.
 	 */
-	public void addUnit(Unit unit)  throws IllegalArgumentException {
+	public void addUnit(Unit unit)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsUnit(unit))
 			throw new IllegalArgumentException();
-		//if (unit.getWorld() != null)
-		//	throw new IllegalArgumentException();
-		if (getNbUnits() >= 100)
-			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
+		if (unit.getWorld() != this)
+			throw new IllegalArgumentException();
+		if (getNbUnits() >= getMaxNbUnits())
+			throw new IllegalNbException();
 		
 		this.units.add(unit);
-		//unit.setWorld(this);
 		
 		sortFactions();
 		this.factions.get(0).addUnit(unit);
@@ -618,13 +611,13 @@ public class World {
 	 * @throws	IllegalArgumentException
 	 * 			The maximum number of factions in this faction has already been reached.
 	 */
-	public void addFaction(Faction faction)  throws IllegalArgumentException {
+	public void addFaction(Faction faction)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsFaction(faction))
 			throw new IllegalArgumentException();
 		if (faction.getWorld() != null)
 			throw new IllegalArgumentException();
-		if (getNbFactions() >= 5)
-			throw new IllegalArgumentException(); // ILLEGAL SIZE EXCEPTION??????
+		if (getNbFactions() >= getMaxNbFactions())
+			throw new IllegalNbException(); // ILLEGAL SIZE EXCEPTION??????
 		
 		this.factions.add(faction);
 		faction.setWorld(this);
@@ -685,37 +678,61 @@ public class World {
 	 **********************************************************/
 	
 	
+	public boolean containsItem(Set<Item> items) {
+		//Set<Item> items = getObjectsAt(cubeCoordinates);
+		if (!items.isEmpty()) {
+			return true;
+		}
+		return false;
+	}
+	
+	
+	public Set<Item> getObjectsAt(Coordinate cubeCoordinates) {
+		Set<Item> items = new HashSet<Item>();
+		
+		for (Boulder boulder: this.boulders) {
+			if (boulder != null && (boulder.getCoordinate().equals(cubeCoordinates)) ) {
+				items.add(boulder);
+			}
+		}
+		for (Log log: this.logs) {
+			if (log != null && (log.getCoordinate().equals(cubeCoordinates) )) {
+				items.add(log);
+			}
+		}
+		return items;
+	}
+	
+	
+	public void removeItem(Item item) {
+		if (hasAsItem(item)) {
+			if (item instanceof Boulder) {
+				this.boulders.remove(item);
+				item.setWorld(null);
+			}
+			if (item instanceof Log) {
+				this.logs.remove(item);
+				item.setWorld(null);
+			}
+		}
+	}
+	
+	public void addItem(Item item) {
+		
+		if (item instanceof Boulder) {
+			this.addBoulder((Boulder) item);
+		}
+		if (item instanceof Log) {
+			this.addLog((Log) item);
+		}
+	}
+	
+		
+	
+	
 	//		LOGS
 	
-	/**
-	 * Set collecting references to logs that this world contains.
-	 * 
-	 * @invar	the set of logs is effective.
-	 * 			| logs != null
-	 * 
-	 * @invar	Each element in the set references a log that this world
-	 * 			can have as log.
-	 * 			| for each log in logs:
-	 * 			| 		canHaveAsLog(log)
-	 * 
-	 * @invar	Each log in the set references this world as their world.
-	 * 			| for each log in logs:
-	 * 			|		log.getWorld() == this
-	 */
-	private final Set<Log> logs = new HashSet<Log>();
 	
-	
-	/**
-	 * Check whether the given log is in this world.
-	 * 
-	 * @param 	log
-	 * 			The log to check.
-	 */
-	/*@Basic @Raw
-	public boolean hasAsLog(Log log) {
-		return this.logs.contains(log);
-	}
-	*/
 	/**
 	 * Check whether this world can contain the given log.
 	 * 
@@ -757,6 +774,17 @@ public class World {
 		return true;
 	}
 	
+	
+	public boolean containsLog(Set<Item> items) {
+		//Set<Item> items = getObjectsAt(cubeCoordinates);
+		for (Item item: items) {
+			if (item instanceof Log)
+				return true;
+		}
+		return false;
+	}
+	
+	
 	/**
 	 * Return the number of logs this world contains.
 	 * 
@@ -780,6 +808,15 @@ public class World {
 	 */
 	public Set<Log> getAllLogs() {
 		return new HashSet<Log>(this.logs);
+	}
+	
+	
+	public Item getLogFrom(Set<Item> items) {
+		for (Item item: items) {
+			if (item instanceof Log)
+				return item;
+		}
+		return null;
 	}
 	
 	/**
@@ -832,28 +869,28 @@ public class World {
 		}
 	}
 	
+	
+	/**
+	 * Set collecting references to logs that this world contains.
+	 * 
+	 * @invar	the set of logs is effective.
+	 * 			| logs != null
+	 * 
+	 * @invar	Each element in the set references a log that this world
+	 * 			can have as log.
+	 * 			| for each log in logs:
+	 * 			| 		canHaveAsLog(log)
+	 * 
+	 * @invar	Each log in the set references this world as their world.
+	 * 			| for each log in logs:
+	 * 			|		log.getWorld() == this
+	 */
+	private final Set<Log> logs = new HashSet<Log>();
+	
 
 	
 	//		BOULDERS
 		
-	
-	/**
-	 * Set collecting references to boulders that this world contains.
-	 * 
-	 * @invar	the set of boulders is effective.
-	 * 			| boulders != null
-	 * 
-	 * @invar	Each element in the set references a boulder that this world
-	 * 			can have as boulder.
-	 * 			| for each log in boulders:
-	 * 			| 		canHaveAsBoulder(boulder)
-	 * 
-	 * @invar	Each boulder in the set references this world as their world.
-	 * 			| for each boulder in boulders:
-	 * 			|		boulder.getWorld() == this
-	 */
-	private final Set<Boulder> boulders = new HashSet<Boulder>();
-	
 	
 	/**
 	 * Check whether the given boulder is in this world.
@@ -907,6 +944,18 @@ public class World {
 		return true;
 	}
 	
+	
+	public boolean containsBoulder(Set<Item> items) {
+		//Set<Item> items = getObjectsAt(cubeCoordinates);
+		for (Item item: items) {
+			if (item instanceof Boulder)
+				return true;
+		}
+		return false;
+	}
+	
+	
+	
 	/**
 	 * Return the number of boulders this world contains.
 	 * 
@@ -931,6 +980,16 @@ public class World {
 	public Set<Boulder> getAllBoulders() {
 		return new HashSet<Boulder>(this.boulders);
 	}
+	
+	
+	public Item getBoulderFrom(Set<Item> items) {
+		for (Item item: items) {
+			if (item instanceof Boulder)
+				return item;
+		}
+		return null;
+	}
+	
 	
 	/**
 	 * Add the given boulder to the set of boulders that this world contains.
@@ -983,89 +1042,22 @@ public class World {
 	}
 	
 	
-	public void removeItem(Item item) {
-		if (hasAsItem(item)) {
-			if (item instanceof Boulder) {
-				this.boulders.remove(item);
-				item.setWorld(null);
-			}
-			if (item instanceof Log) {
-				this.logs.remove(item);
-				item.setWorld(null);
-			}
-		}
-	}
-	
-	public void addItem(Item item) {
-		
-		if (item instanceof Boulder) {
-			this.addBoulder((Boulder) item);
-		}
-		if (item instanceof Log) {
-			this.addLog((Log) item);
-		}
-	}
-	
-	
-	public Set<Item> getObjectsAt(Coordinate cubeCoordinates) {
-		Set<Item> items = new HashSet<Item>();
-		
-		for (Boulder boulder: this.boulders) {
-			if (boulder != null && (boulder.getCubeCoordinate().equals(cubeCoordinates)) ) {
-				items.add(boulder);
-			}
-		}
-		for (Log log: this.logs) {
-			if (log != null && (log.getCubeCoordinate().equals(cubeCoordinates) )) {
-				items.add(log);
-			}
-		}
-		return items;
-	}
-	
-	
-	public Item getBoulderFrom(Set<Item> items) {
-		for (Item item: items) {
-			if (item instanceof Boulder)
-				return item;
-		}
-		return null;
-	}
-	
-	public Item getLogFrom(Set<Item> items) {
-		for (Item item: items) {
-			if (item instanceof Log)
-				return item;
-		}
-		return null;
-	}
-	
-	public boolean containsItem(Set<Item> items) {
-		//Set<Item> items = getObjectsAt(cubeCoordinates);
-		if (!items.isEmpty()) {
-			return true;
-		}
-		return false;
-	}
-	
-	public boolean containsBoulder(Set<Item> items) {
-		//Set<Item> items = getObjectsAt(cubeCoordinates);
-		for (Item item: items) {
-			if (item instanceof Boulder)
-				return true;
-		}
-		return false;
-	}
-	
-	public boolean containsLog(Set<Item> items) {
-		//Set<Item> items = getObjectsAt(cubeCoordinates);
-		for (Item item: items) {
-			if (item instanceof Log)
-				return true;
-		}
-		return false;
-	}
-	
+	/**
+	 * Set collecting references to boulders that this world contains.
+	 * 
+	 * @invar	the set of boulders is effective.
+	 * 			| boulders != null
+	 * 
+	 * @invar	Each element in the set references a boulder that this world
+	 * 			can have as boulder.
+	 * 			| for each log in boulders:
+	 * 			| 		canHaveAsBoulder(boulder)
+	 * 
+	 * @invar	Each boulder in the set references this world as their world.
+	 * 			| for each boulder in boulders:
+	 * 			|		boulder.getWorld() == this
+	 */
+	private final Set<Boulder> boulders = new HashSet<Boulder>();
 	
 	
 	

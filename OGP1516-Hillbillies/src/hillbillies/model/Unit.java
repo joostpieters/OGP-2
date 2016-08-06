@@ -8,19 +8,18 @@ import be.kuleuven.cs.som.annotate.Model;*/
 
 import be.kuleuven.cs.som.annotate.*;
 import hillbillies.model.World.TerrainType;
-import ogp.framework.util.ModelException;
 
 import java.util.*;
-import java.lang.*;
+//import java.lang.*;
 
 //import java.util.Random;
 
 /**
- * A class of units with a current position, a name, weight, strength, agility
- * and toughness, attached to a faction and a world.
+ * A class of units with a number of attributes that can perform activities, 
+ * attached to a faction and a world.
  * 
  * @invar	The position of a unit must always be valid, within the game world.
- * 			| canHaveAsPosition(getPosition())
+ * 			| canHaveAsPosition(getCoordinate())
  * 
  * @invar	The name of a unit must always be a valid name.
  * 			| isValidName(getName())
@@ -45,6 +44,9 @@ import java.lang.*;
  * 
  * @invar	The orientation of a unit must always be valid.
  * 			| isValidOrientation(getOrientation()) 
+ * 
+ * @invar 	The current number of experience points must always be valid.
+ * 			| isValidXP(getExperiencePoints())
  * 
  * @invar	Each unit must have a proper world in which it belongs
  * 			| hasProperWorld()
@@ -340,10 +342,18 @@ public class Unit extends GameObject {
 	 */
 	@Raw
 	private boolean canHaveAsWeight(int value) {
-		return (Integer.class.isInstance(value) && value > 0 && value < 201 
+		return ( value > 0 && value < 201 
 				&& value >= (getStrength()+getAgility())/2 );
 	}
-
+	
+	private void updateWeight() {
+		int i = 0;
+		while (!canHaveAsWeight(getWeight()+i)) {
+			i++;
+		}
+		setWeight(getWeight()+i);
+	}
+	
 
 	/**
 	 * Variable registering the weight of the unit.
@@ -603,7 +613,7 @@ public class Unit extends GameObject {
 	private boolean canHaveAsHitPoints(int value) {
 		return (value >= getMinHitPoints() && value <= getMaxHitPoints());
 	}
-
+	
 	
 	/**
 	 * Variable registering the current number of hitpoints of the unit.
@@ -770,7 +780,7 @@ public class Unit extends GameObject {
 	 * 			| ! isValidDT(dt)
 	 */
 	public void advanceTime(double dt) throws IllegalPositionException, 
-				IllegalArgumentException, IllegalTimeException {
+				IllegalArgumentException, IllegalTimeException, ArithmeticException {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
@@ -779,13 +789,15 @@ public class Unit extends GameObject {
 			terminate();
 		}
 		else {
-			controlXP();
+			if (getTXP() > 10) {
+				controlXP();
+			}
 			
 			if (!isResting()) {
 				setTimeAfterResting(getTimeAfterResting() + dt);
 			}
 
-			if (!isNeighbouringSolid(getCubeCoordinate()) && !isFalling())
+			if (!isNeighbouringSolid(getCoordinate()) && !isFalling())
 				fall();
 
 			if (isFalling()) {
@@ -804,7 +816,7 @@ public class Unit extends GameObject {
 			}
 			else if (getState() == State.EMPTY) {
 				if (!(isDestCubeLTReached(dt))
-						&& !getCubeCoordinate().equals(getDestCubeLT()) ) {
+						&& !getCoordinate().equals(getDestCubeLT()) ) {
 
 					moveTo(getDestCubeLT());
 				}
@@ -826,16 +838,16 @@ public class Unit extends GameObject {
 	
 	private void fall() {
 		if (!isFalling()) {
-			setStartFallingCube(getCubeCoordinate());
-			setPosition(World.getCubeCenter(getCubeCoordinate()));
+			setStartFallingCube(getCoordinate());
+			setPosition(World.getCubeCenter(getCoordinate()));
 			setState(State.FALLING);
 		}
 	}
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCubeCoordinate()) || getCubeCoordinate().get(2) == 0) {
+		if(isAboveSolid(getCoordinate()) || getCoordinate().get(2) == 0) {
 			
-			int lostHP = 10*(getStartFallingCube().get(2) - getCubeCoordinate().get(2));
+			int lostHP = 10*(getStartFallingCube().get(2) - getCoordinate().get(2));
 			setStartFallingCube();
 			this.updateCurrentHitPoints(getCurrentHitPoints() - lostHP);
 			setState(State.EMPTY);
@@ -872,15 +884,15 @@ public class Unit extends GameObject {
 		if (isDefaultBehaviorEnabled()) {
 			double dice = random.nextDouble();
 			
-			if (dice < 1.0/4.0) {
-				Coordinate destCube = getRandomReachableCube(getCubeCoordinate());
+			if (dice < 0.0/4.0) {
+				Coordinate destCube = getRandomReachableCube(getCoordinate());
 				moveTo(destCube);
 				
-			} else if (dice >1.0/4.0 && dice < 2.0/4.0) {
+			} else if (/*true*/ dice >1.0/4.0 && dice < 2.0/4.0) {
 				
-				Coordinate targetCube = getWorld().getRandomNeighbouringCube(getCubeCoordinate());
+				Coordinate targetCube = getWorld().getRandomNeighbouringCube(getCoordinate());
 				
-				//System.out.println(getCubeCoordinate().toString());
+				//System.out.println(getCoordinate().toString());
 				//System.out.println(targetCube.toString());
 				
 				workAt(targetCube);
@@ -992,7 +1004,7 @@ public class Unit extends GameObject {
 		
 		if (getState() != State.RESTING_1) {
 			
-			Coordinate startCube = getCubeCoordinate();
+			Coordinate startCube = getCoordinate();
 			Queue<Tuple> path = computePath(getDestCubeLT());
 			
 			if (path == null) this.destCubeLTReached = true;
@@ -1054,9 +1066,10 @@ public class Unit extends GameObject {
 	 * 
 	 * @param dt
 	 */
-	private void controlMoving(double dt) throws IllegalPositionException {
+	private void controlMoving(double dt) throws IllegalPositionException, 
+				ArithmeticException {
 		
-		if (!isNeighbouringSolid(getCubeCoordinate()))
+		if (!isNeighbouringSolid(getCoordinate()))
 			fall();
 		
 		else if (!isAttacked()) {
@@ -1079,7 +1092,7 @@ public class Unit extends GameObject {
 				setPosition(World.getCubeCenter(getDestination()));
 				addXP(1);
 				
-				if (getCubeCoordinate().equals(getDestCubeLT()) ) {
+				if (getCoordinate().equals(getDestCubeLT()) ) {
 					
 					this.destCubeLTReached = true;
 					if (isSprinting()) stopSprinting();
@@ -1100,7 +1113,7 @@ public class Unit extends GameObject {
 		path.add(new Tuple(destCube, 0));
 		
 		int iterations = 0;
-		while(!Tuple.containsCube(path, getCubeCoordinate()) 
+		while(!Tuple.containsCube(path, getCoordinate()) 
 				&& Tuple.hasNext(path) && iterations < 301) {
 			
 			Tuple nextTuple = Tuple.getNext(path);
@@ -1119,9 +1132,9 @@ public class Unit extends GameObject {
 	
 	private void moveTowards(Coordinate destCube) {
 						
-			if ((getCubeCoordinate() != destCube)) {
+			if ((getCoordinate() != destCube)) {
 				
-				Coordinate startCube = getCubeCoordinate();
+				Coordinate startCube = getCoordinate();
 				
 				int[] cubeDirection = new int[3];
 				for (int i=0; i<cubeDirection.length; i++) {
@@ -1456,7 +1469,8 @@ public class Unit extends GameObject {
 	 * 
 	 * @param dt
 	 */
-	private void controlWorking(double dt) throws IllegalTimeException {
+	private void controlWorking(double dt) throws IllegalTimeException, 
+							ArithmeticException {
 		if (getTimeToCompletion() > 0.0) {
 			
 			double[] targetPosition = World.getCubeCenter(getTargetCube());
@@ -1532,9 +1546,9 @@ public class Unit extends GameObject {
 	private void setTargetCube(Coordinate target) {
 		
 		if (!getWorld().canHaveAsCoordinates(target)
-				|| !(getWorld().isNeighbouring(getCubeCoordinate(), target) 
-				|| getCubeCoordinate().equals(target)) )
-			throw new IllegalTargetException(getCubeCoordinate(), target);
+				|| !(getWorld().isNeighbouring(getCoordinate(), target) 
+				|| getCoordinate().equals(target)) )
+			throw new IllegalTargetException(getCoordinate(), target);
 		this.targetCube = target;
 	}
 	
@@ -1624,7 +1638,7 @@ public class Unit extends GameObject {
 		if (!canAttack(defender))
 			throw new IllegalVictimException(this, defender);
 
-		if (!isMoving() && !isFalling()) {
+		if (!isMoving() && !isFalling() && !defender.isFalling()) {
 			startAttacking();
 
 			this.defender = defender;
@@ -1650,15 +1664,15 @@ public class Unit extends GameObject {
 	 * 
 	 * @return	True if and only if the given unit occupies the same
 	 * 			or a neighboring cube of the game world.
-	 * 			| result = (abs(getCubeCoordinate() - victim.getCubeCoordinate()) <= 1)
+	 * 			| result = (abs(getCoordinate() - victim.getCoordinate()) <= 1)
 	 * 
 	 * AND NOT SAME FACTION
 	 * 
 	 */
 	@Model
 	private boolean canAttack(Unit victim) {
-		Coordinate attackerPos = this.getCubeCoordinate();
-		Coordinate victimPos = victim.getCubeCoordinate();
+		Coordinate attackerPos = this.getCoordinate();
+		Coordinate victimPos = victim.getCoordinate();
 		for (int i = 0; i < attackerPos.getCoordinates().length; i++) {
 			if ( Math.abs(attackerPos.get(i) - victimPos.get(i)) > 1)
 				return false;
@@ -1711,7 +1725,7 @@ public class Unit extends GameObject {
 	 * 
 	 * @param dt
 	 */
-	private void controlAttacking(double dt) throws IllegalTimeException {
+	private void controlAttacking(double dt) throws IllegalTimeException, ArithmeticException {
 		if (!isFalling()) {
 			setTimeToCompletion((float) (getTimeToCompletion() - dt));
 			if (getTimeToCompletion() < 0.0) {
@@ -1733,7 +1747,7 @@ public class Unit extends GameObject {
 	 * @param	attacker
 	 * 			The attacking unit.
 	 */
-	private void defend(Unit attacker) {
+	private void defend(Unit attacker) throws ArithmeticException {
 		boolean dodged = this.dodge(attacker);
 		if (!dodged) {
 			boolean blocked = this.block(attacker);
@@ -2041,6 +2055,9 @@ public class Unit extends GameObject {
 							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
 					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 				}
+				if (this.getCurrentHitPoints() == this.getMaxHitPoints()) {
+					setState(State.RESTING_STAM);
+				}
 			}
 			else if (getState() == State.RESTING_STAM) {
 				if ((getTimeResting() * getToughness())/(0.2*100) > 1.0) {
@@ -2185,10 +2202,12 @@ public class Unit extends GameObject {
 	 */
 	@Raw
 	public void setState(State state) {
-		if (!State.contains(state.toString()) )
+		if (!State.contains(state) )
 			throw new IllegalArgumentException();
 		this.state = state;
 	}
+	
+	
 
 	/**
 	 * Variable registering the state of the unit.
@@ -2200,6 +2219,11 @@ public class Unit extends GameObject {
 	@Basic @Raw
 	public int getExperiencePoints() {
 		return this.xp;
+	}
+	
+	
+	private static boolean isValidXP(int value) {
+		return (value >= 0 && value < Integer.MAX_VALUE);
 	}
 	
 	private int getTXP() {
@@ -2247,9 +2271,15 @@ public class Unit extends GameObject {
 				}
 			}
 		}
+		System.out.println("UpdateWeight");
+		updateWeight();
+		//updateMaxHitPoints();
+		//updateMaxStaminaPoints();
 	}
 	
 	private void addXP(int x) {
+		if (!isValidXP(getExperiencePoints() + x)) 
+			throw new ArithmeticException();
 		this.xp += x;
 		this.tempXp += x;
 	}

@@ -28,7 +28,7 @@ public class Facade implements hillbillies.part1.facade.IFacade {
 
 	@Override
 	public int[] getCubeCoordinate(Unit unit) {
-		return unit.getCubeCoordinate().getCoordinates();
+		return unit.getCoordinate().getCoordinates();
 	}
 
 	@Override

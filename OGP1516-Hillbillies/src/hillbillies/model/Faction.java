@@ -34,6 +34,11 @@ public class Faction /*implements Comparable<Faction>*/ {
 		//this.units.add(unit);
 	}
 	
+	private static int getMaxNbUnits() {
+		return maxUnits;
+	}
+	
+	private final static int maxUnits = 50;
 	
 	/**
 	 * Variable registering whether or not this faction is terminated.
@@ -200,13 +205,24 @@ public class Faction /*implements Comparable<Faction>*/ {
 	 * @throws	IllegalArgumentException
 	 * 			The maximum number of units in this faction has already been reached.
 	 */
-	public void addUnit(Unit unit)  throws IllegalArgumentException {
+	public void addUnit(Unit unit)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsUnit(unit))
 			throw new IllegalArgumentException();
 		if (unit.getFaction() != null)
 			throw new IllegalArgumentException();
-		if (getNbUnits() >= 50)
-			throw new MaxNbUnitsReachedException(); // ILLEGAL SIZE EXCEPTION??????
+		if (getNbUnits() >= getMaxNbUnits())
+			try {
+				throw new IllegalNbException();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+				/* For some reason I don't know the program crashes after throwing
+				* The IllegalNbException. It keeps throwing ArrayIndexOutOfBoundExceptions
+				* caused by a method that is part of one of the helper classes. So
+				* I shut the program down myself in a clean way.
+				*/
+			}
+		
 		this.units.add(unit);
 		unit.setFaction(this);
 	}
@@ -318,16 +334,6 @@ public class Faction /*implements Comparable<Faction>*/ {
 			throw new IllegalArgumentException();
 		this.world = world;
 	}
-	
-	
-	/*public int compareTo(Faction f) {
-	    if (this.getNbUnits() == f.getNbUnits())
-	        return 0;
-	    else if (this.getNbUnits() > f.getNbUnits())
-	        return 1;
-	    else 
-	        return -1;
-	}*/
 	
 }
 
