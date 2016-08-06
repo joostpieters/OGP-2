@@ -26,9 +26,6 @@ public abstract class GameObject extends TimeSubject {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			//System.exit(1);
-			//throw new IllegalPositionException(position);
-			//System.exit(1);
 		}
 		this.position[0] = position[0];
 		this.position[1] = position[1];

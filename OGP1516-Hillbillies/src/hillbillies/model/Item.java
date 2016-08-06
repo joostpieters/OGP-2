@@ -91,7 +91,7 @@ public class Item extends GameObject {
 			throw new IllegalArgumentException();
 		}
 		
-		if (!isNeighbouringSolid(getCubeCoordinate()))
+		if (!isAboveSolid(getCubeCoordinate()))
 			fall();
 		
 		if (isFalling()) {

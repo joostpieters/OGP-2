@@ -158,6 +158,8 @@ public class Unit extends GameObject {
 		if (canHaveAsWeight(weight)) 
 			setWeight(weight);
 		else setWeight((getStrength()+getAgility())/2 +1);
+		
+		setInitialTotalWeight();
 
 		this.MIN_HP = 0;
 		this.MIN_SP = 0;
@@ -192,6 +194,8 @@ public class Unit extends GameObject {
 		if (canHaveAsWeight(weight)) 
 			setWeight(weight);
 		else setWeight((getStrength()+getAgility())/2 +1);
+		
+		setInitialTotalWeight();
 
 		this.MIN_HP = 0;
 		this.MIN_SP = 0;
@@ -388,7 +392,7 @@ public class Unit extends GameObject {
 	/**
 	 * Variable registering the weight of the unit.
 	 */
-	private int weight;
+	private int weight = 0;
 	
 
 	/**
@@ -799,12 +803,17 @@ public class Unit extends GameObject {
 		if (isDefaultBehaviorEnabled()) {
 			double dice = random.nextDouble();
 			
-			if (dice < 2.0/4.0) {
+			if (dice < 4.0/4.0) {
 				Coordinate destCube = getRandomReachableCube(getCubeCoordinate());
 				moveTo(destCube);
 				
 			} else if (dice >1.0/4.0 && dice < 2.0/4.0) {
+				
 				Coordinate targetCube = getWorld().getRandomNeighbouringCube(getCubeCoordinate());
+				
+				//System.out.println(getCubeCoordinate().toString());
+				//System.out.println(targetCube.toString());
+				
 				workAt(targetCube);
 				
 			}
@@ -815,7 +824,7 @@ public class Unit extends GameObject {
 				rest();
 			}
 			if (isMoving()) {
-				if (dice < 0.5) {
+				if (random.nextDouble() < 0.5) {
 					startSprinting();
 				}
 			}
@@ -853,6 +862,13 @@ public class Unit extends GameObject {
 			fall();
 		
 		else if (!isAttacked()) {
+			
+			setOrientation((float) Math.atan2(getVelocity()[1], getVelocity()[0] ));
+			
+			/*System.out.println(getVelocity()[1]);
+			System.out.println(getVelocity()[0]);
+			System.out.println("tan" + Math.atan2(getVelocity()[1], getVelocity()[0] ));
+			*/
 			
 			if (isSprinting()) {
 				updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
@@ -936,7 +952,7 @@ public class Unit extends GameObject {
 			}
 			
 			//this.movingDirection = direction;
-			setOrientation((float) Math.atan2(getVelocity()[1], getVelocity()[0] ));
+			//setOrientation((float) Math.atan2(getVelocity()[0], getVelocity()[1] ));
 		}
 	}
 
@@ -977,7 +993,8 @@ public class Unit extends GameObject {
 				Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
 				
 				//startMoving();
-				moveTowards(nextTuple.cube);
+				if (nextTuple != null)
+					moveTowards(nextTuple.cube);
 			}
 			
 		}
@@ -1019,7 +1036,7 @@ public class Unit extends GameObject {
 				}
 				
 				moveToAdjacent(cubeDirection);
-				
+				setOrientation((float) Math.atan2(getVelocity()[1], getVelocity()[0] ));
 			}
 	}
 	
@@ -1069,7 +1086,7 @@ public class Unit extends GameObject {
 	}
 	
 	
-	private Coordinate getRandomReachableCube(Coordinate coordinate) {
+	private Coordinate getRandomReachableCube(Coordinate currentCube) {
 		Coordinate cube;
 		do {
 			cube = getWorld().getRandomNeighbouringSolidCube();
@@ -1271,7 +1288,7 @@ public class Unit extends GameObject {
 	 * 			| result = getCurrentSpeed()*(getDestination() - getPosition())
 	 * 			|				/getDistanceToDestination(getPosition())
 	 */
-	@Model
+	@Model @Override
 	protected double[] getVelocity() throws IllegalPositionException {
 		/*double d = Math.sqrt(Math.pow(getMovingDirection()[0],2)
 				+ Math.pow(getMovingDirection()[1],2) + Math.pow(getMovingDirection()[2],2));*/
@@ -1301,10 +1318,11 @@ public class Unit extends GameObject {
 	 */
 	@Model
 	private double getBaseSpeed() {
-		if (isSprinting())
+		if (isSprinting()) {
 			return 3.0*(getStrength()+getAgility())/(2.0*getTotalWeight());
-		else
+		} else {
 			return 1.5*(getStrength()+getAgility())/(2.0*getTotalWeight());
+		}
 	}
 
 	/**
@@ -1396,7 +1414,7 @@ public class Unit extends GameObject {
 	 * 		| result = (Integer.class.isInstance(value) && value > 0 && value < 2*Math.PI) 
 	 */
 	private static boolean isValidOrientation(float value) {
-		return (Float.class.isInstance(value) && value >= 0.0 && value < 2*Math.PI);
+		return (Float.class.isInstance(value) && value >= - Math.PI && value <= Math.PI);
 	}
 	
 
@@ -1459,6 +1477,10 @@ public class Unit extends GameObject {
 	 */
 	private void controlWorking(double dt) throws IllegalTimeException {
 		if (getTimeToCompletion() > 0.0) {
+			
+			double[] targetPosition = World.getCubeCenter(getTargetCube());
+			setOrientation((float)Math.atan2(getPosition()[1]-targetPosition[1],
+					targetPosition[0] - getPosition()[0]));
 			try {
 				setTimeToCompletion((float) (getTimeToCompletion() - dt));
 			} catch (Exception e) {
@@ -1572,7 +1594,11 @@ public class Unit extends GameObject {
 		return this.totalWeight;
 	}
 	
-	private int totalWeight = getWeight();
+	private void setInitialTotalWeight() {
+		this.totalWeight = getWeight();
+	}
+	
+	private int totalWeight = 0;
 	
 	public boolean isCarryingBoulder() {
 		return (carriedItem instanceof Boulder);
