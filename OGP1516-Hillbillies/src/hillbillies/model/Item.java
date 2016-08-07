@@ -195,6 +195,8 @@ public class Item extends GameObject {
 	}
 	
 	
-	
+	public void terminate() {
+		getWorld().removeItem(this);
+	}
 	
 }

@@ -904,12 +904,13 @@ public class Unit extends GameObject {
 	 * 			The value for dt is not valid.
 	 * 			| ! isValidDT(dt)
 	 */
+	//@Override //TODO override annotation necessary?
 	public void advanceTime(double dt) throws IllegalPositionException, 
 				IllegalArgumentException, IllegalTimeException, ArithmeticException {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
-		if (getCurrentHitPoints() == 0) {
+		if (getCurrentHitPoints() <= 0) {
 			dropItem();
 			terminate();
 		}
@@ -940,12 +941,13 @@ public class Unit extends GameObject {
 				controlMoving(dt);
 			}
 			else if (getState() == State.EMPTY) {
-				if (!(isDestCubeLTReached(dt))
+				if (!(isDestCubeLTReached())
 						&& !getCoordinate().equals(getDestCubeLT()) ) {
 
 					moveTo(getDestCubeLT());
+				} else {
+					controlWaiting(dt);
 				}
-				controlWaiting(dt);
 			}
 			else if (isAttacking()) {
 				controlAttacking(dt);
@@ -976,16 +978,14 @@ public class Unit extends GameObject {
 	 * 			where the unit started falling is set to its current cube,
 	 * 			| if (!isFalling())
 	 * 			| 	then setStartFallingCube(getCoordinate())
-	 * 			the position of the unit is set to the middle of its current
-	 * 			cube for clarity,
-	 * 			| 		setPosition(getCoordinate())
+	 * 			
 	 * 			and the units state is set to falling.
 	 * 			| 		setState(State.FALLING)
 	 */
 	private void fall() {
 		if (!isFalling()) {
 			setStartFallingCube(getCoordinate());
-			setPosition(getCoordinate());
+			//setPosition(getCoordinate());
 			setState(State.FALLING);
 		}
 	}
@@ -997,10 +997,25 @@ public class Unit extends GameObject {
 	 * @param 	dt
 	 * 			the game time interval in which to manage the falling behavior.
 	 * 
-	 * @post	if the units position is above a solid cube or at the bottom of
-	 * 			the game world, the unit stops falling.
+	 * @effect	if the units position is above a solid cube or at the bottom of
+	 * 			the game world, the unit stops falling, i.e. its state is set
+	 * 			to empty,
 	 * 			| if (isAboveSolid(getCoordinate()) || getCoordinate().get(2) == 0)
-	 * 			| 	then new.getState() == State.EMPTY
+	 * 			| 	then setState(State.EMPTY)
+	 * 			it loses 10 HP for each Z-level it fell,
+	 * 			|		updateCurrentHitPoints(getCurrentHitPoints() - 
+	 * 			|				10*(getStartFallingCube().get(2) - getCoordinate().get(2))
+	 * 			its field for registering the cube where it started
+	 * 			falling is set to null again,
+	 * 			| 		setStartFallingCube()
+	 * 			and the position of the unit is set to the middle of its current
+	 * 			cube for clarity.
+	 * 			| 		setPosition(getCoordinate())
+	 * 
+	 * @effect	if the units position is NOT above a solid cube or at the bottom of
+	 * 			the game world, its position is updated.
+	 * 			| else
+	 * 			|	then updatePosition(dt)
 	 * 			
 	 */
 	private void controlFalling(double dt) throws IllegalPositionException {
@@ -1008,8 +1023,9 @@ public class Unit extends GameObject {
 			
 			int lostHP = 10*(getStartFallingCube().get(2) - getCoordinate().get(2));
 			setStartFallingCube();
-			this.updateCurrentHitPoints(getCurrentHitPoints() - lostHP);
+			updateCurrentHitPoints(getCurrentHitPoints() - lostHP);
 			setState(State.EMPTY);
+			setPosition(getCoordinate());
 			
 		}
 		else {
@@ -1017,18 +1033,45 @@ public class Unit extends GameObject {
 		}
 	}
 	
-	private void setStartFallingCube(Coordinate coordinate) {
-		this.startFallingCube = coordinate;
-	}
 	
-	private void setStartFallingCube() {
-		this.startFallingCube = null;
-	}
-	
+	/**
+	 * Returns the cube where the unit started falling. 
+	 */
+	@Basic
 	private Coordinate getStartFallingCube() {
 		return this.startFallingCube;
 	}
 	
+	
+	/**
+	 * Set the cube where the unit starts falling, to later compute the amount
+	 * of HP lost.
+	 * 
+	 * @param 	coordinate
+	 * 			The cube where the unit starts falling.
+	 * 
+	 * @post	| getStartFallingCube() == coordinate
+	 */
+	@Raw
+	private void setStartFallingCube(Coordinate coordinate) {
+		this.startFallingCube = coordinate;
+	}
+	
+	
+	/**
+	 * Set the cube where the unit starts falling to null.
+	 * 
+	 * @post	| getStartFallingCube() == null
+	 */
+	private void setStartFallingCube() {
+		this.startFallingCube = null;
+	}
+	
+	
+	/**
+	 * Variable registering the cube where the unit started falling,
+	 * if any.
+	 */
 	private Coordinate startFallingCube = null;
 	
 	
@@ -1036,7 +1079,24 @@ public class Unit extends GameObject {
 	/**
 	 * Manage the waiting of the unit, i.e. when the state of the unit is equal to empty.
 	 * 
-	 * @param dt
+	 * @param 	dt
+	 * 			the game time interval in which to manage the falling behavior.
+	 * 
+	 * @effect	If the default behavior is not enabled, nothing happens.
+	 * 			Else, there is an equal chance that the unit will execute each
+	 * 			of the following activities: move to a random cube, start working at
+	 * 			a random cube, rest or attack an enemy if there is one in range.
+	 * 			| if (isDefaultBehaviorEnabled())
+	 * 			|	then (
+	 * 			|		if (random < 0.25 && random > 0.0)
+	 * 			|			then moveTo(getRandomReachableCube())
+	 * 			|		else if (random < 0.5 && random > 0.25)
+	 * 			|			then workAt(getRandomNeighbouringCube())
+	 * 			|		else if (random < 0.75 && random > 0.5 && enemiesInRange())
+	 * 			|			then attack(getEnemyInRange())
+	 * 			|		else if (random < 1.0 && random > 0.75)
+	 * 			|			then rest()
+	 * 			| 		)
 	 */
 	private void controlWaiting(double dt) throws IllegalPositionException {
 
@@ -1044,12 +1104,12 @@ public class Unit extends GameObject {
 			double dice = random.nextDouble();
 			
 			if (dice < 0.0/4.0) {
-				Coordinate destCube = getRandomReachableCube(getCoordinate());
+				Coordinate destCube = getRandomReachableCube();
 				moveTo(destCube);
 				
 			} else if (/*true*/ dice >1.0/4.0 && dice < 2.0/4.0) {
 				
-				Coordinate targetCube = getWorld().getRandomNeighbouringCube(getCoordinate());
+				Coordinate targetCube = getRandomNeighbouringCube();
 				
 				//System.out.println(getCoordinate().toString());
 				//System.out.println(targetCube.toString());
@@ -1077,7 +1137,7 @@ public class Unit extends GameObject {
 	 * Returns true if the unit is moving.
 	 * 
 	 * @return	True if and only if the unit is moving.
-	 * 			| result = (getState() == State.MOVING)
+	 * 			| result == (getState() == State.MOVING)
 	 */
 	public boolean isMoving() {
 		return (getState() == State.MOVING);
@@ -1085,45 +1145,44 @@ public class Unit extends GameObject {
 	
 	
 	/**
-	 * Move to an adjacent cube.
+	 * Start moving to an adjacent cube.
 	 * 
-	 * @param cubeDirection
+	 * @param 	cubeDirection
 	 * 			The relative directions of the cube to which the unit has to move.
 	 * 
 	 * @post	The destination of the unit is set to the right adjacent cube, if
-	 * 			the unit is not already moving or in the initial resting state or attacked.
+	 * 			the unit is not already moving or in the initial resting state or attacked
+	 * 			or falling.
 	 * 			| new.getDestination() == determineCube(cubeDirection)
 	 * 
-	 * @post	The moving direction of the unit is set towards the destination cube, if
-	 * 			the unit is not already moving or in the initial resting state or attacked.
-	 * 			| new.movingDirection == new.getDestination() - this.getPosition()
-	 * 
 	 * @post	The orientation of the unit is set towards the destination, if
-	 * 			the unit is not already moving or in the initial resting state or attacked.
+	 * 			the unit is not already moving or in the initial resting state or attacked
+	 * 			or falling.
 	 * 			| new.getOrientation() == Math.atan2(getVelocity()[0], getVelocity()[2] )
 	 * 
-	 * @throws IllegalArgumentException
+	 * @effect	The units state is set to moving, if the unit is not already moving 
+	 * 			or in the initial resting state or attacked or falling.
+	 * 			| startMoving()
+	 * 
+	 * @throws  IllegalArgumentException
 	 * 			The given direction is not a valid direction.
-	 * 			| !(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
+	 * 			| !isValidCubeDirection(cubeDirection)
 	 */
 	public void moveToAdjacent(int[] cubeDirection) 
 			throws IllegalPositionException, IllegalArgumentException {
-
-		if (!(cubeDirection instanceof int[]) || cubeDirection.length != 3 )
+		
+		if (!isValidCubeDirection(cubeDirection))
 			throw new IllegalArgumentException();
 
-
-		if (/*!isMoving() &&*/ !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
+		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 && !isFalling()) {
 			startMoving();
 			
 			double[] newPosition = new double[3];
-			double[] direction = new double[3];
 
 			for (int i=0; i<3; i++) {
 				newPosition[i] = Math.floor(getPosition()[i] )
 						+ (double) cubeDirection[i];
 				newPosition[i] += World.getCubeLength()/2.0;
-				direction[i] = newPosition[i] - getPosition()[i];
 			}
 			
 			try {
@@ -1137,19 +1196,29 @@ public class Unit extends GameObject {
 		}
 	}
 
+	
 	/**
 	 * Move to a target cube.
 	 * 
-	 * @param destCube
+	 * @param 	destCube
 	 * 			The coordinates of the destination cube.
 	 * 
 	 * @post	The long term destination of the unit will be equal to
 	 * 			the destination cube.
 	 * 			| new.destCubeLT == destCube
 	 * 
-	 * @throws IllegalPositionException
+	 * @post	The long term destination reached field will be equal to false.
+	 * 			| new.isDestCubeLTReached() == false
+	 * 
+	 * @effect	If the unit is not in the initial resting state and not falling,
+	 * 			a path will be computed. If the path is equal to null the destination
+	 * 			is not reachable and the long term destination reached field 
+	 * 			is set to true, hence the unit will not move. Otherwise, if a path
+	 * 			is found, the unit will move towards the first cube of the path.
+	 * 
+	 * @throws 	IllegalPositionException
 	 * 			The given destination cube is not valid.
-	 * 			| !canHaveAsPosition(convertPositionToDouble(destCube))
+	 * 			| !canHaveAsPosition(destCube)
 	 */
 	public void moveTo(Coordinate destCube) throws IllegalPositionException,
 						IllegalArgumentException {
@@ -1161,7 +1230,7 @@ public class Unit extends GameObject {
 		setDestCubeLT(destCube);
 		this.destCubeLTReached = false;
 		
-		if (getState() != State.RESTING_1) {
+		if (getState() != State.RESTING_1 && !isFalling()) {
 			
 			Coordinate startCube = getCoordinate();
 			Queue<Tuple> path = computePath(getDestCubeLT());
@@ -1179,6 +1248,30 @@ public class Unit extends GameObject {
 	}
 	
 	
+	/**
+	 * Get a random cube neighboring the cube currently occupied by the unit.
+	 * 
+	 * @return	a random cube neighboring the current cube.
+	 * 			| getWorld().getRandomNeighbouringCube(getCoordinate())
+	 */
+	private Coordinate getRandomNeighbouringCube() {
+		return getWorld().getRandomNeighbouringCube(getCoordinate());
+	}
+	
+	
+	/**
+	 * Find the cube that is neighboring the given cube with the smallest 
+	 * weight from a given set of tuples consisting of a weight and a cube coordinate.
+	 * 
+	 * @param 	path
+	 * 			The set containing tuples that consist of a coordinate and a weight.
+	 * 
+	 * @param 	cube
+	 * 			The cube to find the neighbour of.
+	 * 	
+	 * @return	The the cube that is neighboring the given cube with the smallest 
+	 * 			weight.
+	 */
 	private Tuple getNeighbourWSmallestN(Queue<Tuple> path, Coordinate cube) {
 		Set<Coordinate> neighbours = getWorld().getNeighbours(cube);
 		Tuple result = null;
@@ -1196,12 +1289,31 @@ public class Unit extends GameObject {
 		return result;
 	}
 	
+	
+	/**
+	 * Check whether a given cube is reachable or not, by trying to compute
+	 * a path from the current cube to the given cube.
+	 * 
+	 * @param 	destCube
+	 * 			the cube to test if reachable.
+	 * 
+	 * @return	True if and only if a path can be computed to the given cube.
+	 * 			| result == (computePath(destCube) != null)
+	 */
 	private boolean isReachable(Coordinate destCube) {
 		return (computePath(destCube) != null);
 	}
 	
 	
-	private Coordinate getRandomReachableCube(Coordinate currentCube) {
+	/**
+	 * Get a random cube that is reachable from the units current position.
+	 *  
+	 * @return	A random reachable cube coordinate.
+	 * 			| do ( cube = getWorld().getRandomNeighbouringSolidCube() )
+	 * 			| while (!isReachable(cube)
+	 * 			| result == cube
+	 */
+	private Coordinate getRandomReachableCube() {
 		Coordinate cube;
 		do {
 			cube = getWorld().getRandomNeighbouringSolidCube();
@@ -1216,14 +1328,23 @@ public class Unit extends GameObject {
 	 * @post	The units state is equal to moving
 	 * 			| new.getState() == State.MOVING
 	 */
+	@Model
 	private void startMoving() {
 		setState(State.MOVING);
 	}
 
+	
 	/**
 	 * Manage the moving of the unit, i.e. when the state of the unit is equal to moving.
 	 * 
-	 * @param dt
+	 * @param 	dt
+	 * 			the game time interval in which to manage the falling behavior.
+	 * 
+	 * @effect	if the unit is not occupying a cube neighbouring a solid cube, it will fall.
+	 * 			| if (!isNeighbouringSolid(getCoordinate())
+	 * 			|	then fall()
+	 * 
+	 * @effect	
 	 */
 	private void controlMoving(double dt) throws IllegalPositionException, 
 				ArithmeticException {
@@ -1231,7 +1352,7 @@ public class Unit extends GameObject {
 		if (!isNeighbouringSolid(getCoordinate()))
 			fall();
 		
-		else if (!isAttacked()) {
+		else /*if (/*!isAttacked()*/ {
 			
 			setOrientation((float) Math.atan2(getVelocity()[1], getVelocity()[0] ));
 			
@@ -1260,9 +1381,9 @@ public class Unit extends GameObject {
 			}
 
 		}
-		else {
-			setState(State.EMPTY);
-		}
+		//else {
+	//		setState(State.EMPTY);
+		//}
 
 	}
 
@@ -1338,6 +1459,18 @@ public class Unit extends GameObject {
 	public Coordinate getDestination() {
 		return this.destination;
 	}
+	
+	private boolean isValidCubeDirection(int[] cubeDirection) {
+		if (cubeDirection.length != 3)
+			return false;
+		boolean valid = true;
+		for (int i=0; i<cubeDirection.length; i++) {
+			if (cubeDirection[i] != 0 && cubeDirection[i] != 1 && cubeDirection[i] != -1)
+				valid = false;
+		}
+		return valid;
+	}
+	
 
 	/**
 	 * Set the destination of the unit to the given coordinates.
@@ -1370,7 +1503,7 @@ public class Unit extends GameObject {
 	
 	
 	@Basic
-	private boolean isDestCubeLTReached(double dt) {
+	private boolean isDestCubeLTReached() {
 		return this.destCubeLTReached;
 	}
 
@@ -1748,7 +1881,12 @@ public class Unit extends GameObject {
 		if (isCarryingItem()) {
 			getCarriedItem().setWorld(getWorld());
 			getWorld().addItem(getCarriedItem());
-			getCarriedItem().setPosition(getTargetCube());
+			try {
+				getCarriedItem().setPosition(getTargetCube());
+			} catch (RuntimeException e) {
+				e.printStackTrace();
+				getCarriedItem().setPosition(getCoordinate());
+			}
 			carriedItem = null;
 		}
 	}
@@ -1970,8 +2108,9 @@ public class Unit extends GameObject {
 	 * 			| !(canHaveAsPosition(randomAdjacentPosition))
 	 */
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
-		Coordinate newPosition = new Coordinate(getCoordinate().get(0) + 2*random.nextInt() - 1,
-				getCoordinate().get(1) + 2*random.nextInt() - 1, 
+		//System.out.println("got here");
+		Coordinate newPosition = new Coordinate(getCoordinate().get(0) + random.nextInt(3) - 1,
+				getCoordinate().get(1) + random.nextInt(3) - 1, 
 				getCoordinate().get(2));
 				
 		/*double[] newPosition = this.getPosition();
@@ -2447,8 +2586,8 @@ public class Unit extends GameObject {
 					}
 				}
 			}
+			updateWeight();
 		}
-		updateWeight();
 	}
 	
 	private void addXP(int x) {
@@ -2622,6 +2761,12 @@ public class Unit extends GameObject {
 	 */
 	private Faction faction = null;
 	
+	
+	public void terminate() {
+		dropItem();
+		getFaction().removeUnit(this);
+		getWorld().removeUnit(this);
+	}
 	
 	
 	/* ISVALID POSITION etc IN WORLD IPV IN UNIT, ITEM AFZONDERLIJK???????

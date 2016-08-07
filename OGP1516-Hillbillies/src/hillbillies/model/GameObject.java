@@ -10,9 +10,10 @@ public abstract class GameObject extends TimeSubject {
 	
 	
 	protected boolean canHaveAsPosition(Coordinate coordinates) {
-		if (coordinates == null)
+		if (coordinates == null) {
+			System.out.println("coordinates == null");
 			return false;
-		
+		}
 		if (!getWorld().canHaveAsCoordinates(coordinates)) {
 			return false; }
 
@@ -123,9 +124,7 @@ public abstract class GameObject extends TimeSubject {
 	 * @post	This item is terminated.
 	 * 			| new.isTerminated()
 	 */
-	public void terminate() {
-		this.isTerminated = true;
-	}
+	public abstract void terminate();
 	
 	
 	/**
