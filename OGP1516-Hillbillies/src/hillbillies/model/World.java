@@ -161,6 +161,8 @@ public class World {
 	 * 		|		&& !(coordinates[2] < 0.0 || coordinates[2] >= getNbCubesZ())
 	 */
 	public boolean canHaveAsCoordinates(Coordinate coordinates) {
+		if (coordinates == null)
+			return false;
 		if (coordinates.get(0) < 0 || coordinates.get(0) >= getNbCubesX()) {
 			return false; }
 		if (coordinates.get(1) < 0 || coordinates.get(1) >= getNbCubesY()) {
@@ -341,8 +343,14 @@ public class World {
 			throw new IllegalNbException();
 		}
 		
-		Unit unit = new Unit(this, enableDefaultBehavior);
+		sortFactions();
+		Faction faction = this.factions.get(0);
+		
+		Unit unit = new Unit(this, faction, enableDefaultBehavior);
+		
 		addUnit(unit);
+		faction.addUnit(unit);
+		
 		return unit;
 	}
 	
@@ -454,9 +462,6 @@ public class World {
 			throw new IllegalNbException();
 		
 		this.units.add(unit);
-		
-		sortFactions();
-		this.factions.get(0).addUnit(unit);
 	}
 	
 	
@@ -841,7 +846,7 @@ public class World {
 	public void addLog(Log log)  throws IllegalArgumentException {
 		if (!canHaveAsItem(log))
 			throw new IllegalArgumentException();
-		if (log.getWorld() != null)
+		if (log.getWorld() != this)
 			throw new IllegalArgumentException();
 		this.logs.add(log);
 		log.setWorld(this);

@@ -208,7 +208,7 @@ public class Faction /*implements Comparable<Faction>*/ {
 	public void addUnit(Unit unit)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsUnit(unit))
 			throw new IllegalArgumentException();
-		if (unit.getFaction() != null)
+		if (unit.getFaction() != this)
 			throw new IllegalArgumentException();
 		if (getNbUnits() >= getMaxNbUnits())
 			try {
@@ -224,7 +224,7 @@ public class Faction /*implements Comparable<Faction>*/ {
 			}
 		
 		this.units.add(unit);
-		unit.setFaction(this);
+		//unit.setFaction(this);
 	}
 	
 	

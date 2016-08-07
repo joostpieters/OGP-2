@@ -10,6 +10,8 @@ public abstract class GameObject extends TimeSubject {
 	
 	
 	protected boolean canHaveAsPosition(Coordinate coordinates) {
+		if (coordinates == null)
+			return false;
 		
 		if (!getWorld().canHaveAsCoordinates(coordinates)) {
 			return false; }
@@ -30,6 +32,16 @@ public abstract class GameObject extends TimeSubject {
 		this.position[0] = position[0];
 		this.position[1] = position[1];
 		this.position[2] = position[2];
+	}
+	
+	
+	protected void setPosition(Coordinate position) throws IllegalPositionException {
+		if (! canHaveAsPosition(position) ) {
+				throw new IllegalPositionException(position);
+			}
+		this.position[0] = World.getCubeCenter(position)[0];
+		this.position[1] = World.getCubeCenter(position)[1];
+		this.position[2] = World.getCubeCenter(position)[2];
 	}
 	
 	

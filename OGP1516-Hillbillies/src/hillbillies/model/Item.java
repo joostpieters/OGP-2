@@ -43,16 +43,14 @@ public class Item extends GameObject {
 		}*/
 		
 		setWorld(world);
-		
-		double[] position = World.getCubeCenter(initialPosition);
-		
+			
 		int weight = random.nextInt(41) + 10;
 		if (!isValidWeight(weight))
 			throw new IllegalArgumentException();
 		this.weight = weight;
 		
 		try {
-			setPosition(position);
+			setPosition(initialPosition);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
