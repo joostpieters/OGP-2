@@ -2184,17 +2184,17 @@ public class Unit extends GameObject {
 	
 	
 	/**
-	 * Checks whether the given item is a valid item for a unit to carry.
+	 * Checks whether the given item is a valid item for this unit to carry.
 	 * 
 	 * @param 	item
 	 * 			the item to check
 	 * 
-	 * @return	true if and only if the given item is not equal to null.
-	 * 			| result == (item != null)
+	 * @return	true if and only if the given item is not equal to null and 
+	 * 			if the item references the same world as this unit.
+	 * 			| result == (item != null && getWorld() == item.getWorld())
 	 */
-	//TODO and if this item references the same world as this unit
-	public static boolean isValidItem(Item item) {
-		return (item != null);
+	public boolean canHaveAsItem(Item item) {
+		return (item != null && item.getWorld() == this.getWorld());
 	}
 	
 	
@@ -2246,13 +2246,26 @@ public class Unit extends GameObject {
 		}
 	}
 	
+	
 	/**
+	 * Pick up the given item.
 	 * 
-	 * @param item
+	 * @effect	the item the unit is carrying is dropped.
+	 * 			| dropItem()
+	 * 
+	 * @post 	the item the unit is carrying is equal to the given item.
+	 * 			| new.carriedItem == item
+	 * 
+	 * @effect	the given item is removed from the units current world.
+	 * 			| getWorld().removeItem(item)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The unit cannot have this item as the item its carrying.
+	 * 			| !canHaveAsItem(item)
 	 */
 	@Model
-	private void pickUpItem(Item item) {
-		if (!isValidItem(item))
+	private void pickUpItem(Item item) throws IllegalArgumentException {
+		if (!canHaveAsItem(item))
 			throw new IllegalArgumentException();
 		
 		dropItem();
@@ -2261,6 +2274,9 @@ public class Unit extends GameObject {
 	}
 	
 	
+	/**
+	 * Variable registering the item the unit is carrying.
+	 */
 	private Item carriedItem = null;
 
 
@@ -2276,34 +2292,41 @@ public class Unit extends GameObject {
 	
 	
 	/**
-	 * Attack another unit.
+	 * Attack the given unit.
 	 * 
-	 * @param defender
+	 * @param 	defender
 	 * 			The unit to attack.
 	 * 
-	 * @post	If the unit is not currently moving, its orientation is set towards
+	 * @effect	If the unit is not currently moving or falling, it starts attacking.
+	 * 			| startAttacking()
+	 * 
+	 * @post	If the unit is not currently moving or falling, this units defender field 
+	 * 			is set to the given other unit.
+	 * 			| new.getDefender() == defender
+	 * 
+	 * @effect	If the unit is not currently moving or falling, the unit this unit is attacking
+	 * 			its is attacked field is set to true.
+	 * 			| getDefender().setAttacked(true)
+	 * 
+	 * @post	If the unit is not currently moving or falling, its orientation is set towards
 	 * 			the attacked unit.
 	 * 			| new.getOrientation() == arctangent(defender.getPosition()[1]-this.getPosition()[1],
 	 * 			|	defender.getPosition()[0]-this.getPosition()[0]))
 	 * 
-	 * @post	If the unit is not currently moving, the attacked units orientation is set
+	 * @post	If the unit is not currently moving or falling, the attacked units orientation is set
 	 * 			towards this unit, i.e. the attacking unit.
 	 * 			| (new defender).getOrientation() == arctangent(this.getPosition()[1]-
 	 * 			|	defender.getPosition()[1], this.getPosition()[0]-defender.getPosition()[0]))
-	 * 
-	 * @post	If the unit is not currently moving, this units defender field is set to
-	 * 			the unit object it is attacking.
-	 * 			| new.defender == defender
 	 *  
-	 * @throws IllegalVictimException
-	 * 			The given unit to be attacked is not in range.
+	 * @throws 	IllegalVictimException
+	 * 			The unit cannot attack the given other unit.
 	 * 			| !canAttack(defender)
 	 */
 	public void attack(Unit defender) throws IllegalTimeException, IllegalVictimException {
 		if (!canAttack(defender))
 			throw new IllegalVictimException(this, defender);
 
-		if (!isMoving() && !isFalling() && !defender.isFalling()) {
+		if (!isMoving() && !isFalling()) {
 			startAttacking();
 
 			this.defender = defender;
@@ -2321,37 +2344,48 @@ public class Unit extends GameObject {
 	
 	
 	/**
-	 * Returns true if the unit can attack another given unit, i.e. if the
-	 * 		given unit is within range.
+	 * Returns true if the unit can attack another given unit.
 	 * 
 	 * @param	victim
-	 * 			The unit to check if in range or not.
+	 * 			The unit to check.
 	 * 
 	 * @return	True if and only if the given unit occupies the same
-	 * 			or a neighboring cube of the game world.
-	 * 			| result = (abs(getCoordinate() - victim.getCoordinate()) <= 1)
-	 * 
-	 * AND NOT SAME FACTION
-	 * 
+	 * 			or a neighboring cube of the game world, and if the given
+	 * 			unit is not falling and it does not belong to the same faction as this
+	 * 			unit.
+	 * 			| result == (  ( getWorld().isNeighbouring(getCoordinate(), victim.getCoordinate())
+	 * 			|		|| getCoordinate().equals(victim.getCoordinate())  )
+	 * 			|		&& !victim.isFalling() && getFaction() != victim.getFaction()  )
 	 */
+	// TODO formal documentation return tag
 	@Model
 	private boolean canAttack(Unit victim) {
-		Coordinate attackerPos = this.getCoordinate();
-		Coordinate victimPos = victim.getCoordinate();
-		for (int i = 0; i < attackerPos.getCoordinates().length; i++) {
-			if ( Math.abs(attackerPos.get(i) - victimPos.get(i)) > 1)
-				return false;
-		}
+		if (! ( getWorld().isNeighbouring(getCoordinate(), victim.getCoordinate())
+				|| getCoordinate().equals(victim.getCoordinate())  )	)
+			return false;
+		if (victim.isFalling())
+			return false;
 		if (getFaction() == victim.getFaction())
 			return false;
 		return true;
 	}
 	
 	
+	/**
+	 * Return whether there are units in this units world that this unit can attack.
+	 * 
+	 * @return 	true if and only if there is at least one unit in this units 
+	 * 			world that this unit can attack.
+	 * 			| result == (for some 
+	 */
 	private boolean enemiesInRange() {
 		Iterator<Unit> it = getWorld().getAllUnits().iterator();
+		
+		Unit victim;
+		
 		while (it.hasNext()) {
-			if (canAttack(it.next()))
+			victim = it.next();
+			if (canAttack(victim))
 				return true;
 		}
 		return false;
@@ -2378,6 +2412,7 @@ public class Unit extends GameObject {
 	 * @post	The units time to completion is set to 1.0
 	 * 			| new.getTimeToCompletion() == 1.0
 	 */
+	@Model
 	private void startAttacking() throws IllegalTimeException {
 		setTimeToCompletion(1.0f);
 		setState(State.ATTACKING);
@@ -2526,7 +2561,7 @@ public class Unit extends GameObject {
 	/**
 	 * Returns the unit that this unit is attacking.
 	 */
-	@Basic
+	@Basic @Model
 	private Unit getDefender() {
 		return this.defender;
 	}
