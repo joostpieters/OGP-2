@@ -1,18 +1,11 @@
 package hillbillies.model;
 
 
-/*import be.kuleuven.cs.som.annotate.Basic;
-import be.kuleuven.cs.som.annotate.Immutable;
-import be.kuleuven.cs.som.annotate.Raw;
-import be.kuleuven.cs.som.annotate.Model;*/
-
 import be.kuleuven.cs.som.annotate.*;
 import hillbillies.model.World.TerrainType;
 
 import java.util.*;
-//import java.lang.*;
 
-//import java.util.Random;
 
 /**
  * A class of units with a number of attributes that can perform activities, 
@@ -1027,7 +1020,7 @@ public class Unit extends GameObject {
 	 * 			
 	 */
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCoordinate()) || getCoordinate().get(2) == 0) {
+		if(isAboveSolid(getCoordinate()) || getCoordinate().get(2) == 0 ) {
 			
 			int lostHP = 10*(getStartFallingCube().get(2) - getCoordinate().get(2));
 			setStartFallingCube();
@@ -2901,7 +2894,7 @@ public class Unit extends GameObject {
 	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
 
-		//if (!isAttacked() && !isAttacking() && !isFalling()) {
+		if (!isAttacked() && !isAttacking() && !isFalling()) {
 
 			if (getState() == State.RESTING_1) {
 				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
@@ -2949,7 +2942,7 @@ public class Unit extends GameObject {
 					getCurrentStaminaPoints() == getMaxStaminaPoints()) {
 				setState(State.EMPTY);
 			}
-		//}
+		}
 	}
 	
 	

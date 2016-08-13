@@ -3,6 +3,8 @@ package hillbillies.part2.facade;
 import hillbillies.model.*;
 import hillbillies.model.World.TerrainType;
 import hillbillies.part2.listener.TerrainChangeListener;
+
+import java.util.List;
 import java.util.Set;
 
 import ogp.framework.util.ModelException;
@@ -94,7 +96,7 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	
 	@Override
 	public Set<Unit> getUnits(World world) throws ModelException {
-		return world.getAllUnits();
+		return world.getAllUnitsSet();
 	}
 	
 	

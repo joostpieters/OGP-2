@@ -2,20 +2,8 @@ package hillbillies.model;
 
 import hillbillies.part2.listener.TerrainChangeListener;
 import hillbillies.util.ConnectedToBorder;
-import ogp.framework.util.ModelException;
 
 import be.kuleuven.cs.som.annotate.*;
-
-import hillbillies.model.Boulder;
-import hillbillies.model.Log;
-
-import hillbillies.model.Unit;
-
-import hillbillies.model.Faction.*;
-import hillbillies.model.World.TerrainType;
-
-import hillbillies.model.*;
-
 import java.util.*;
 
 
@@ -42,26 +30,27 @@ public class World {
 	
 	/**
 	 * Initialize this new world with given terrain types for each cube of the
-	 * game world and a modelListener. The new world contains no units nor factions.
+	 * game world, the given modelListener and a connectedToBorderChecker. 
+	 * The new world contains no units and 5 empty factions.
 	 * 
 	 * @param	terrainTypes
 	 * 
 	 * @param	modelListener
 	 * 
 	 * @post	This new world contains no units.
-	 * 			| new.getNbUnits() == 0
 	 * 
-	 * @post	This new world contains no factions.
-	 * 			| new.getNbFactions() == 0
+	 * @post	This new world contains 5 factions.
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			The given terrain type array is not valid.
 	 */
+	// TODO finish documentation
 	@Raw
 	public World(int[][][] terrainTypes, TerrainChangeListener modelListener) 
 							throws IllegalArgumentException {
 		if (!isValidTerrainTypes(terrainTypes)) 
 			throw new IllegalArgumentException();
+		
 		this.terrainTypes = terrainTypes;
 		this.modelListener = modelListener;
 		
@@ -101,6 +90,9 @@ public class World {
 	private final static double cubeLength = 1.0;
 	
 	
+	private static final Random random = new Random();
+	
+	
 	/**
 	 * Return the terrain type array of this game world.
 	 */
@@ -114,10 +106,6 @@ public class World {
 	
 	private final TerrainChangeListener modelListener;
 	private final ConnectedToBorder connectedToBorderChecker;
-	
-	
-	private static final Random random = new Random();
-	
 	
 	
 	private boolean isValidTerrainTypes(int[][][] terrainTypes) {
@@ -215,7 +203,7 @@ public class World {
 		return TerrainType.contains(type);
 	}
 	
-	// POSITION of COORDINATE class
+	
 	public boolean isNeighbouringSolid(Coordinate coordinates) {
 		if (!canHaveAsCoordinates(coordinates) )
 			throw new IllegalPositionException(coordinates);
@@ -228,6 +216,7 @@ public class World {
 		}
 		return false;
 	}
+	
 	
 	public Set<Coordinate> getNeighbours(Coordinate coordinates) {
 		Set<Coordinate> neighbours = new HashSet<Coordinate>();
@@ -242,6 +231,7 @@ public class World {
 		}
 		return neighbours;
 	}
+	
 	
 	public boolean isNeighbouring(Coordinate coordinates, Coordinate neighbourCoordinates) {
 		Set<Coordinate> neighbours = getNeighbours(coordinates);
@@ -261,6 +251,7 @@ public class World {
 		
 		return false;
 	}
+	
 	
 	public Coordinate getRandomNeighbouringSolidCube() {
 		int x, y, z;
@@ -296,30 +287,37 @@ public class World {
 		return null;
 	}
 	
-	
+	// TODO arraylist with all timesubjects
 	public void advanceTime(double dt) {
 		if (!isValidDT(dt))
 			throw new IllegalArgumentException();
 		
-		//advance time for all units in world
 		for (Unit unit: units) {
 			unit.advanceTime(dt);
 		}
-		
-		
+		for (Log log: logs) {
+			log.advanceTime(dt);
+		}
+		for (Boulder boulder: boulders) {
+			boulder.advanceTime(dt);
+		}
+		/*for (TimeSubject timesubject: this.timeSubjects) {
+			timesubject.advanceTime(dt);
+		}*/
+		//updateTimeSubjects();
 	}
+	
 	
 	/**
 	 * Check if a given value is a valid game time dt value.
 	 * 
-	 * @param dt
+	 * @param 	dt
 	 * 			The value to be checked.
-	 * @return true if and only if the value is larger than or equal to
+	 * @return 	true if and only if the value is larger than or equal to
 	 * 			zero and smaller than 0.2.
-	 * 		| result =  (dt >= 0 && dt < 0.2 )
+	 * 			| result =  (dt >= 0 && dt < 0.2 )
 	 */
-	//@Model
-	private static boolean isValidDT(double dt) {
+	public static boolean isValidDT(double dt) {
 		return (dt <= 0.2 && dt >= 0.0);
 	}
 	
@@ -329,6 +327,7 @@ public class World {
 	 * 							UNITS
 	 *
 	 **********************************************************/
+	
 	
 	
 	/**
@@ -419,18 +418,25 @@ public class World {
 	}
 	
 	/**
-	 * Return a set collecting all units this world contains.
+	 * Return a list collecting all units this world contains.
 	 * 
-	 * @return	The resulting set is effective.
+	 * @return	The resulting list is effective.
 	 * 			| result != null
-	 * @return	Each unit in the resulting set is attached to this world
+	 * 
+	 * @return	Each unit in the resulting list is attached to this world
 	 * 			and vice versa.
 	 * 			| for each unit in Unit:
 	 * 			| 	result.contains(unit) == this.hasAsUnit(unit)
 	 */
-	public Set<Unit> getAllUnits() {
+	public List<Unit> getAllUnits() {
+		return new ArrayList<Unit>(this.units);
+	}
+
+	
+	public Set<Unit> getAllUnitsSet() {
 		return new HashSet<Unit>(this.units);
 	}
+	
 	
 	/**
 	 * Add the given unit to the set of units that this world contains.
@@ -462,6 +468,7 @@ public class World {
 			throw new IllegalNbException();
 		
 		this.units.add(unit);
+		this.toAddToTimeSubjects.add(unit);
 	}
 	
 	
@@ -480,6 +487,7 @@ public class World {
 	public void removeUnit(Unit unit) {
 		if (hasAsUnit(unit)) {
 			this.units.remove(unit);
+			this.toRemoveFromTimeSubjects.add(unit);
 			unit.setWorld(null);
 		}
 	}
@@ -709,15 +717,28 @@ public class World {
 	}
 	
 	
+	
+	@Basic @Raw
+	public boolean hasAsItem(Item item) {
+		return (this.boulders.contains(item) || this.logs.contains(item));
+	}
+	
+	
+	@Raw
+	public boolean canHaveAsItem(Item item) {
+		return ( (item != null) && 
+						( !this.isTerminated() || item.isTerminated()) );
+	}
+	
+	
+	
 	public void removeItem(Item item) {
 		if (hasAsItem(item)) {
 			if (item instanceof Boulder) {
-				this.boulders.remove(item);
-				item.setWorld(null);
+				removeBoulder((Boulder) item);
 			}
 			if (item instanceof Log) {
-				this.logs.remove(item);
-				item.setWorld(null);
+				removeLog((Log) item);
 			}
 		}
 	}
@@ -849,6 +870,7 @@ public class World {
 		if (log.getWorld() != this)
 			throw new IllegalArgumentException();
 		this.logs.add(log);
+		this.toAddToTimeSubjects.add(log);
 		log.setWorld(this);
 	}
 	
@@ -870,6 +892,7 @@ public class World {
 	public void removeLog(Log log) {
 		if (hasAsItem(log)) {
 			this.logs.remove(log);
+			this.toRemoveFromTimeSubjects.add(log);
 			log.setWorld(null);
 		}
 	}
@@ -897,36 +920,6 @@ public class World {
 	//		BOULDERS
 		
 	
-	/**
-	 * Check whether the given boulder is in this world.
-	 * 
-	 * @param 	boulder
-	 * 			The boulder to check.
-	 */
-	@Basic @Raw
-	public boolean hasAsItem(Item item) {
-		return (this.boulders.contains(item) || this.logs.contains(item));
-	}
-	
-	/**
-	 * Check whether this world can contain the given boulder.
-	 * 
-	 * @param 	boulder
-	 * 			The boulder to check.
-	 * 
-	 * @return	False if the given boulder is not effective.
-	 * 			| if (log == null)
-	 * 			| 	then result = false
-	 * 			True if this world is not terminated or the given boulder is
-	 * 			also terminated
-	 * 			| else result == ( (!this.isTerminated())
-	 * 			|		|| boulder.isTerminated())
-	 */
-	@Raw
-	public boolean canHaveAsItem(Item item) {
-		return ( (item != null) && 
-						( !this.isTerminated() || item.isTerminated()) );
-	}
 	
 	/**
 	 * Check whether this world contains proper boulders.
@@ -1021,6 +1014,7 @@ public class World {
 		if (boulder.getWorld() != this)
 			throw new IllegalArgumentException();
 		this.boulders.add(boulder);
+		this.toAddToTimeSubjects.add(boulder);
 		boulder.setWorld(this);
 	}
 	
@@ -1042,6 +1036,7 @@ public class World {
 	public void removeBoulder(Boulder boulder) {
 		if (hasAsItem(boulder)) {
 			this.boulders.remove(boulder);
+			this.toRemoveFromTimeSubjects.add(boulder);
 			boulder.setWorld(null);
 		}
 	}
@@ -1065,6 +1060,34 @@ public class World {
 	private final Set<Boulder> boulders = new HashSet<Boulder>();
 	
 	
+	
+	/* *********************************************************
+	 * 
+	 * 							TIMESUBJECTS
+	 *
+	 **********************************************************/
+	
+	
+	
+	private final List<TimeSubject> timeSubjects = new ArrayList<TimeSubject>();
+	
+	
+	private final List<TimeSubject> toAddToTimeSubjects = new ArrayList<TimeSubject>();
+	private final List<TimeSubject> toRemoveFromTimeSubjects = new ArrayList<TimeSubject>();
+	
+	/*
+	private void updateTimeSubjects() {
+		for (TimeSubject ts: this.toAddToTimeSubjects) {
+			timeSubjects.add(ts);
+		}
+		this.toAddToTimeSubjects.clear();
+		for (TimeSubject ts: this.toRemoveFromTimeSubjects) {
+			if (timeSubjects.contains(ts))
+				timeSubjects.remove(ts);
+		}
+		this.toRemoveFromTimeSubjects.clear();
+		timeSubjects.removeAll(Collections.singleton(null));
+	}*/
 	
 	/* *********************************************************
 	 * 

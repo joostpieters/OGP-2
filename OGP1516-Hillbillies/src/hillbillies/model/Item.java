@@ -62,9 +62,9 @@ public class Item extends GameObject {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
-		
-		if (!isAboveSolid(getCoordinate()))
-			fall();
+		if (getCoordinate().get(2) != 0)
+			if (!isAboveSolid(getCoordinate()))
+				fall();
 		
 		if (isFalling()) {
 			controlFalling(dt);
