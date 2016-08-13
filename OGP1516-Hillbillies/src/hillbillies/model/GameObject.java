@@ -15,12 +15,14 @@ public abstract class GameObject extends TimeSubject {
 			return false;
 		}
 		if (!getWorld().canHaveAsCoordinates(coordinates)) {
+			System.out.println("world can't have as coordinates");
 			return false; }
 
 		if (!TerrainType.byOrdinal(getWorld().getTerrainTypes()
-				[coordinates.get(0)][coordinates.get(1)][coordinates.get(2)]).isPassable() )
+				[coordinates.get(0)][coordinates.get(1)][coordinates.get(2)]).isPassable() ) {
+			System.out.println("not passable");
 			return false;
-		
+		}
 		return true;
 	}
 	
@@ -34,7 +36,7 @@ public abstract class GameObject extends TimeSubject {
 		this.position[1] = position[1];
 		this.position[2] = position[2];
 	}
-	
+	//TODO parameteriseren ipv 0 1 en 2 apart
 	
 	protected void setPosition(Coordinate position) throws IllegalPositionException {
 		if (! canHaveAsPosition(position) ) {
@@ -55,8 +57,22 @@ public abstract class GameObject extends TimeSubject {
 	}
 	
 	
-	protected abstract double[] getVelocity() throws IllegalPositionException;
+	protected /*abstract*/ double[] getVelocity() throws IllegalPositionException {
+		if (isFalling())
+			return new double[]{0.0,0.0,-3.0};
+		return new double[]{0.0,0.0,0.0};
+	}
 	
+	
+	public boolean isFalling() {
+		return this.isFalling;
+	}
+	
+	public void setFalling(boolean value) {
+		this.isFalling = value;
+	}
+	
+	private boolean isFalling = false;
 	
 	/**
 	 * Return the exact position of the game object in its game world.
@@ -76,10 +92,11 @@ public abstract class GameObject extends TimeSubject {
 		return convertPositionToCoordinate(getPosition());
 	}
 	
+	
 	/**
 	 * Variable registering the position of the game object in the game world.
 	 */
-	protected double position[] = new double[3];
+	private double position[] = new double[3];
 
 	
 	
@@ -93,12 +110,22 @@ public abstract class GameObject extends TimeSubject {
 	}
 	
 	
+	
+	protected void setWorld(World world) throws IllegalArgumentException {
+		//if ( (world != null) && !world.hasAsItem(this) )
+			//throw new IllegalArgumentException();
+		//if ( (world == null) && (getWorld() != null) )
+		//	throw new IllegalArgumentException();
+		//TODO
+		this.world = world;
+	}
 
 	
 	/**
 	 * Variable registering the world to which this item belongs.
 	 */
-	protected World world = null;
+	private World world = null;
+	
 	
 	/**
 	 * Return the world to which this item belongs. Returns a null refererence
@@ -118,12 +145,7 @@ public abstract class GameObject extends TimeSubject {
 		return this.isTerminated;
 	}
 	
-	/**
-	 * Terminate this item.
-	 * 
-	 * @post	This item is terminated.
-	 * 			| new.isTerminated()
-	 */
+	
 	public abstract void terminate();
 	
 	

@@ -194,7 +194,8 @@ public class Unit extends GameObject {
 		this.setState(State.EMPTY);
 	}
 	
-	
+	// TODO invoke constructor above in body constructor below!
+	// TODO invoke constructor of superclass in body constructor below!
 	/**
 	 * Initialize a new unit with the given world as its world, the given default
 	 * behavior and the given faction as its faction, with random attributes 
@@ -261,7 +262,12 @@ public class Unit extends GameObject {
 		setWorld(world);
 		setFaction(faction);
 		
-		Coordinate position = getWorld().getRandomNeighbouringSolidCube();
+		//Coordinate position = getWorld().getRandomNeighbouringSolidCube();
+		Coordinate position = new Coordinate(14 - i, 14, 14);
+		i += 1;
+		if (i==14) {
+			i = 0;
+		}
 		setPosition(position);
 		
 		setName(generateName());
@@ -280,7 +286,7 @@ public class Unit extends GameObject {
 		setDefaultBehavior(enableDefaultBehavior);
 	}
 	
-	
+	static int i = 0;
 	
 	/* *********************************************************
 	 * 
@@ -302,10 +308,10 @@ public class Unit extends GameObject {
 	@Override @Raw @Model
 	public boolean canHaveAsPosition(Coordinate position) {
 		boolean value = super.canHaveAsPosition(position);
-		if (!isNeighbouringSolid(position) ) {
+		/*if (!isNeighbouringSolid(position) ) {
 			//TODO is directly neighbouring solid instead of just neighbouring?
 			value = false;
-		}
+		}*/
 		return value;
 	}
 	
@@ -635,7 +641,7 @@ public class Unit extends GameObject {
 	 * Return the minimum initial value for a units strength, toughness and agility.
 	 */
 	@Basic @Immutable
-	private static int getMinInitialSkill() {
+	protected final static int getMinInitialSkill() {
 		return minInitialSkill;
 	}
 	
@@ -644,7 +650,7 @@ public class Unit extends GameObject {
 	 * Return the maximum initial value for a units strength, toughness and agility.
 	 */
 	@Basic @Immutable
-	private static int getMaxInitialSkill() {
+	protected final static int getMaxInitialSkill() {
 		return maxInitialSkill;
 	}
 	
@@ -714,7 +720,7 @@ public class Unit extends GameObject {
 	 * Return the units minimum number of hitpoints.
 	 */
 	@Basic @Immutable
-	public static int getMinHitPoints() {
+	public final static int getMinHitPoints() {
 		return minHP;
 	}
 	
@@ -796,7 +802,7 @@ public class Unit extends GameObject {
 	 * Return the units minimum number of stamina points.
 	 */
 	@Basic @Immutable
-	public static int getMinStaminaPoints() {
+	public final static int getMinStaminaPoints() {
 		return minSP;
 	}
 
@@ -837,7 +843,7 @@ public class Unit extends GameObject {
 	// TODO FIX ORIENTATION!
 	@Basic @Raw
 	public float getOrientation() {
-		return -orientation + ((float) Math.PI/2.0f);
+		return (float) (-orientation + ( Math.PI/*/2.0f*/) + ( 3*Math.PI/2));
 	}
 	
 	
@@ -869,7 +875,7 @@ public class Unit extends GameObject {
 	 * 			| 	then new.getOrientation() == newValue
 	 */
 	@Raw
-	private void setOrientation(float newValue) {
+	protected void setOrientation(float newValue) {
 		if (isValidOrientation(newValue)) {
 			this.orientation = newValue;
 		}
@@ -902,14 +908,13 @@ public class Unit extends GameObject {
 	 * 			The value for dt is not valid.
 	 * 			| ! isValidDT(dt)
 	 */
-	//@Override //TODO override annotation necessary? Because implements, not overrides
+	@Override
 	public void advanceTime(double dt) throws IllegalPositionException, 
 				IllegalArgumentException, IllegalTimeException, ArithmeticException {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
 		}
 		if (getCurrentHitPoints() <= 0) {
-			dropItem();
 			terminate();
 		}
 		else {
@@ -941,7 +946,7 @@ public class Unit extends GameObject {
 			else if (isMoving()) {
 				controlMoving(dt);
 			}
-			else if (getState() == State.EMPTY) {
+			else if (getState() == State.EMPTY && !isAttacked()) {
 				if (!(isDestCubeLTReached())
 						&& !getCoordinate().equals(getDestCubeLT()) ) {
 
@@ -1031,6 +1036,13 @@ public class Unit extends GameObject {
 		}
 		else {
 			updatePosition(dt);
+			/*double[] newPosition = new double[3];
+			for (int i=0; i<3; i++) {
+				newPosition[i] = getPosition()[i] + getVelocity()[i]*dt;
+			}
+			this.position[0] = position[0];
+			this.position[1] = position[1];
+			this.position[2] = position[2];*/
 		}
 	}
 	
@@ -1039,7 +1051,7 @@ public class Unit extends GameObject {
 	 * Returns the cube where the unit started falling. 
 	 */
 	@Basic
-	private Coordinate getStartFallingCube() {
+	protected Coordinate getStartFallingCube() {
 		return this.startFallingCube;
 	}
 	
@@ -1054,7 +1066,7 @@ public class Unit extends GameObject {
 	 * @post	| getStartFallingCube() == coordinate
 	 */
 	@Raw
-	private void setStartFallingCube(Coordinate coordinate) {
+	protected void setStartFallingCube(Coordinate coordinate) {
 		this.startFallingCube = coordinate;
 	}
 	
@@ -1064,7 +1076,7 @@ public class Unit extends GameObject {
 	 * 
 	 * @post	| getStartFallingCube() == null
 	 */
-	private void setStartFallingCube() {
+	protected void setStartFallingCube() {
 		this.startFallingCube = null;
 	}
 	
@@ -1103,12 +1115,15 @@ public class Unit extends GameObject {
 
 		if (isDefaultBehaviorEnabled()) {
 			double dice = random.nextDouble();
+			//System.out.println(dice);
 			
 			if (dice < 0.0/4.0) {
 				Coordinate destCube = getRandomReachableCube();
+				//System.out.println(destCube.toString());
+				//System.out.println(this.isReachable(destCube));
 				moveTo(destCube);
 				
-			} else if (/*true*/ dice >1.0/4.0 && dice < 2.0/4.0) {
+			} else if (false && dice > 1.0/4.0 && dice < 2.0/4.0) {
 				
 				Coordinate targetCube = getRandomNeighbouringCube();
 				
@@ -1118,15 +1133,23 @@ public class Unit extends GameObject {
 				workAt(targetCube);
 				
 			}
-			else if (dice >2.0/4.0 && dice < 3.0/4.0 && enemiesInRange()) {
+			else if ((true || dice > 2.0/4.0 && dice < 3.0/4.0) 
+					&& !isAttacking() && !isAttacked() && enemiesInRange()) {
 				attack(getEnemyInRange());
+				//System.out.println("Attackingk");
 			}
 			else {
-				rest();
+				//rest();
+				//setDefaultBehavior(false);
 			}
-			if (isMoving()) {
+			if (isMoving() && isSprinting()) {
 				if (random.nextDouble() < 0.5) {
 					startSprinting();
+				}
+			}
+			if (isMoving() && !isSprinting()) {
+				if (random.nextDouble() < 0.5) {
+					stopSprinting();
 				}
 			}
 		}
@@ -1227,16 +1250,32 @@ public class Unit extends GameObject {
 		setDestCubeLT(destCube);
 		this.destCubeLTReached = false;
 		
+		//System.out.println(isFalling());
+		//System.out.println(getState().toString());
 		if (getState() != State.RESTING_1 && !isFalling()) {
 			
 			Coordinate startCube = getCoordinate();
-			Queue<Tuple> path = computePath(getDestCubeLT());
+			List<Tuple> path = computePath(getDestCubeLT());
 			
-			if (path == null) this.destCubeLTReached = true;
+			//System.out.println("contains? " + Tuple.containsCube(path, startCube));
+			//System.out.println("startcube " + startCube.toString());
+			//System.out.println("GC " + getCoordinate().toString());
+			//for (Tuple tuple: path) {
+			//	System.out.println(tuple.toString());
+			//}
+			//System.exit(1);
+			//System.out.println("contains? " + Tuple.containsCube(path, startCube));
+			
+			if (path == null) { 
+				this.destCubeLTReached = true;
+			
+				//System.out.println("reached?" + this.destCubeLTReached); 
+			}
 			
 			else if (Tuple.containsCube(path, startCube)) {
 				Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
 				
+				//System.out.println("null?" + nextTuple != null);
 				if (nextTuple != null)
 					moveTowards(nextTuple.cube);
 			}
@@ -1269,21 +1308,39 @@ public class Unit extends GameObject {
 	 * @return	The the cube that is neighboring the given cube with the smallest 
 	 * 			weight.
 	 */
-	private Tuple getNeighbourWSmallestN(Queue<Tuple> path, Coordinate cube) {
+	private Tuple getNeighbourWSmallestN(List<Tuple> path, Coordinate cube) {
 		Set<Coordinate> neighbours = getWorld().getNeighbours(cube);
-		Tuple result = null;
-		boolean first = false;
+		LinkedList<Tuple> neighboursInPath = new LinkedList<Tuple>();
+		//Tuple result = null;
+		//boolean first = false;
 		
 		for (Coordinate neighbour: neighbours) {
-			if (!first && Tuple.containsCube(path, neighbour)) {
-				result = Tuple.getCubeTuple(path, neighbour);
-				first = true;
+			if (Tuple.containsCube(path, neighbour)) {
+				//result = Tuple.getCubeTuple(path, neighbour);
+				//first = true;
+				neighboursInPath.add(Tuple.getCubeTuple(path, neighbour));
 			}
-			else if (Tuple.containsCube(path, neighbour) && Tuple.getCubeTuple(path, neighbour).n < result.n) {
+			/*else if (Tuple.containsCube(path, neighbour) && Tuple.getCubeTuple(path, neighbour).n < result.n) {
 				result = Tuple.getCubeTuple(path, neighbour);
-			}
+			}*/
 		}
-		return result;
+		//return result;
+		return smallestN(neighboursInPath);
+	}
+	
+	
+	private static Tuple smallestN(LinkedList<Tuple> elements) {
+		if (! elements.isEmpty()){
+			Tuple smallest = elements.getFirst();
+			for(Tuple element: elements){
+				if (element.n < smallest.n){
+					smallest = element;
+				}
+			}
+			return smallest;
+		}else{
+			return null;
+		}
 	}
 	
 	
@@ -1313,7 +1370,7 @@ public class Unit extends GameObject {
 	private Coordinate getRandomReachableCube() {
 		Coordinate cube;
 		do {
-			cube = getWorld().getRandomNeighbouringSolidCube();
+			cube = getWorld().getNearRandomNeighbouringSolidCube(getCoordinate());
 		} while (!isReachable(cube));
 		return cube;
 	}
@@ -1331,13 +1388,13 @@ public class Unit extends GameObject {
 	 * @return	if no path can be found within a reasonable time, null is returned.
 	 * 			| result == null
 	 */
-	private Queue<Tuple> computePath(Coordinate destCube) {
-		Queue<Tuple> path = new LinkedList<Tuple>();
+	private List<Tuple> computePath(Coordinate destCube) {
+		List<Tuple> path = new ArrayList<Tuple>();
 		path.add(new Tuple(destCube, 0));
 		
 		int iterations = 0;
 		while(!Tuple.containsCube(path, getCoordinate()) 
-				&& Tuple.hasNext(path) && iterations < 301) {
+				&& Tuple.hasNext(path) && iterations < 501) {
 			
 			Tuple nextTuple = Tuple.getNext(path);
 			path = search(nextTuple, path);
@@ -1345,6 +1402,7 @@ public class Unit extends GameObject {
 			iterations++;
 
 			if (iterations >= 501) {
+				//System.out.println("501");
 				path = null;
 				break;
 			}
@@ -1369,11 +1427,56 @@ public class Unit extends GameObject {
 	 * @return	the path is returned after the neighbours are added.
 	 * 
 	 */
-	private Queue<Tuple> search(Tuple currentTuple, Queue<Tuple> path) {
+	private List<Tuple> search(Tuple currentTuple, List<Tuple> path) {
+		
+		//Set<Coordinate> cubes = new HashSet<Coordinate>();
+		
+		//Set<Coordinate> neighbours = getWorld().getNeighbours(currentTuple.cube);
+		List<Coordinate> neighbours = new LinkedList<Coordinate>();
+		
+		for (Coordinate neighbour: getWorld().getNeighbours(currentTuple.cube)) {
+			
+			if (getWorld().getCubeTypeAt(neighbour).isPassable()
+					
+					&& getWorld().isNeighbouringSolid(neighbour)
+										
+					&& ! (Tuple.containsCube(path, neighbour)
+					
+					&& Tuple.getCubeTuple(path, neighbour).n <= currentTuple.n )
+					) {
+				neighbours.add(neighbour);
+			}
+		}
+		
+		for (Coordinate neighbour: neighbours) {
+			path.add(new Tuple(neighbour, currentTuple.n + 1));
+		}
+		
+		return path;
+	}
+	
+	/*
+	private void search(PathTuple next, Queue<PathTuple> Path) {
+		List<Coordinate> neighbors = new LinkedList<Coordinate>();
+		for (Coordinate neighbor: this.getWorld().getNeighbors(next.getCube())){
+			if(! (PathTuple.Contains(neighbor, Path) && PathTuple.getPathTuple(neighbor, Path).getWeight() <= next.getWeight())){
+				neighbors.add(neighbor);
+			}
+		}
+		for (Coordinate neighbor: neighbors){
+			if (this.getWorld().isPassableCube(neighbor) && this.getWorld().isAroundSolid(neighbor)){
+				Path.add(new PathTuple(neighbor, next.getWeight() + 1));
+			}
+		}
+	}
+	
+/*
+	private List<Tuple> search(Tuple currentTuple, List<Tuple> path) {
 		
 		Set<Coordinate> cubes = new HashSet<Coordinate>();
 		
-		Set<Coordinate> neighbours = getWorld().getNeighbours(currentTuple.cube);
+		//Set<Coordinate> neighbours = getWorld().getNeighbours(currentTuple.cube);
+		List<Coordinate> neighbours = new LinkedList<Coordinate>();
 		for (Coordinate neighbour: neighbours) {
 			if (getWorld().getCubeTypeAt(neighbour).isPassable()
 					
@@ -1390,9 +1493,7 @@ public class Unit extends GameObject {
 		}
 		
 		return path;
-	}
-	
-
+	}*/
 	
 	/**
 	 * Makes the unit start moving, i.e. sets its state to moving.
@@ -1468,7 +1569,13 @@ public class Unit extends GameObject {
 					updateCurrentStaminaPoints(0);
 				}
 			}
-			
+			else if (this.isDefaultBehaviorEnabled()) {
+				//System.out.println("controlmoving sprinting?");
+				double dice = random.nextDouble();
+				if (dice < 0.5) {
+					startSprinting();
+				}
+			}
 			if (! reached(dt)) {
 				updatePosition(dt);
 			}
@@ -1540,7 +1647,7 @@ public class Unit extends GameObject {
 	 * 			|			(for each integer in cubeDirection:
 	 * 			|			integer == -1 || integer == 0 || integer == 1)  )
 	 */
-	private static boolean isValidCubeDirection(int[] cubeDirection) {
+	public static boolean isValidCubeDirection(int[] cubeDirection) {
 		if (cubeDirection.length != 3)
 			return false;
 		boolean valid = true;
@@ -1578,7 +1685,7 @@ public class Unit extends GameObject {
 	 * 			| !canHaveAsPosition(newDestination)
 	 */
 	@Raw
-	private void setDestination(Coordinate newDestination) throws IllegalPositionException {
+	protected void setDestination(Coordinate newDestination) throws IllegalPositionException {
 		if (!canHaveAsPosition(newDestination)) {
 			throw new IllegalPositionException(newDestination);
 		}
@@ -1671,7 +1778,7 @@ public class Unit extends GameObject {
 	 * 				|| destCubeLT == null )
 	 */
 	@Raw
-	private void setDestCubeLT(Coordinate destCubeLT) throws IllegalPositionException {
+	protected void setDestCubeLT(Coordinate destCubeLT) throws IllegalPositionException {
 		if ( !canHaveAsPosition(destCubeLT) )
 			throw new IllegalPositionException(destCubeLT);
 		this.destCubeLT = destCubeLT;
@@ -1743,10 +1850,10 @@ public class Unit extends GameObject {
 	 * 			|					- getPosition() )
 	 * 			|		/ getDistanceTo(getPosition(), World.getCubeCenter(getDestination()))
 	 */
-	@Model //@Override
+	@Model @Override
 	protected double[] getVelocity() throws IllegalPositionException {
 		if (isFalling())
-			return new double[]{0.0,0.0,-3.0};
+			return super.getVelocity();
 		
 		double d = getDistanceTo(getPosition(), World.getCubeCenter(getDestination()));
 		double[] v = new double[3];
@@ -2084,7 +2191,7 @@ public class Unit extends GameObject {
 	 * Returns the units target cube.
 	 */
 	@Basic @Raw @Model
-	private Coordinate getTargetCube() {
+	protected Coordinate getTargetCube() {
 		return this.targetCube;
 	}
 	
@@ -2124,7 +2231,7 @@ public class Unit extends GameObject {
 	 * 			| !canHaveAsTargetCube(target)
 	 */
 	@Raw @Model
-	private void setTargetCube(Coordinate target) throws IllegalTargetException {
+	protected void setTargetCube(Coordinate target) throws IllegalTargetException {
 		if (!canHaveAsTargetCube(target) )
 			throw new IllegalTargetException(getCoordinate(), target);
 		
@@ -2223,7 +2330,7 @@ public class Unit extends GameObject {
 	 * 			| 		then new.carriedItem == null
 	 */
 	@Model
-	private void dropItem() {
+	protected void dropItem() {
 		if (isCarryingItem()) {
 			getCarriedItem().setWorld(getWorld());
 			getWorld().addItem(getCarriedItem());
@@ -2255,7 +2362,7 @@ public class Unit extends GameObject {
 	 * 			| !canHaveAsItem(item)
 	 */
 	@Model
-	private void pickUpItem(Item item) throws IllegalArgumentException {
+	protected void pickUpItem(Item item) throws IllegalArgumentException {
 		if (!canHaveAsItem(item))
 			throw new IllegalArgumentException();
 		
@@ -2317,11 +2424,16 @@ public class Unit extends GameObject {
 		if (!canAttack(defender))
 			throw new IllegalVictimException(this, defender);
 
-		if (!isMoving() && !isFalling()) {
+		if (!isMoving() && !isFalling() && !isAttacked() && !isAttacking() && !defender.isAttacked()
+				&& !defender.isAttacking()) {
 			startAttacking();
-
+			
+			//System.out.println("started attacking");
+			
 			setDefender(defender);
 			getDefender().setAttacked(true);
+			
+			//System.out.println("set defender");
 
 			// Orientation update
 			this.setOrientation((float)Math.atan2(defender.getPosition()[1]-this.getPosition()[1],
@@ -2354,7 +2466,7 @@ public class Unit extends GameObject {
 		if (! ( getWorld().isNeighbouring(getCoordinate(), victim.getCoordinate())
 				|| getCoordinate().equals(victim.getCoordinate())  )	)
 			return false;
-		if (victim.isFalling())
+		if (victim.isFalling() || victim.isAttacked())
 			return false;
 		if (getFaction() == victim.getFaction())
 			return false;
@@ -2462,6 +2574,15 @@ public class Unit extends GameObject {
 				getDefender().setAttacked(false);
 				setState(State.EMPTY);
 				
+				System.out.println("defender state  " + getDefender().getState().toString());
+				System.out.println("defender IA  " + getDefender().isAttacked());
+				
+				System.out.println("this state  " + getState().toString());
+				System.out.println("attacker IA  " + isAttacking());
+				
+				//System.out.println("defender is attacked" + getDefender().isAttacked());
+				//System.out.println("State empty, attack voltooid");
+				//System.out.println("State empty, attack voltooid");
 			}
 		//}
 	}
@@ -2494,8 +2615,10 @@ public class Unit extends GameObject {
 	 */
 	private void defend(Unit attacker) throws ArithmeticException {
 		boolean dodged = dodge(attacker);
+		System.out.println("dodged " + dodged);
 		if (!dodged) {
 			boolean blocked = this.block(attacker);
+			System.out.println("blocked " + blocked);
 			if (!blocked) {
 				takeDamage(attacker);
 				attacker.addXP(20);
@@ -2530,12 +2653,14 @@ public class Unit extends GameObject {
 			while(true) {
 				try {
 					jumpToRandomAdjacent();
+					System.out.println("tried to jump");
 					break;
 				}
 				catch (IllegalPositionException exc){
 					continue;
 				}
 			}
+			System.out.println("succeed to jump");
 			return true;
 		}
 		return false;
@@ -2630,7 +2755,7 @@ public class Unit extends GameObject {
 	 * @post 	The state of the unit is set to empty.
 	 * 			| new.getState() == State.EMPTY
 	 */
-	private void setAttacked(boolean isAttacked) {
+	protected void setAttacked(boolean isAttacked) {
 		this.setState(State.EMPTY);
 		this.isAttacked = isAttacked;
 	}
@@ -2666,7 +2791,7 @@ public class Unit extends GameObject {
 	 * 			| !canAttack(victim)
 	 */
 	@Raw
-	private void setDefender(Unit victim) throws IllegalVictimException {
+	protected void setDefender(Unit victim) throws IllegalVictimException {
 		if (!canAttack(victim))
 			throw new IllegalVictimException(this, victim);
 		this.defender = victim;
@@ -2729,7 +2854,7 @@ public class Unit extends GameObject {
 	 * 			The time value is not valid.
 	 * 			| !(isValidTime(newValue))
 	 */
-	private void setTimeToCompletion(float newValue) throws IllegalTimeException {
+	protected void setTimeToCompletion(float newValue) throws IllegalTimeException {
 		if (!isValidTime(newValue))
 			throw new IllegalTimeException(newValue, this);
 		this.timeToCompletion = newValue;
@@ -2899,11 +3024,12 @@ public class Unit extends GameObject {
 			if (getState() == State.RESTING_1) {
 				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
 					
-					updateCurrentHitPoints(getCurrentHitPoints() + 
-							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
 					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
-
+					
 					if ( getCurrentHitPoints() < getMaxHitPoints()) {
+						updateCurrentHitPoints(getCurrentHitPoints() + 
+								(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
+						
 						setState(State.RESTING_HP);
 					}
 					else if (getCurrentStaminaPoints() < getMaxStaminaPoints()) {
@@ -2959,7 +3085,7 @@ public class Unit extends GameObject {
 	 * 			The new value is not a valid time value.
 	 * 			| !isValidTime(newValue)
 	 */
-	private void setTimeResting(double newValue) throws IllegalTimeException {
+	protected void setTimeResting(double newValue) throws IllegalTimeException {
 		if (!isValidTime(newValue))
 			throw new IllegalTimeException(newValue, this);
 		this.timeResting = newValue;
@@ -2978,7 +3104,7 @@ public class Unit extends GameObject {
 	 * 			The new value is not a valid time value.
 	 * 			| !isValidTime(newValue)
 	 */
-	private void setTimeAfterResting(double newValue) throws IllegalTimeException {
+	protected void setTimeAfterResting(double newValue) throws IllegalTimeException {
 		if (!isValidTime(newValue))
 			throw new IllegalTimeException(newValue, this);
 		this.timeAfterResting = newValue;
@@ -3126,7 +3252,7 @@ public class Unit extends GameObject {
 	 * Return the temporary XP of the unit.
 	 */
 	@Raw
-	private int getTXP() {
+	protected int getTXP() {
 		return this.tempXp;
 	}
 	
@@ -3248,7 +3374,7 @@ public class Unit extends GameObject {
 	 * 			The given x cannot be added to the units XP.
 	 * 			| !canAddToXP(x)
 	 */
-	private void addXP(int x) throws ArithmeticException {
+	protected void addXP(int x) throws ArithmeticException {
 		if (!canAddToXP(x)) 
 			throw new ArithmeticException();
 		this.xp += x;
@@ -3269,7 +3395,7 @@ public class Unit extends GameObject {
 	 * 			The given number cannot be subtracted.
 	 * 			| x < 0 || !isValidXP(getTXP() - x)
 	 */
-	private void subTXP(int x) throws ArithmeticException {
+	protected void subTXP(int x) throws ArithmeticException {
 		if (x < 0 || !isValidXP(getTXP() - x) ) {
 			throw new ArithmeticException();
 		}
@@ -3349,12 +3475,13 @@ public class Unit extends GameObject {
 	 * 			| (world == null) && (getWorld() != null) 
 	 * 			|					&& (getWorld().hasAsUnit(this))
 	 */
+	//TODO documentation super
 	public void setWorld(World world) throws IllegalArgumentException {
 		//if ( (world != null) && !world.hasAsUnit(this) )
 		//	throw new IllegalArgumentException();
 		if ( (world == null) && (getWorld() != null) && (getWorld().hasAsUnit(this)) )
 			throw new IllegalArgumentException();
-		this.world = world;
+		super.setWorld(world);
 	}
 	
 	
@@ -3454,6 +3581,7 @@ public class Unit extends GameObject {
 	 * @effect 	The unit is removed from the world it belongs to.
 	 * 			| getWorld().removeUnit(this)
 	 */
+	@Override
 	public void terminate() {
 		dropItem();
 		getFaction().removeUnit(this);

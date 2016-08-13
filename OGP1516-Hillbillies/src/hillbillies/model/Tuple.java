@@ -9,7 +9,7 @@ public class Tuple {
 		this.isChecked = false;
 	} 
 
-	public static boolean containsCubeWithSmallerN(Queue<Tuple> path, Coordinate cube, Tuple startTuple) {
+	public static boolean containsCubeWithSmallerN(List<Tuple> path, Coordinate cube, Tuple startTuple) {
 		for (Tuple tuple: path) {
 			if (tuple.cube.equals(cube) && tuple.n < startTuple.n) {
 				return true;
@@ -18,7 +18,7 @@ public class Tuple {
 		return false;
 	}
 	
-	public static boolean containsCube(Queue<Tuple> path, Coordinate cube) {
+	public static boolean containsCube(List<Tuple> path, Coordinate cube) {
 		for (Tuple tuple: path) {
 			if (tuple.cube.equals(cube)) {
 				return true;
@@ -27,7 +27,7 @@ public class Tuple {
 		return false;
 	}
 	
-	public static Tuple getCubeTuple(Queue<Tuple> path, Coordinate cube) {
+	public static Tuple getCubeTuple(List<Tuple> path, Coordinate cube) {
 		for (Tuple tuple: path) {
 			if (tuple.cube.equals(cube)) {
 				return tuple;
@@ -37,7 +37,7 @@ public class Tuple {
 	}
 	
 	
-	public static boolean hasNext(Queue<Tuple> path) {
+	public static boolean hasNext(List<Tuple> path) {
 		for (Tuple tuple: path) {
 			if (!tuple.isChecked)
 				return true;
@@ -45,7 +45,7 @@ public class Tuple {
 		return false;
 	}
 	
-	public static Tuple getNext(Queue<Tuple> path) {
+	public static Tuple getNext(List<Tuple> path) {
 		for (Tuple tuple: path) {
 			if (!tuple.isChecked)
 				return tuple;

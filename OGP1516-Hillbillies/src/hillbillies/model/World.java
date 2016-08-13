@@ -67,20 +67,20 @@ public class World {
 	}
 	
 	
-	private static int getMaxNbUnits() {
+	protected final static int getMaxNbUnits() {
 		return maxUnits;
 	}
 	
 	private final static int maxUnits = 100;
 	
-	private static int getMaxNbFactions() {
+	protected final static int getMaxNbFactions() {
 		return maxFactions;
 	}
 	
 	private final static int maxFactions = 5;
 	
 	
-	public static double getCubeLength() {
+	public final static double getCubeLength() {
 		return cubeLength;
 	}
 	
@@ -275,6 +275,30 @@ public class World {
 	}
 	
 	
+	public Coordinate getNearRandomNeighbouringSolidCube(Coordinate coordinate) {
+		int x, y, z;
+		Coordinate position;
+		while(true) {
+			try {
+				x = random.nextInt(7) - 3;
+				y = random.nextInt(7) - 3;
+				z = random.nextInt(7) - 3;
+				position = new Coordinate(coordinate.get(0)+x, coordinate.get(1)+y, 
+									coordinate.get(2)+z);
+				
+				if (getCubeTypeAt(position).isPassable() && (
+						!getCubeTypeAt(new Coordinate(coordinate.get(0)+x, coordinate.get(1)+y,
+								coordinate.get(2)+z-1)).isPassable() || coordinate.get(2)+z == 0))
+					break;
+			}
+			catch (IllegalPositionException exc){
+				continue;
+			}
+		}
+		return position;
+	}
+	
+	
 	public Coordinate getRandomNeighbouringCube(Coordinate coordinate) {
 		Set<Coordinate> neighbours = getNeighbours(coordinate);
 		int dice = random.nextInt(neighbours.size());
@@ -288,23 +312,25 @@ public class World {
 	}
 	
 	// TODO arraylist with all timesubjects
-	public void advanceTime(double dt) {
+	public void advanceTime(double dt) throws RuntimeException {
 		if (!isValidDT(dt))
 			throw new IllegalArgumentException();
 		
-		for (Unit unit: units) {
+		/*for (Unit unit: units) {
 			unit.advanceTime(dt);
 		}
-		for (Log log: logs) {
+		/*for (Log log: logs) {
 			log.advanceTime(dt);
 		}
 		for (Boulder boulder: boulders) {
 			boulder.advanceTime(dt);
-		}
-		/*for (TimeSubject timesubject: this.timeSubjects) {
-			timesubject.advanceTime(dt);
 		}*/
-		//updateTimeSubjects();
+		
+		updateTimeSubjects();
+		
+		for (TimeSubject timesubject: this.timeSubjects) {
+			timesubject.advanceTime(dt);
+		}
 	}
 	
 	
@@ -1075,7 +1101,7 @@ public class World {
 	private final List<TimeSubject> toAddToTimeSubjects = new ArrayList<TimeSubject>();
 	private final List<TimeSubject> toRemoveFromTimeSubjects = new ArrayList<TimeSubject>();
 	
-	/*
+	
 	private void updateTimeSubjects() {
 		for (TimeSubject ts: this.toAddToTimeSubjects) {
 			timeSubjects.add(ts);
@@ -1087,7 +1113,7 @@ public class World {
 		}
 		this.toRemoveFromTimeSubjects.clear();
 		timeSubjects.removeAll(Collections.singleton(null));
-	}*/
+	}
 	
 	/* *********************************************************
 	 * 

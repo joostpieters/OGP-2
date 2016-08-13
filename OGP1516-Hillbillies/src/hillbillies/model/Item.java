@@ -20,13 +20,13 @@ import java.util.Random;
  * @author	rubencartuyvels
  * @version	1.2
  */
-public class Item extends GameObject {
+public abstract class Item extends GameObject {
 	
 	/**
 	 * Initialize this new item, not yet attached to a world.
 	 */
-	@Raw
-	public Item(Coordinate initialPosition, World world) throws IllegalPositionException,
+	@Raw @Model
+	protected Item(Coordinate initialPosition, World world) throws IllegalPositionException,
 															IllegalArgumentException {
 		
 		/* if (!getWorld().canHaveAsCoordinates(initialPosition)) 
@@ -58,6 +58,7 @@ public class Item extends GameObject {
 	}
 	
 	
+	@Override
 	public void advanceTime (double dt) {
 		if (! isValidDT(dt)) {
 			throw new IllegalArgumentException();
@@ -79,7 +80,7 @@ public class Item extends GameObject {
 		}
 	}
 	
-	public boolean isFalling() {
+	/*public boolean isFalling() {
 		return this.isFalling;
 	}
 	
@@ -87,7 +88,7 @@ public class Item extends GameObject {
 		this.isFalling = value;
 	}
 	
-	private boolean isFalling = false;
+	private boolean isFalling = false;*/
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
 		if(isAboveSolid(getCoordinate()) || getCoordinate().getCoordinates()[2] == 0) {
@@ -100,17 +101,13 @@ public class Item extends GameObject {
 	}
 	
 	
-	@Model
+	@Model @Override
 	protected double[] getVelocity() {
-		
-		if (isFalling())
-			return new double[]{0.0,0.0,-3.0};
-		
-		return new double[]{0.0,0.0,0.0};
+		return super.getVelocity();
 	}
 	
 		
-	private static boolean isValidWeight(int value) {
+	protected static boolean isValidWeight(int value) {
 		return (value >= getMinimumWeight() && value <= getMaximumWeight());
 	}
 	
@@ -118,11 +115,11 @@ public class Item extends GameObject {
 		return this.weight;
 	}
 	
-	private static int getMinimumWeight() {
+	protected static int getMinimumWeight() {
 		return Item.minWeight;
 	}
 	
-	private static int getMaximumWeight() {
+	protected static int getMaximumWeight() {
 		return Item.maxWeight;
 	}
 	
@@ -191,10 +188,11 @@ public class Item extends GameObject {
 			//throw new IllegalArgumentException();
 		if ( (world == null) && (getWorld() != null) && (getWorld().hasAsItem(this)) )
 			throw new IllegalArgumentException();
-		this.world = world;
+		super.setWorld(world);
 	}
 	
 	
+	@Override
 	public void terminate() {
 		getWorld().removeItem(this);
 	}
