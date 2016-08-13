@@ -73,8 +73,8 @@ import java.util.*;
  * @invar 	The time after the unit last rested is valid.
  * 			| isValidTime(getTimeAfterResting())
  * 
- * @invar 	The item the unit is carrying must be a valid item.
- * 			| isValidItem(getCarriedItem())
+ * @invar 	The item the unit is carrying must be a valid item or null.
+ * 			| isValidItem(getCarriedItem()) || getCarriedItem() == null
  * 
  * @invar	Each unit must have a proper world in which it belongs
  * 			| hasProperWorld()
@@ -205,7 +205,7 @@ public class Unit extends GameObject {
 	/**
 	 * Initialize a new unit with the given world as its world, the given default
 	 * behavior and the given faction as its faction, with random attributes 
-	 * and a random name, with an orientation and an empty state.
+	 * and a random name, with an orientation and an empty state, not carrying an item.
 	 * 
 	 * @param 	enableDefaultBehavior
 	 *        	Whether the default behavior of the unit is enabled.
@@ -310,7 +310,7 @@ public class Unit extends GameObject {
 	public boolean canHaveAsPosition(Coordinate position) {
 		boolean value = super.canHaveAsPosition(position);
 		if (!isNeighbouringSolid(position) ) {
-			//TODO is directly neighbouring solid????
+			//TODO is directly neighbouring solid instead of just neighbouring?
 			value = false;
 		}
 		return value;
@@ -909,7 +909,7 @@ public class Unit extends GameObject {
 	 * 			The value for dt is not valid.
 	 * 			| ! isValidDT(dt)
 	 */
-	//@Override //TODO override annotation necessary?
+	//@Override //TODO override annotation necessary? Because implements, not overrides
 	public void advanceTime(double dt) throws IllegalPositionException, 
 				IllegalArgumentException, IllegalTimeException, ArithmeticException {
 		if (! isValidDT(dt)) {
@@ -2205,9 +2205,7 @@ public class Unit extends GameObject {
 	public Item getCarriedItem() {
 		return this.carriedItem;
 	}
-	
-	// TODO make postcond/effect at constructor that unit is not yet carrying an item
-	
+		
 	
 	/**
 	 * Drop the item the unit is currently carrying. If the unit is not carrying an item,
@@ -2329,7 +2327,7 @@ public class Unit extends GameObject {
 		if (!isMoving() && !isFalling()) {
 			startAttacking();
 
-			this.defender = defender;
+			setDefender(defender);
 			getDefender().setAttacked(true);
 
 			// Orientation update
@@ -2376,7 +2374,8 @@ public class Unit extends GameObject {
 	 * 
 	 * @return 	true if and only if there is at least one unit in this units 
 	 * 			world that this unit can attack.
-	 * 			| result == (for some 
+	 * 			| result == ( for some victim in getWorld().getAllUnits():
+	 * 			|				canAttack(victim)   )
 	 */
 	private boolean enemiesInRange() {
 		Iterator<Unit> it = getWorld().getAllUnits().iterator();
@@ -2392,6 +2391,15 @@ public class Unit extends GameObject {
 	}
 	
 	
+	/**
+	 * Returns a unit this unit can attack. Returns null if there is none.
+	 * 
+	 * @return	A unit this unit can attack. Null if no victim is found.
+	 * 			| for each victim in getWorld().getAllUnits():
+	 * 			|		if ( canAttack(victim) )
+	 * 			|			then result == victim
+	 * 			|		else then result == null
+	 */
 	private Unit getEnemyInRange() {
 		Iterator<Unit> it = getWorld().getAllUnits().iterator();
 		while (it.hasNext()) {
@@ -2411,6 +2419,7 @@ public class Unit extends GameObject {
 	 * 
 	 * @post	The units time to completion is set to 1.0
 	 * 			| new.getTimeToCompletion() == 1.0
+	 * 
 	 */
 	@Model
 	private void startAttacking() throws IllegalTimeException {
@@ -2423,36 +2432,79 @@ public class Unit extends GameObject {
 	 * Manage the attacking of the unit, i.e. when the state of 
 	 * 				the unit is equal to attacking.
 	 * 
-	 * @param dt
+	 * @param	dt
+	 * 			the game time interval in which to manage the attacking behavior.
+	 * 
+	 * @effect	if the time before completion of the attack is larger than zero
+	 * 			the time before completion is decremented with the given time interval.
+	 * 			| if (getTimeToCompletion() > 0.0)
+	 * 			| 	then setTimeToCompletion((float) (getTimeToCompletion() - dt))
+	 * 
+	 * @effect	if the time before completion of the attack is smaller than or equal to zero
+	 * 			the time before completion is set to zero.
+	 * 			| if (getTimeToCompletion() <= 0.0)
+	 * 			| 	then setTimeToCompletion(0.0f)
+	 * 
+	 * @effect	if the time before completion of the attack is smaller than or equal to zero
+	 * 			the defending unit does its defending behavior,
+	 * 			| if (getTimeToCompletion() <= 0.0)
+	 * 			| 	then getDefender().defend(this)
+	 * 			its isAttacked field is set to false,
+	 * 			|		 getDefender().setAttacked(false)
+	 * 			and this units state is set to empty.
+	 * 			|		 setState(State.EMPTY)
+	 * 
 	 */
 	private void controlAttacking(double dt) throws IllegalTimeException, ArithmeticException {
-		if (!isFalling()) {
-			setTimeToCompletion((float) (getTimeToCompletion() - dt));
-			if (getTimeToCompletion() < 0.0) {
-	
-				getDefender().setAttacked(true);
+		//if (!isFalling()) {
+			if (getTimeToCompletion() > 0.0) {
+				setTimeToCompletion((float) (getTimeToCompletion() - dt));
+			}
+			
+			if (getTimeToCompletion() <= 0.0) {
+				
+				setTimeToCompletion(0.0f);
+				//getDefender().setAttacked(true);
 				getDefender().defend(this);
 				getDefender().setAttacked(false);
 				setState(State.EMPTY);
 				
 			}
-		}
+		//}
 	}
 
+	
 	/**
 	 * Defend an attack from an attacking unit. The defending unit will first try
-	 * 		to dodge the incoming attack, if that fails it will try to block it,
-	 * 		and if that fails too it will take damage.
+	 * 		to dodge the incoming attack, if that fails it will try to block it. If one of
+	 * 		those succeeds it will be rewarded 20 XP, else it will take damage and
+	 * 		the attacking unit will be rewarded 20 XP.
 	 * 
 	 * @param	attacker
 	 * 			The attacking unit.
+	 * 
+	 * @effect	This unit tries to dodge the attack from the attacking unit. If it
+	 * 			succeeds, its XP is incremented by 20.
+	 * 			| if ( dodge(attacker) )
+	 * 			| 	then addXP(20)
+	 * 
+	 * @effect	If the dodge fails, this unit tries to block the attack from the 
+	 * 			attacking unit. If this succeeds, its XP is incremented by 20.
+	 * 			| if ( block(attacker) )
+	 * 			| 	then addXP(20)
+	 * 
+	 * @effect	If both the blocking and the dodging fails, this unit takes damage from the 
+	 * 			attacking unit. The attacking units XP is incremented by 20.
+	 * 			| if ( ! block(attacker) && ! dodge(attacker) )
+	 * 			| 	then takeDamage(attacker)
+	 * 			|		 attacker.addXP(20)
 	 */
 	private void defend(Unit attacker) throws ArithmeticException {
-		boolean dodged = this.dodge(attacker);
+		boolean dodged = dodge(attacker);
 		if (!dodged) {
 			boolean blocked = this.block(attacker);
 			if (!blocked) {
-				this.takeDamage(attacker);
+				takeDamage(attacker);
 				attacker.addXP(20);
 			} else {
 				addXP(20);
@@ -2462,23 +2514,29 @@ public class Unit extends GameObject {
 		}
 	}
 
+	
 	/**
-	 * Try to dodge an attack from an attacking unit. If it succeeds, the unit
+	 * Try to dodge an attack from an attacking unit. If it succeeds, this unit
 	 * 		will jump to a random adjacent cube.
 	 * 
 	 * @param	attacker
 	 * 			The attacking unit.
 	 * 
-	 * @return	True if the attack is dodged, otherwise false. The probability 
-	 * 			for this to happen is equal to 0.2 times the quotient of the 
-	 * 			agility of the defender and the agility of the attacker.
-	 * 			| result = (random.nextDouble() <= 0.2*(this.getAgility()/attacker.getAgility()) )
+	 * @effect	The dodging succeeds with a probability of 0.2 times the quotient of the 
+	 * 			agility of the defender and the agility of the attacker. If it succeeds,
+	 * 			this unit jumps to a random adjacent cube.
+	 * 			| if ( random.nextDouble() <= 0.20*(getAgility()/attacker.getAgility()) )
+	 * 			|	then jumpToRandomAdjacent()
+	 * 
+	 * @return	True if and only if the attack is dodged, otherwise false.
+	 * 			| result == (random.nextDouble() <= 
+	 * 			|			0.2*(this.getAgility()/attacker.getAgility()) )
 	 */
 	private boolean dodge(Unit attacker) {
-		if ( random.nextDouble() <= 0.20*(this.getAgility()/attacker.getAgility())) {
+		if ( random.nextDouble() <= 0.20*(getAgility()/attacker.getAgility())) {
 			while(true) {
 				try {
-					this.jumpToRandomAdjacent();
+					jumpToRandomAdjacent();
 					break;
 				}
 				catch (IllegalPositionException exc){
@@ -2494,23 +2552,21 @@ public class Unit extends GameObject {
 	/**
 	 * Jump to a random adjacent cube.
 	 * 
-	 * @post	The units position is set to a random adjacent cube.
-	 * 			| new.getPosition() = randomAdjacentPosition
+	 * @post	The units position is set to a random adjacent cube on the same Z level.
+	 * 			| new.getPosition().equals(new Coordinate(getCoordinate().get(0) + random.nextInt(3) - 1,
+				|		getCoordinate().get(1) + random.nextInt(3) - 1, 
+				|		getCoordinate().get(2)) )
 	 * 
-	 * @throws IllegalPositionException
-	 * 			The calculated random adjacent position is not a valid position.
+	 * @throws 	IllegalPositionException
+	 * 			The unit cannot have the calculated random adjacent position
+	 * 			as its position.
 	 * 			| !(canHaveAsPosition(randomAdjacentPosition))
 	 */
 	private void jumpToRandomAdjacent() throws IllegalPositionException {
-		//System.out.println("got here");
 		Coordinate newPosition = new Coordinate(getCoordinate().get(0) + random.nextInt(3) - 1,
 				getCoordinate().get(1) + random.nextInt(3) - 1, 
 				getCoordinate().get(2));
 				
-		/*double[] newPosition = this.getPosition();
-		newPosition[0] += 2*random.nextDouble() - 1.0;
-		newPosition[1] += 2*random.nextDouble() - 1.0;*/
-		
 		if (!canHaveAsPosition(newPosition)) 
 			throw new IllegalPositionException(newPosition);
 		
@@ -2528,8 +2584,8 @@ public class Unit extends GameObject {
 	 * 			for this to happen is equal to 0.25 times the quotient of the 
 	 * 			sum of the agility and the strength of the defender and 
 	 * 			the sum of the agility and the strength of the attacker.
-	 * 			| result = (random.nextDouble() <= 0.25*((this.getAgility() + this.getStrength())
-				|	/(attacker.getAgility() + attacker.getStrength())) )
+	 * 			| result == (random.nextDouble() <= 0.25*((this.getAgility() + this.getStrength())
+	 *			|	/(attacker.getAgility() + attacker.getStrength())) )
 	 */
 	private boolean block(Unit attacker) {
 		double probability = 0.25*((this.getAgility() + this.getStrength())
@@ -2548,7 +2604,7 @@ public class Unit extends GameObject {
 	 * @param	attacker
 	 * 			The attacking unit.
 	 * 
-	 * @post	the hitpoints of the unit get reduced by the strength of the
+	 * @post	the hitpoints of the unit are reduced by the strength of the
 	 * 			attacker divided by 10.
 	 * 			| new.getCurrentHitPoints() = this.getCurrentHitPoints()
 				|		- (attacker.getStrength()/10)
@@ -2557,84 +2613,8 @@ public class Unit extends GameObject {
 		this.updateCurrentHitPoints(this.getCurrentHitPoints() - 
 				(attacker.getStrength()/10));
 	}
-
-	/**
-	 * Returns the unit that this unit is attacking.
-	 */
-	@Basic @Model
-	private Unit getDefender() {
-		return this.defender;
-	}
-
-	/**
-	 * Field registering the unit that this unit is attacking.
-	 */
-	private Unit defender;
-
 	
-	/**
-	 * Returns the time left for a unit to complete its work or attack.
-	 */
-	@Basic
-	private float getTimeToCompletion() {
-		return this.timeToCompletion;
-	}
-
-		
-	/**
-	 * Checks if a given value is a valid time to completion value.
-	 * 
-	 * @param	value
-	 * 			Value to check
-	 * 
-	 * @return	true if and only if the given value is a float value and
-	 * 			is larger than -0.5.
-	 * 			| result = (Float.class.isInstance(value) && (value > -0.5))
-	 */
-	public static boolean isValidTime(float value) {
-		return ( (value > -10.0f) );
-	}
 	
-	/**
-	 * Checks if a given value is a valid time value.
-	 * 
-	 * @param	value
-	 * 			Value to check
-	 * 
-	 * @return	true if and only if the given value is a float value and
-	 * 			is larger than or equal to 0.0.
-	 * 			| result = (Double.class.isInstance(value) && (value >= 0.0))
-	 */
-	public static boolean isValidTime(double value) {
-		return ( (value >= 0.0) );
-	}
-
-	/**
-	 * Sets the time to completion for an attack or work job to a given value.
-	 * 
-	 * @param newValue
-	 * 			the given value for the new time to completion.
-	 * 
-	 * @post	The time to completion field is set to the new value.
-	 * 			| new.getTimeToCompletion() = newValue
-	 * 
-	 * @throws IllegalTimeException
-	 * 			The time value is not valid.
-	 * 			| !(isValidTime(newValue))
-	 */
-	private void setTimeToCompletion(float newValue) throws IllegalTimeException {
-		if (!isValidTime(newValue))
-			throw new IllegalTimeException(newValue, this);
-		this.timeToCompletion = newValue;
-	}
-
-	/**
-	 * Field registering the time to completion.
-	 */
-	private float timeToCompletion;
-
-
-
 	/**
 	 * Returns whether the unit is currently being attacked.
 	 */
@@ -2647,24 +2627,144 @@ public class Unit extends GameObject {
 	/**
 	 * Set the units attacked field to a given boolean value.
 	 * 
-	 * @param isAttacked
+	 * @param 	isAttacked
 	 * 			the value to set the attacked field to.
 	 * 
-	 * @post The attacked field of this unit is equal to the
-	 * 		given value.
-	 * 		| new.isAttacked() == isAttacked
+	 * @post 	The attacked field of this unit is equal to the
+	 * 			given value.
+	 * 			| new.isAttacked() == isAttacked
+	 * 
+	 * @post 	The state of the unit is set to empty.
+	 * 			| new.getState() == State.EMPTY
 	 */
 	private void setAttacked(boolean isAttacked) {
 		this.setState(State.EMPTY);
 		this.isAttacked = isAttacked;
 	}
 	
+	
 	/**
 	 * Field registering whether the unit is being attacked.
 	 */
-	private boolean isAttacked;
-	// EXTRA STATE VOOR MAKEN????
+	private boolean isAttacked = false;
+	// TODO Make additional state for isAttacked?
+
 	
+	/**
+	 * Returns the unit that this unit is attacking.
+	 */
+	@Basic @Raw
+	public Unit getDefender() {
+		return this.defender;
+	}
+	
+	
+	/**
+	 * Set the unit this unit is attacking to the given victim unit.
+	 * 
+	 * @param 	victim
+	 * 			The unit to set the unit this unit is attacking to.
+	 * 
+	 * @post	The unit this unit is attacking is equal to the given victim unit.
+	 * 			| new.getDefender() == victim
+	 * 
+	 * @throws 	IllegalVictimException
+	 * 			This unit cannot attack the given victim unit.
+	 * 			| !canAttack(victim)
+	 */
+	@Raw
+	private void setDefender(Unit victim) throws IllegalVictimException {
+		if (!canAttack(victim))
+			throw new IllegalVictimException(this, victim);
+		this.defender = victim;
+	}
+
+	
+	/**
+	 * Field registering the unit that this unit is attacking.
+	 */
+	private Unit defender = null;
+
+	
+	/**
+	 * Returns the time left for a unit to complete its work or attack.
+	 */
+	@Basic
+	public float getTimeToCompletion() {
+		return this.timeToCompletion;
+	}
+
+		
+	/**
+	 * Checks if a given value is a valid time to completion value.
+	 * 
+	 * @param	value
+	 * 			Value to check
+	 * 
+	 * @return	true if and only if the given value	is larger than -0.5.
+	 * 			| result == (value > -2.0)
+	 */
+	public static boolean isValidTime(float value) {
+		return ( (value > -2.0f) );
+	}
+	
+	
+	/**
+	 * Checks if a given value is a valid time value.
+	 * 
+	 * @param	value
+	 * 			Value to check
+	 * 
+	 * @return	true if and only if the given value is larger than or equal to 0.0.
+	 * 			| result == (value >= 0.0)
+	 */
+	public static boolean isValidTime(double value) {
+		return ( (value >= 0.0) );
+	}
+
+	
+	/**
+	 * Sets the time to completion for an attack or work job to a given value.
+	 * 
+	 * @param 	newValue
+	 * 			the given value for the new time to completion.
+	 * 
+	 * @post	The time to completion field is set to the new value.
+	 * 			| new.getTimeToCompletion() == newValue
+	 * 
+	 * @throws 	IllegalTimeException
+	 * 			The time value is not valid.
+	 * 			| !(isValidTime(newValue))
+	 */
+	private void setTimeToCompletion(float newValue) throws IllegalTimeException {
+		if (!isValidTime(newValue))
+			throw new IllegalTimeException(newValue, this);
+		this.timeToCompletion = newValue;
+	}
+
+	
+	/**
+	 * Field registering the time to completion.
+	 */
+	private float timeToCompletion = 0.0f;
+	
+	
+	/**
+	 * Returns the time the unit has been resting.
+	 */
+	@Basic 
+	public double getTimeResting() {
+		return this.timeResting;
+	}
+	
+	
+	/**
+	 * Returns the time that has passed after the last time the unit rested.
+	 */
+	@Basic 
+	public double getTimeAfterResting() {
+		return this.timeAfterResting;
+	}
 	
 		
 	/**
@@ -2683,29 +2783,15 @@ public class Unit extends GameObject {
 	/**
 	 * Make the unit rest, if it's not currently moving or falling.
 	 * 
+	 * @effect	If the unit is not currently moving or falling, it starts
+	 * 			resting.
+	 * 			| if ( !isMoving && !isFalling() )
+	 * 			| 	then startResting()
 	 */
 	public void rest() throws IllegalTimeException {
 		if (!isMoving() && !isFalling()) {
 			startResting();
 		}
-	}
-	
-	
-	/**
-	 * Returns the time the unit has been resting.
-	 */
-	@Basic 
-	private double getTimeResting() {
-		return this.timeResting;
-	}
-	
-	
-	/**
-	 * Returns the time that has passed after the last time the unit rested.
-	 */
-	@Basic 
-	private double getTimeAfterResting() {
-		return this.timeAfterResting;
 	}
 	
 	
@@ -2729,12 +2815,93 @@ public class Unit extends GameObject {
 	 * Manage the resting of the unit, i.e. when the state of 
 	 * 				the unit is equal to resting.
 	 * 
-	 * @param dt
+	 * @param	dt
+	 * 			the game time interval in which to manage the falling behavior.
+	 * 
+	 * @effect	if the units state is equal to the initial resting state, and if the
+	 * 			quotient of the product of the time the unit has been resting and its toughness,
+	 * 			and 40 is larger than 1, its current HP are incremented by this quotient
+	 * 			and the time it has been resting is decremented by 40 divided by its toughness.
+	 * 			| if ( (getState() == State.RESTING_1) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)  )
+	 * 			| 	then updateCurrentHitPoints(getCurrentHitPoints() + 
+	 *			|			(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) )
+	 *			|		 setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
+	 * 	
+	 * @effect	if the above conditions hold and the units current HP are below its maximum HP,
+	 * 			the units state is set to resting HP.
+	 * 			| if (   (getState() == State.RESTING_1) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			|		&&  (getCurrentHitPoints() < getMaxHitPoints())   )
+	 * 			|	then setState(State.RESTING_HP)
+	 * 
+	 * @effect	if the first condition holds and the units current HP are not below its maximum HP,
+	 * 			and if its current stamina points are below its maximum stamina points,
+	 * 			the units state is set to resting stam.
+	 * 			| if (   (getState() == State.RESTING_1) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			|		&& !( getCurrentHitPoints() < getMaxHitPoints())
+	 * 			|		&&  (getCurrentStaminaPoints() < getMaxStaminaPoints())   )
+	 * 			|	then setState(State.RESTING_STAM)
+	 * 
+	 * @effect	if the first condition holds and the units current HP are not below its maximum HP,
+	 * 			and if its current stamina points are not below its maximum stamina points,
+	 * 			the units state is set to empty.
+	 * 			| if (   (getState() == State.RESTING_1) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			|		&& !( getCurrentHitPoints() < getMaxHitPoints())
+	 * 			|		&& !(getCurrentStaminaPoints() < getMaxStaminaPoints())   )
+	 * 			|	then setState(State.EMPTY)
+	 * 
+	 * @effect	2. if the units state is equal to the resting HP, and if the
+	 * 			quotient of the product of the time the unit has been resting and its toughness,
+	 * 			and 40 is larger than 1, its current HP are incremented by this quotient
+	 * 			and the time it has been resting is decremented by 40 divided by its toughness.
+	 * 			| if ( (getState() == State.RESTING_HP) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			| 	then updateCurrentHitPoints(getCurrentHitPoints() + 
+	 *			|			(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) )
+	 *			|		 setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness())
+	 *
+	 * @effect	if the above condition holds and the units current HP are not below its maximum HP,
+	 * 			and if its current stamina points are below its maximum stamina points,
+	 * 			the units state is set to resting stam.
+	 * 			| if (   (getState() == State.RESTING_HP) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			|		&& !( getCurrentHitPoints() < getMaxHitPoints())
+	 * 			|		&&  (getCurrentStaminaPoints() < getMaxStaminaPoints())   )
+	 * 			|	then setState(State.RESTING_STAM)
+	 * 
+	 * @effect	if 2. holds and the units current HP are not below its maximum HP,
+	 * 			and if its current stamina points are not below its maximum stamina points,
+	 * 			the units state is set to empty.
+	 * 			| if (   (getState() == State.RESTING_HP) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			|		&& !( getCurrentHitPoints() < getMaxHitPoints())
+	 * 			|		&& !(getCurrentStaminaPoints() < getMaxStaminaPoints())   )
+	 * 			|	then setState(State.EMPTY)
+	 * 
+	 * @effect	3. if the units state is equal to the resting stam, and if the
+	 * 			quotient of the product of the time the unit has been resting and its toughness,
+	 * 			and 40 is larger than 1, its current HP are incremented by this quotient
+	 * 			and the time it has been resting is decremented by 40 divided by its toughness.
+	 * 			| if ( (getState() == State.RESTING_STAM) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			| 	then updateCurrentStaminaPoints(getCurrentStaminaPoints() + 
+	 *			|			(int) Math.round((getTimeResting()*getToughness())/(0.2*100)) )
+	 *			|		 setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness())
+	 *
+	 * @effect	if 3. holds and the units current stamina points are not below its 
+	 * 			maximum stamina points, the units state is set to empty.
+	 * 			| if (   (getState() == State.RESTING_STAM) 
+	 * 			|			&& ((getTimeResting() * getToughness())/(0.2*200) > 1.0)
+	 * 			|		&& !(getCurrentStaminaPoints() < getMaxStaminaPoints())   )
+	 * 			|	then setState(State.EMPTY)
 	 */
 	private void controlResting(double dt) throws IllegalTimeException {
 		setTimeResting(getTimeResting() + dt);
 
-		if (!isAttacked() && !isAttacking() && !isFalling()) {
+		//if (!isAttacked() && !isAttacking() && !isFalling()) {
 
 			if (getState() == State.RESTING_1) {
 				if ((getTimeResting() * getToughness())/(0.2*200) > 1.0) {
@@ -2743,12 +2910,13 @@ public class Unit extends GameObject {
 							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
 					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 
-					if (this.getCurrentHitPoints() < this.getMaxHitPoints()) {
+					if ( getCurrentHitPoints() < getMaxHitPoints()) {
 						setState(State.RESTING_HP);
 					}
-					else if (this.getCurrentStaminaPoints() < this.getMaxStaminaPoints()) {
+					else if (getCurrentStaminaPoints() < getMaxStaminaPoints()) {
 						setState(State.RESTING_STAM);
 					}
+					else { setState(State.EMPTY); }
 				}
 			}
 
@@ -2758,8 +2926,13 @@ public class Unit extends GameObject {
 							(int) Math.round((getTimeResting()*getToughness())/(0.2*200)) );
 					setTimeResting(getTimeResting() - (0.2*200*1.0)/getToughness());
 				}
-				if (this.getCurrentHitPoints() == this.getMaxHitPoints()) {
+				if (getCurrentHitPoints() == getMaxHitPoints()
+						&& getCurrentStaminaPoints() < getMaxStaminaPoints()) {
 					setState(State.RESTING_STAM);
+				}
+				else if (getCurrentHitPoints() == getMaxHitPoints()
+						&& getCurrentStaminaPoints() == getMaxStaminaPoints()) {
+					setState(State.EMPTY);
 				}
 			}
 			else if (getState() == State.RESTING_STAM) {
@@ -2768,25 +2941,28 @@ public class Unit extends GameObject {
 							(int) Math.round((getTimeResting()*getToughness())/(0.2*100)) );
 					setTimeResting(getTimeResting() - (0.2*100*1.0)/getToughness());
 				}
+				if (getCurrentStaminaPoints() == getMaxStaminaPoints()) {
+					setState(State.EMPTY);
+				}
 			}
 			if (getCurrentHitPoints() == getMaxHitPoints() &&
 					getCurrentStaminaPoints() == getMaxStaminaPoints()) {
 				setState(State.EMPTY);
 			}
-		}
+		//}
 	}
 	
 	
 	/**
 	 * Set the time the unit has been resting to a given value.
 	 * 
-	 * @param newValue
+	 * @param 	newValue
 	 * 			The new value for the time resting.
 	 * 
 	 * @post	The time the unit has been resting is equal to the given value.
 	 * 			| new.getTimeResting() == newValue
 	 * 
-	 * @throws IllegalTimeException
+	 * @throws 	IllegalTimeException
 	 * 			The new value is not a valid time value.
 	 * 			| !isValidTime(newValue)
 	 */
@@ -2799,7 +2975,7 @@ public class Unit extends GameObject {
 	/**
 	 * Set the time after the unit has last rested to a given value.
 	 * 
-	 * @param newValue
+	 * @param 	newValue
 	 * 			The new value for the time not rested.
 	 * 
 	 * @post	The time the unit has not been resting is equal to the given value.
@@ -2815,10 +2991,12 @@ public class Unit extends GameObject {
 		this.timeAfterResting = newValue;
 	}
 	
+	
 	/**
 	 * Field registering how long the unit has been resting.
 	 */
 	private double timeResting = 0.0;
+	
 	
 	/**
 	 * Field registering how much time passed after the unit last rested.
@@ -2829,7 +3007,7 @@ public class Unit extends GameObject {
 	/**
 	 * Returns whether the default behavior of the unit is enabled.
 	 */
-	@Basic
+	@Basic @Raw
 	public boolean isDefaultBehaviorEnabled() {
 		return this.defaultBehavior;
 	}
@@ -2838,39 +3016,16 @@ public class Unit extends GameObject {
 	/**
 	 * Set the default behavior of the unit.
 	 * 
-	 * @param value
+	 * @param 	value
 	 * 			The new value for default behavior.
 	 * 
-	 * @post	If the value is true and the default behavior is not enabled,
-	 * 			the default behavior is set to true, hence enabled.
-	 * 			| new.isDefaultBehaviorEnabled() == true
-	 * 
-	 * @post	If the value is false and the default behavior is enabled,
-	 * 			the default behavior is set to false, hence disabled.
-	 * 			| new.isDefaultBehaviorEnabled() == false
+	 * @post	The units default behavior is equal to the given
+	 * 			value.
+	 * 			| new.isDefaultBehaviorEnabled() == value
 	 */
+	@Raw
 	public void setDefaultBehavior(boolean value) {
 		this.defaultBehavior = value;
-	}
-	
-	/**
-	 * Start the default behavior of the unit.
-	 * 
-	 * @post	The default behavior of the unit is enabled.
-	 * 			| new.isDefaultBehaviorEnabled() == true
-	 */
-	public void startDefaultBehavior() {
-		this.defaultBehavior = true;
-	}
-	
-	/**
-	 * Stop the default behavior of the unit.
-	 * 
-	 * @post	The default behavior of the unit is disabled.
-	 * 			| new.isDefaultBehaviorEnabled() == false
-	 */
-	public void stopDefaultBehavior() {
-		this.defaultBehavior = false;
 	}
 
 	
@@ -2880,13 +3035,27 @@ public class Unit extends GameObject {
 	private boolean defaultBehavior = true;
 	
 	
-	
 	/**
 	 * Returns the current state of the unit.
 	 */
 	@Basic @Raw
 	public State getState() {
 		return this.state;
+	}
+	
+	
+	/**
+	 * Checks if the given state is a valid state.
+	 * 
+	 * @param 	State
+	 * 			The state to check.
+	 * 
+	 * @return	True if and only if the value class of states 
+	 * 			contains the given state.
+	 * 			| result == (State.contains(state))
+	 */
+	public static boolean isValidState(State state) {
+		return State.contains(state);
 	}
 	
 	
@@ -2901,7 +3070,7 @@ public class Unit extends GameObject {
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			the given state value is not a valid state for the unit.
-	 * 			| !State.contains(toString(state))
+	 * 			| !!isValidState(state)
 	 */
 	@Raw
 	public void setState(State state) {
@@ -2910,12 +3079,6 @@ public class Unit extends GameObject {
 		this.state = state;
 	}
 	
-	
-	public static boolean isValidState(State state) {
-		return State.contains(state);
-	}
-	
-	
 
 	/**
 	 * Variable registering the state of the unit.
@@ -2923,79 +3086,215 @@ public class Unit extends GameObject {
 	private State state;
 	
 	
-	
+	/**
+	 * Get the units current number of experience points.
+	 */
 	@Basic @Raw
 	public int getExperiencePoints() {
 		return this.xp;
 	}
 	
 	
+	/**
+	 * Checks if the given value is a valid number of XP for a unit.
+	 * 
+	 * @param 	value
+	 * 			the value to check.
+	 * 
+	 * @return	true if and only if the given value is larger than or equal to
+	 * 			zero and smaller than the largest allowed value for an integer.
+	 * 			| result == (value >= 0 && value < Integer.MAX_VALUE)
+	 */
 	public static boolean isValidXP(int value) {
 		return (value >= 0 && value < Integer.MAX_VALUE);
 	}
 	
+	
+	/**
+	 * Checks if the given value can be added to a units XP.
+	 * 
+	 * @param 	value
+	 * 			the value to check.
+	 * 
+	 * @return	true if and only if the maximum value for an integer minus 
+	 * 			the given value is larger than the units current XP, and if the value
+	 * 			is positive or zero, and if the current XP points plus the value
+	 * 			is a valid nb of XP points.
+	 * 			| result == (value >= 0 && Integer.MAX_VALUE - value > getExperiencePoints() &&
+	 *			|	isValidXP(value + getExperiencePoints()) )
+	 */
+	public boolean canAddToXP(int value) {
+		return (value >= 0 && Integer.MAX_VALUE - value > getExperiencePoints() &&
+					isValidXP(value + getExperiencePoints()) );
+	}
+	
+	
+	/**
+	 * Return the temporary XP of the unit.
+	 */
+	@Raw
 	private int getTXP() {
 		return this.tempXp;
 	}
 	
 	
-	private void controlXP() {
+	/**
+	 * Control the XP of the unit, i.e. check if the unit has enough temporary XP to
+	 * increment one of its skills, and if so, increment one of its skills.
+	 * 
+	 * @effect	If the units temporary XP is larger than 10, it is subtracted by 10.
+	 * 			| if (getTXP() > 10)
+	 * 			|	then subTXP(10)
+	 * 
+	 * @effect	If the units temporary XP is larger than 10 and if its strength can
+	 * 			be incremented by 1 AND if a random double is smaller than 1/3, OR if
+	 * 			its agility can not be incremented by 1 and if a random double is larger than 1/3 
+	 * 			and smaller than 2.0/3.0 and its agility cannot be incremented by 1, OR if
+	 * 			its toughness can not be incremented by 1 and if a random double is larger than 2/3: 
+	 * 			the units strength will be incremented by 1.
+	 * 			| if ( (getTXP() > 10 && isValidStrength(getStrength() + 1) ) 
+	 * 			|		&& (  	(random.nextDouble() < 1.0/3.0)
+	 * 			|				|| (random.nextDouble() > 1.0/3.0 && random.nextDouble() < 2.0/3.0
+	 * 			|					&& !isValidAgility(getAgility() + 1)) 
+	 * 			|				|| (random.nextDouble() > 2.0/3.0 
+	 * 			|					&& !isValidToughness(getToughness() + 1) ) 
+	 * 			|			)  
+	 * 			|		)
+	 * 			|	then setStrength(getStrength() + 1)
+	 * 
+	 * @effect	If the units temporary XP is larger than 10 and if its agility can
+	 * 			be incremented by 1 AND if a random double is larger than 1/3 and smaller than
+	 * 			2/3, OR if its strength can not be incremented by 1 and if a random double is 
+	 * 			smaller than 1/3, OR if its toughness and strength cannot be incremented by 1 and
+	 * 			a random double is larger than 2/3: 
+	 * 			the units agility will be incremented by 1.
+	 * 			| if ( (getTXP() > 10 && isValidAgility(getAgility() + 1) ) 
+	 * 			|		&& (  	(random.nextDouble() > 1.0/3.0 && random.nextDouble() < 2.0/3.0)
+	 * 			|				|| (random.nextDouble() < 1.0/3.0
+	 * 			|					&& !isValidStrength(getStrength() + 1)) 
+	 * 			|				|| (random.nextDouble() > 2.0/3.0 
+	 * 			|					&& !isValidToughness(getToughness() + 1)
+	 * 			|					&& !isValidStrength(getStrength() + 1) ) 
+	 * 			|			)  
+	 * 			|		)
+	 * 			|	then setAgility(getAgility() + 1)
+	 * 
+	 * @effect	If the units temporary XP is larger than 10 and if its toughness can
+	 * 			be incremented by 1 AND if a random double is larger than 2/3, OR if 
+	 * 			its strength and its agility can not be incremented by 1 and if a random double is 
+	 * 			smaller than 1/3, OR if its agility and strength cannot be incremented by 1 and
+	 * 			a random double is larger than 1/3 and smaller than 2/3: 
+	 * 			the units toughness will be incremented by 1.
+	 * 			| if ( (getTXP() > 10 && isValidToughness(getToughness() + 1) ) 
+	 * 			|		&& (  	(random.nextDouble() > 2.0/3.0 )
+	 * 			|				|| (random.nextDouble() < 1.0/3.0
+	 * 			|					&& !isValidStrength(getStrength() + 1)
+	 * 			|					&& !isValidAgility(getAgility() + 1)) 
+	 * 			|				|| (random.nextDouble() > 1.0/3.0  && random.nextDouble() < 2.0/3.0 
+	 * 			|					&& !isValidAgility(getAgility() + 1)
+	 * 			|					&& !isValidStrength(getStrength() + 1) ) 
+	 * 			|			)  
+	 * 			|		)
+	 * 			|	then setToughness(getToughness() + 1)
+	 * 
+	 * @effect	If the units temporary XP is larger than 10, its weight is updated.
+	 * 			| if (getTXP() > 10)
+	 * 			|	then updateWeight()
+	 * 
+	 */
+	private void controlXP() throws ArithmeticException {
 		while (getTXP() > 10) {
 			subTXP(10);
 			double dice = random.nextDouble();
 			
-			if (dice < 1.0/3.0 && isValidStrength(getStrength() + 1)) {
-				setStrength(getStrength() + 1);
-				
-				if (!isValidStrength(getStrength() + 1)) {
-					if (isValidAgility(getAgility() + 1)) {
-						setAgility(getAgility() + 1);
-					} else if (isValidToughness(getToughness() + 1)) {
-						setToughness(getToughness() + 1);
-					}
+			if (dice < 1.0/3.0 ) {
+				if (isValidStrength(getStrength() + 1)) {
+					setStrength(getStrength() + 1);
+				} else if (isValidAgility(getAgility() + 1)) {
+					setAgility(getAgility() + 1);
+				} else if (isValidToughness(getToughness() + 1)) {
+					setToughness(getToughness() + 1);
 				}
 			}
-			else if (dice > 1.0/3.0 && dice < 2.0/3.0
-					&& isValidAgility(getAgility() + 1)) {
-				setAgility(getAgility() + 1);
-				
-				if (!isValidAgility(getAgility() + 1)) {
-					if (isValidStrength(getStrength() + 1)) {
-						setStrength(getStrength() + 1);
-					} else if (isValidToughness(getToughness() + 1)) {
-						setToughness(getToughness() + 1);
-					}
+			else if (dice > 1.0/3.0 && dice < 2.0/3.0) {
+				if ( isValidAgility(getAgility() + 1)) {
+					setAgility(getAgility() + 1);
+				} else if (isValidStrength(getStrength() + 1)) {
+					setStrength(getStrength() + 1);
+				} else if (isValidToughness(getToughness() + 1)) {
+					setToughness(getToughness() + 1);
 				}
 			}
-			else if (isValidToughness(getToughness() + 1)) {
-				setToughness(getToughness() + 1);
-				
-				if (!isValidToughness(getToughness() + 1)) {
-					if (isValidStrength(getStrength() + 1)) {
-						setStrength(getStrength() + 1);
-					} else if (isValidAgility(getAgility() + 1)) {
-						setAgility(getAgility() + 1);
-					}
+			else {
+				if (isValidToughness(getToughness() + 1)) {
+					setToughness(getToughness() + 1);
+				} else if (isValidStrength(getStrength() + 1)) {
+					setStrength(getStrength() + 1);
+				} else if (isValidAgility(getAgility() + 1)) {
+					setAgility(getAgility() + 1);
 				}
 			}
 			updateWeight();
 		}
 	}
 	
-	private void addXP(int x) {
-		if (!isValidXP(getExperiencePoints() + x)) 
+	
+	/**
+	 * Add a number of XP to this units XP.
+	 * 
+	 * @param 	x
+	 * 			The number of XP to add.
+	 * 
+	 * @post	The units XP is incremented by x.
+	 * 			| new.getExperiencePoints() = this.getExperiencePoints() + x
+	 * 
+	 * @post	The units temporary XP is incremented by x.
+	 * 			| new.getTXP() == this.getTXP() + x
+	 * 
+	 * @throws	ArithmeticException
+	 * 			The given x cannot be added to the units XP.
+	 * 			| !canAddToXP(x)
+	 */
+	private void addXP(int x) throws ArithmeticException {
+		if (!canAddToXP(x)) 
 			throw new ArithmeticException();
 		this.xp += x;
 		this.tempXp += x;
 	}
 	
-	private void subTXP(int x) {
+	
+	/**
+	 * Subtract a number of XP from the units temporary XP.
+	 * 
+	 * @param 	x
+	 * 			The number of XP to subtract.
+	 * 
+	 * @post	The units temporary XP is x less than before.
+	 * 			| new.getTXP() == this.getTXP - x
+	 * 
+	 * @throws	ArithmeticException
+	 * 			The given number cannot be subtracted.
+	 * 			| x < 0 || !isValidXP(getTXP() - x)
+	 */
+	private void subTXP(int x) throws ArithmeticException {
+		if (x < 0 || !isValidXP(getTXP() - x) ) {
+			throw new ArithmeticException();
+		}
 		this.tempXp -= x;
 	}
 	
-	private int xp;
-	private int tempXp;
 	
+	/**
+	 * Variable registering the total number of experience points the unit has gained.
+	 */
+	private int xp = 0;
+	
+	
+	/**
+	 * Variable registering the temporary number of experience points of the unit, for
+	 * computing reasons.
+	 */
+	private int tempXp = 0;
 	
 	
 	
@@ -3022,6 +3321,8 @@ public class Unit extends GameObject {
 	public boolean canHaveAsWorld(World world) {
 		return ( (world == null) || world.canHaveAsUnit(this) );
 	}
+	//TODO world and faction association conditions right?
+	
 	
 	/**
 	 * Check whether this unit has a proper world in which it belongs.
@@ -3048,11 +3349,6 @@ public class Unit extends GameObject {
 	 * @post	This unit references the given world as the world
 	 * 			it belongs to.
 	 * 			| new.getWorld() == world
-	 * 
-	 * @throws	IllegalArgumentException
-	 * 			If the given world is effective it must already reference this unit
-	 * 			as one of its units.
-	 * 			| (world != null) && !world.hasAsUnit(this)
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			If the given world is not effective and this unit references an
@@ -3129,11 +3425,6 @@ public class Unit extends GameObject {
 	 * 			| new.getFaction() == faction
 	 * 
 	 * @throws	IllegalArgumentException
-	 * 			If the given world is effective it must already reference this unit
-	 * 			as one of its units.
-	 * 			| (faction != null) && !faction.hasAsUnit(this)
-	 * 
-	 * @throws	IllegalArgumentException
 	 * 			If the given faction is not effective and this unit references an
 	 * 			effective faction, that faction may not contain this unit.
 	 * 			| (faction == null) && (getFaction() != null) 
@@ -3154,26 +3445,30 @@ public class Unit extends GameObject {
 	private Faction faction = null;
 	
 	
+	
+	/**
+	 * Method to terminate this unit.
+	 * 
+	 * @post	The new unit is terminated.
+	 * 			| new.isTerminated == true;
+	 * 
+	 * @effect	The item the unit is carrying is dropped.
+	 * 			| dropItem()
+	 * 
+	 * @effect 	The unit is removed from the faction it belongs to.
+	 * 			| getFaction().removeUnit(this)
+	 * 
+	 * @effect 	The unit is removed from the world it belongs to.
+	 * 			| getWorld().removeUnit(this)
+	 */
 	public void terminate() {
 		dropItem();
 		getFaction().removeUnit(this);
 		getWorld().removeUnit(this);
+		this.isTerminated = true;
 	}
 	
 	
-	/* ISVALID POSITION etc IN WORLD IPV IN UNIT, ITEM AFZONDERLIJK???????
-	 * 
-	 */
-	/* ISVALIDFACTION/UNITS IPV CANHAVEAS????????????
-	/* tests */
-		
-	// Override equals etc in value classes!
 	
-	/* VRAGEN
-	 * 
-	 * 
-	 * Nog methods @Raw?
-	 * 
-	 */
 }
 
