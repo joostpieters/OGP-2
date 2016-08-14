@@ -60,15 +60,16 @@ public abstract class Item extends GameObject {
 	
 	@Override
 	public void advanceTime (double dt) {
-		if (! isValidDT(dt)) {
-			throw new IllegalArgumentException();
-		}
-		if (getCoordinate().get(2) != 0)
+		if (getWorld() != null) {
+			if (! isValidDT(dt)) {
+				throw new IllegalArgumentException();
+			}
 			if (!isAboveSolid(getCoordinate()))
 				fall();
-		
-		if (isFalling()) {
-			controlFalling(dt);
+
+			if (isFalling()) {
+				controlFalling(dt);
+			}
 		}
 	}
 	
@@ -91,7 +92,7 @@ public abstract class Item extends GameObject {
 	private boolean isFalling = false;*/
 	
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCoordinate()) || getCoordinate().getCoordinates()[2] == 0) {
+		if(isAboveSolid(getCoordinate())) {
 			setFalling(false);
 			
 		}

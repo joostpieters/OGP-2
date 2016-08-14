@@ -244,6 +244,8 @@ public class World {
 	public boolean isAboveSolid(Coordinate coordinates) {
 		if (!canHaveAsCoordinates(coordinates) )
 			throw new IllegalPositionException(coordinates);
+		if (coordinates.get(2) == 0)
+			return true;
 		
 		if (!getCubeTypeAt(new Coordinate(coordinates.get(0), 
 					coordinates.get(1), coordinates.get(2)-1)).isPassable() )
@@ -1002,7 +1004,8 @@ public class World {
 	 * 			| 	result.contains(boulder) == this.hasAsBoulder(boulder)
 	 */
 	public Set<Boulder> getAllBoulders() {
-		return new HashSet<Boulder>(this.boulders);
+		//return new HashSet<Boulder>(this.boulders);
+		return this.boulders;
 	}
 	
 	
@@ -1107,10 +1110,12 @@ public class World {
 			timeSubjects.add(ts);
 		}
 		this.toAddToTimeSubjects.clear();
+		
 		for (TimeSubject ts: this.toRemoveFromTimeSubjects) {
 			if (timeSubjects.contains(ts))
 				timeSubjects.remove(ts);
 		}
+		
 		this.toRemoveFromTimeSubjects.clear();
 		timeSubjects.removeAll(Collections.singleton(null));
 	}

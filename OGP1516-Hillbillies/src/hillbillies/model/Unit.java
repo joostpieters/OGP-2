@@ -262,12 +262,12 @@ public class Unit extends GameObject {
 		setWorld(world);
 		setFaction(faction);
 		
-		//Coordinate position = getWorld().getRandomNeighbouringSolidCube();
-		Coordinate position = new Coordinate(14 - i, 14, 14);
+		Coordinate position = getWorld().getRandomNeighbouringSolidCube();
+		/*Coordinate position = new Coordinate(14, 14, 14);
 		i += 1;
 		if (i==14) {
 			i = 0;
-		}
+		}*/
 		setPosition(position);
 		
 		setName(generateName());
@@ -286,7 +286,7 @@ public class Unit extends GameObject {
 		setDefaultBehavior(enableDefaultBehavior);
 	}
 	
-	static int i = 0;
+	//static int i = 0;
 	
 	/* *********************************************************
 	 * 
@@ -1006,7 +1006,7 @@ public class Unit extends GameObject {
 	 * @effect	if the units position is above a solid cube or at the bottom of
 	 * 			the game world, the unit stops falling, i.e. its state is set
 	 * 			to empty,
-	 * 			| if (isAboveSolid(getCoordinate()) || getCoordinate().get(2) == 0)
+	 * 			| if (isAboveSolid(getCoordinate()) )
 	 * 			| 	then setState(State.EMPTY)
 	 * 			it loses 10 HP for each Z-level it fell,
 	 * 			|		updateCurrentHitPoints(getCurrentHitPoints() - 
@@ -1025,7 +1025,7 @@ public class Unit extends GameObject {
 	 * 			
 	 */
 	private void controlFalling(double dt) throws IllegalPositionException {
-		if(isAboveSolid(getCoordinate()) || getCoordinate().get(2) == 0 ) {
+		if(isAboveSolid(getCoordinate()) ) {
 			
 			int lostHP = 10*(getStartFallingCube().get(2) - getCoordinate().get(2));
 			setStartFallingCube();
@@ -1117,13 +1117,13 @@ public class Unit extends GameObject {
 			double dice = random.nextDouble();
 			//System.out.println(dice);
 			
-			if (dice < 0.0/4.0) {
+			if (dice < 1.0/4.0) {
 				Coordinate destCube = getRandomReachableCube();
 				//System.out.println(destCube.toString());
 				//System.out.println(this.isReachable(destCube));
 				moveTo(destCube);
 				
-			} else if (false && dice > 1.0/4.0 && dice < 2.0/4.0) {
+			} else if ( dice > 1.0/4.0 && dice < 2.0/4.0) {
 				
 				Coordinate targetCube = getRandomNeighbouringCube();
 				
@@ -1133,13 +1133,13 @@ public class Unit extends GameObject {
 				workAt(targetCube);
 				
 			}
-			else if ((true || dice > 2.0/4.0 && dice < 3.0/4.0) 
+			else if ( dice > 2.0/4.0 && dice < 3.0/4.0 
 					&& !isAttacking() && !isAttacked() && enemiesInRange()) {
 				attack(getEnemyInRange());
-				//System.out.println("Attackingk");
+				//System.out.println("Attacking");
 			}
 			else {
-				//rest();
+				rest();
 				//setDefaultBehavior(false);
 			}
 			if (isMoving() && isSprinting()) {
@@ -1704,6 +1704,9 @@ public class Unit extends GameObject {
 	 * 			|		World.getCubeCenter(getDestination())) < getCurrentSpeed()*dt )
 	 */
 	private boolean reached(double dt) throws IllegalPositionException {
+		//System.out.println( "D  " + getDistanceTo(getPosition(), World.getCubeCenter(getDestination())) );
+		//System.out.println( "S  " + getCurrentSpeed()*dt );
+		//System.out.println( "D-S  " + this.hashCode() + "   " + (getDistanceTo(getPosition(), World.getCubeCenter(getDestination())) - getCurrentSpeed()*dt ));
 		return (getDistanceTo(getPosition(), World.getCubeCenter(getDestination())) < getCurrentSpeed()*dt);
 	}
 
@@ -2337,7 +2340,7 @@ public class Unit extends GameObject {
 			try {
 				getCarriedItem().setPosition(getTargetCube());
 			} catch (RuntimeException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 				getCarriedItem().setPosition(getCoordinate());
 			}
 			this.carriedItem = null;
@@ -2574,14 +2577,13 @@ public class Unit extends GameObject {
 				getDefender().setAttacked(false);
 				setState(State.EMPTY);
 				
-				System.out.println("defender state  " + getDefender().getState().toString());
-				System.out.println("defender IA  " + getDefender().isAttacked());
+				//System.out.println("defender state  " + getDefender().getState().toString());
+				//System.out.println("defender IA  " + getDefender().isAttacked());
 				
-				System.out.println("this state  " + getState().toString());
-				System.out.println("attacker IA  " + isAttacking());
+				//System.out.println("this state  " + getState().toString());
+				//System.out.println("attacker IA  " + isAttacking());
 				
 				//System.out.println("defender is attacked" + getDefender().isAttacked());
-				//System.out.println("State empty, attack voltooid");
 				//System.out.println("State empty, attack voltooid");
 			}
 		//}
@@ -2615,10 +2617,10 @@ public class Unit extends GameObject {
 	 */
 	private void defend(Unit attacker) throws ArithmeticException {
 		boolean dodged = dodge(attacker);
-		System.out.println("dodged " + dodged);
+		//System.out.println("dodged " + dodged);
 		if (!dodged) {
 			boolean blocked = this.block(attacker);
-			System.out.println("blocked " + blocked);
+			//System.out.println("blocked " + blocked);
 			if (!blocked) {
 				takeDamage(attacker);
 				attacker.addXP(20);
@@ -2653,14 +2655,14 @@ public class Unit extends GameObject {
 			while(true) {
 				try {
 					jumpToRandomAdjacent();
-					System.out.println("tried to jump");
+					//System.out.println("tried to jump");
 					break;
 				}
 				catch (IllegalPositionException exc){
 					continue;
 				}
 			}
-			System.out.println("succeed to jump");
+			//System.out.println("succeed to jump");
 			return true;
 		}
 		return false;
