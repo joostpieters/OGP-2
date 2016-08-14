@@ -262,6 +262,8 @@ public class Unit extends GameObject {
 		setWorld(world);
 		setFaction(faction);
 		
+		System.out.println("HERE");
+		
 		Coordinate position = getWorld().getRandomNeighbouringSolidCube();
 		/*Coordinate position = new Coordinate(14, 14, 14);
 		i += 1;
@@ -1114,46 +1116,60 @@ public class Unit extends GameObject {
 	private void controlWaiting(double dt) throws IllegalPositionException {
 
 		if (isDefaultBehaviorEnabled()) {
-			double dice = random.nextDouble();
-			//System.out.println(dice);
 			
-			if (dice < 1.0/4.0) {
-				Coordinate destCube = getRandomReachableCube();
-				//System.out.println(destCube.toString());
-				//System.out.println(this.isReachable(destCube));
-				moveTo(destCube);
-				
-			} else if ( dice > 1.0/4.0 && dice < 2.0/4.0) {
-				
-				Coordinate targetCube = getRandomNeighbouringCube();
-				
-				//System.out.println(getCoordinate().toString());
-				//System.out.println(targetCube.toString());
-				
-				workAt(targetCube);
-				
+			
+			
+			if (getFaction().getScheduler().hasUnassignedTask() ) {
+				Task task = getFaction().getScheduler().getHighestPriorityTask();
+				task.setBeingExecuted(true);
+				setAssignedTask(task);
+				getAssignedTask().execute();
 			}
-			else if ( dice > 2.0/4.0 && dice < 3.0/4.0 
-					&& !isAttacking() && !isAttacked() && enemiesInRange()) {
-				attack(getEnemyInRange());
-				//System.out.println("Attacking");
-			}
+			
 			else {
-				rest();
-				//setDefaultBehavior(false);
-			}
-			if (isMoving() && isSprinting()) {
-				if (random.nextDouble() < 0.5) {
-					startSprinting();
+			
+				double dice = random.nextDouble();
+				//System.out.println(dice);
+				
+				if (dice < 1.0/4.0) {
+					Coordinate destCube = getRandomReachableCube();
+					//System.out.println(destCube.toString());
+					//System.out.println(this.isReachable(destCube));
+					moveTo(destCube);
+					
+				} else if ( dice > 1.0/4.0 && dice < 2.0/4.0) {
+					
+					Coordinate targetCube = getRandomNeighbouringCube();
+					
+					//System.out.println(getCoordinate().toString());
+					//System.out.println(targetCube.toString());
+					
+					workAt(targetCube);
+					
 				}
-			}
-			if (isMoving() && !isSprinting()) {
-				if (random.nextDouble() < 0.5) {
-					stopSprinting();
+				else if ( dice > 2.0/4.0 && dice < 3.0/4.0 
+						&& !isAttacking() && !isAttacked() && enemiesInRange()) {
+					attack(getEnemyInRange());
+					//System.out.println("Attacking");
+				}
+				else {
+					rest();
+					//setDefaultBehavior(false);
+				}
+				if (isMoving() && isSprinting()) {
+					if (random.nextDouble() < 0.5) {
+						startSprinting();
+					}
+				}
+				if (isMoving() && !isSprinting()) {
+					if (random.nextDouble() < 0.5) {
+						stopSprinting();
+					}
 				}
 			}
 		}
 	}
+	
 
 	
 	
@@ -3589,16 +3605,48 @@ public class Unit extends GameObject {
 		getFaction().removeUnit(this);
 		getWorld().removeUnit(this);
 		this.isTerminated = true;
+		// TODO remove associations with tasks
 	}
 
 	
 	
 	public Task getAssignedTask() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.assignedTask;
 	}
 	
 	
+	public void setAssignedTask(Task task) throws IllegalArgumentException {
+		if (!canHaveAsTask(task))
+			throw new IllegalArgumentException();
+		this.assignedTask = task;
+		task.setAssignedUnit(this);
+	}
 	
+	
+	public void stopExecutingTask() {
+		setTaskInterrupted(true);
+		//this.assignedTask = null;
+	}
+	
+	
+	public boolean canHaveAsTask(Task task) {
+		if (/*task.getAssignedUnit() != this ||*/ task == null)
+			return false;
+		return true;
+	}
+	
+	private Task assignedTask = null;
+	
+	
+	private boolean isTaskInterrupted() {
+		return this.isTaskInterrupted;
+	}
+	
+	
+	private void setTaskInterrupted(boolean value) {
+		this.isTaskInterrupted = value;
+	}
+	
+	private boolean isTaskInterrupted = false;
 }
 

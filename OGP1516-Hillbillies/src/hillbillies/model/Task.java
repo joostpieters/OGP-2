@@ -14,12 +14,13 @@ public class Task {
 	private int priority;
 	private Unit unit;
 	private boolean beingExecuted;
-	private Statement activities;
+	private Statement actions;
 	private Coordinate cube;
-	private Map<String, Object> variables = new HashMap<String, Object>();
+	private final Map<String, Object> variables = new HashMap<String, Object>();
+	private boolean isCompleted = false;
 
 	
-	public Task(String name, int priority, Statement activities, int[] cube ){
+	public Task(String name, int priority, Statement actions, int[] cube ){
 		if (!isValidName(name)) {
 			throw new IllegalNameException(name);
 		}
@@ -27,24 +28,35 @@ public class Task {
 		
 		setPriority(priority);
 		setCube(new Coordinate(cube[0], cube[1], cube[2]));
-		setActivities(activities);
-		
-		//setVariables(new HashMap<String, Expression<?>>());
-		
-		//setActivities(activities);
+		setActions(actions);
+		//getActions().setTask(this);
+	}
+	
+	
+	public void execute() {
+		//setExecuted(true);
+		if (beingExecuted() && getAssignedUnit() != null) {
+			//setExecuted(true);
+			
+			getActions().setTask(this);
+			
+			getActions().execute();
+			
+			setCompleted();
+			setBeingExecuted(false);
+		}
+	}
+	
+	
+	@Basic
+	public boolean isCompleted() {
+		return this.isCompleted;
 	}
 	
 
-	/*private void setActivities(Statement activities) {
-		// TODO Auto-generated method stub
-		
-	}*/
-
-
-	/*private void setVariables(HashMap<String, Expression<?>> hashMap) {
-		// TODO Auto-generated method stub
-		
-	}*/
+	public void setCompleted() {
+		this.isCompleted = true;
+	}
 	
 	
 	public Map<String, Object> getVariables() {
@@ -66,20 +78,20 @@ public class Task {
 	}
 	
 	
-	public Statement getActivities() {
-		return this.activities;
+	public Statement getActions() {
+		return this.actions;
 	}
 	
 	
-	public static boolean isValidActivities(Statement activities) {
+	public static boolean isValidActions(Statement activities) {
 		return (activities != null /*&& activities.size() > 0*/);
 	}
 	
 	
-	private void setActivities(Statement activities) throws IllegalArgumentException {
-		if (!isValidActivities(activities))
+	private void setActions(Statement actions) throws IllegalArgumentException {
+		if (!isValidActions(actions))
 			throw new IllegalArgumentException();
-		this.activities = activities;
+		this.actions = actions;
 	}
 
 
@@ -91,7 +103,8 @@ public class Task {
 	
 	@Raw
 	private boolean canHaveAsCube(Coordinate coordinate) {
-		return this.getSchedulerForTask().getFaction().getWorld().canHaveAsCoordinates(coordinate);
+		return true;
+				//this.getSchedulerForTask().getFaction().getWorld().canHaveAsCoordinates(coordinate);
 	}
 
 	
@@ -257,9 +270,13 @@ public class Task {
 
 	@Raw
 	public void setAssignedUnit(Unit unit) {
+		if (getAssignedUnit() != null) 
+			throw new RuntimeException();
 		if (!isValidUnit(unit))
 			throw new IllegalArgumentException();
 		this.unit = unit;
+		System.out.println("Unit assigned to task");
+		//unit.setAssignedTask(this);
 	}
 
 
@@ -284,13 +301,13 @@ public class Task {
 
 	
 	@Raw
-	private boolean beingExecuted() {
+	public boolean beingExecuted() {
 		return this.beingExecuted;
 	}
 	
 	
 	@Raw
-	private void setExecuted(boolean value) {
+	public void setBeingExecuted(boolean value) {
 		this.beingExecuted = value;
 	}
 	
@@ -299,14 +316,31 @@ public class Task {
 	@Override
 	public String toString() {
 		return getName() + ", priority: " + getPriority() + ", activities: " + 
-					getActivities().toString() + ", cube: " + getCube().toString()
+					getActions().toString() + ", cube: " + getCube().toString()
 					+ ", executing: " + beingExecuted();
 	}
 	
 	
 	
+	public void terminate() {
+		if (getAssignedUnit() == null && !beingExecuted() && isCompleted()) {
+			for (Scheduler scheduler: getSchedulersForTask()) {
+				if (scheduler.getAllTasks().contains(this)) {
+					scheduler.removeTask(this);
+				}
+				removeScheduler(scheduler);
+			}
+			this.isTerminated = true;
+		}
+	}
 	
 	
+	@Raw @Basic
+	public boolean isTerminated() {
+		return this.isTerminated;
+	}
 	
-
+	private boolean isTerminated = false;
+	
+	
 }

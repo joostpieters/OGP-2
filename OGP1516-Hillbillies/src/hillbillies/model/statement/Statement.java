@@ -13,6 +13,12 @@ public abstract class Statement {
 	
 	public void setTask(Task task) {
 		this.task = task;
+		try {
+			throw new IllegalArgumentException();
+		} catch (RuntimeException e ){
+			e.printStackTrace();
+		}
+		System.out.println("set task");
 	}
 	
 	public abstract void execute();
@@ -22,5 +28,12 @@ public abstract class Statement {
 		// TODO Auto-generated method stub
 		return 0;
 	}*/
+	
+	//public abstract String toString();
+	
+	@Override
+	public String toString() {
+		return this.getClass().getName();
+	}
 
 }

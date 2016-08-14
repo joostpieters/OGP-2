@@ -177,7 +177,7 @@ public class SchedulerControlArea extends ControlArea {
 			if (item != null && !empty) {
 				setText(oip.getFactionName(item));
 				Rectangle rect = new Rectangle(10, 10);
-				rect.setFill(FactionColors.factionColors[oip.getFactionIndex(item)][0]);
+				//rect.setFill(FactionColors.factionColors[oip.getFactionIndex(item)][0]);
 				setGraphic(rect);
 			} else {
 				setGraphic(null);

@@ -17,5 +17,5 @@ public class Assignment extends Statement {
 	public void execute() {
 		getTask().addVariableName(this.variableName, this.value.evaluate());
 	}
-
+	
 }

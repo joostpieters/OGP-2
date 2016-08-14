@@ -350,11 +350,62 @@ public class Faction /*implements Comparable<Faction>*/ {
 	
 	@Basic
 	public Scheduler getScheduler() {
-		
 		return this.scheduler;
 	}
 	
-	private Scheduler scheduler = new Scheduler();
+	
+	private final Scheduler scheduler = new Scheduler(this);
+	
+	
+	
+	/**
+	 * Check whether this faction can be attached to a given world.
+	 * 
+	 * @param	world
+	 * 			The world to check.
+	 * 
+	 * @return	True if and only if the given world is not effective or if it
+	 * 			can contain this faction.
+	 * 			| result == ( (world == null)
+	 * 			| 				|| world.canHaveAsFaction(this) )
+	 */
+	@Raw
+	public boolean canHaveAsScheduler(Scheduler scheduler) {
+		return ( (scheduler == null) || scheduler.canHaveAsFaction(this) );
+	}
+	
+	
+	
+	/**
+	 * Set the world this faction belongs to to the given world.
+	 * 
+	 * @param	world
+	 * 			The world to add the faction to.
+	 * 
+	 * @post	This faction references the given world as the world
+	 * 			it belongs to.
+	 * 			| new.getWorld() == world
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given world is effective it must already reference this faction
+	 * 			as one of its factions.
+	 * 			| (world != null) && !world.hasAsFaction(this)
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given world is not effective and this faction references an
+	 * 			effective world, that world may not contain this faction.
+	 * 			| (world == null) && (getWorld() != null) 
+	 * 			|					&& (getWorld().hasAsFaction(this))
+	 */
+	/*public void setScheduler(Scheduler scheduler) throws IllegalArgumentException {
+		if ( (scheduler != null) && !scheduler.hasAsFaction(this) )
+			throw new IllegalArgumentException();
+		if ( (scheduler == null) && (getScheduler() != null) && (getScheduler().hasAsFaction(this)) )
+			throw new IllegalArgumentException();
+		this.scheduler = scheduler;
+	}*/
+	
+	
 	
 }
 

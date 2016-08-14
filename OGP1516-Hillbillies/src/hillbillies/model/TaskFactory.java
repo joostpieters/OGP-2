@@ -21,10 +21,14 @@ public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task>
 		List<Task> listOfTasks = new ArrayList<Task>();
 		if (selectedCubes != null) {
 			for (int[] selectedCube : selectedCubes) {
-				listOfTasks.add(new Task(name, priority, activity, selectedCube));
+				Task task = new Task(name, priority, activity, selectedCube);
+				listOfTasks.add(task);
+				//task.getActions().setTask(task);
 			} 
 		} else {
-			listOfTasks.add(new Task(name, priority, activity, null));
+			Task task = new Task(name, priority, activity, null);
+			listOfTasks.add(task);
+			//task.getActions().setTask(task);
 		}
 		return listOfTasks;
 	}

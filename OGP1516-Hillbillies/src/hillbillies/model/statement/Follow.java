@@ -13,6 +13,17 @@ public class Follow extends Statement {
 	
 	@Override
 	public void execute() {
+		Unit currentUnit = getTask().getAssignedUnit();
+		Unit unitToFollow = this.unit.evaluate();
+		
+		while (! (currentUnit.getCoordinate().equals(unitToFollow.getCoordinate()) 
+				|| currentUnit.getWorld().isNeighbouring(currentUnit.getCoordinate(), 
+						unitToFollow.getCoordinate())  
+				|| unitToFollow.isTerminated()  ) )
+		{
+			currentUnit.moveTo(unitToFollow.getCoordinate());
+		}
+		
 		
 	}
 
