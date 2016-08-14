@@ -69,11 +69,15 @@ public class Faction /*implements Comparable<Faction>*/ {
 	public void terminate() {
 		for (Unit unit: this.units) {
 			if (!unit.isTerminated()) {
-				unit.setWorld(null);
+				unit.setFaction(null);
 				this.units.remove(unit);
 			}
 		}
+		
+		getWorld().removeFaction(this);
+		
 		this.isTerminated = true;
+		
 	}
 	
 	
@@ -334,6 +338,23 @@ public class Faction /*implements Comparable<Faction>*/ {
 			throw new IllegalArgumentException();
 		this.world = world;
 	}
+
+	
+
+	/* *********************************************************
+	 * 
+	 * 						FACTION - SCHEDULER
+	 *
+	 **********************************************************/
+	
+	
+	@Basic
+	public Scheduler getScheduler() {
+		
+		return this.scheduler;
+	}
+	
+	private Scheduler scheduler = new Scheduler();
 	
 }
 

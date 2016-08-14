@@ -161,7 +161,7 @@ public class Unit extends GameObject {
 			boolean enableDefaultBehavior) 
 					throws IllegalPositionException, IllegalNameException {
 
-		double[] doubleInitialPosition = convertPositionToDouble(initialPosition);
+		double[] doubleInitialPosition = Convert.convertPositionToDouble(initialPosition);
 		
 		for (int i=0; i<doubleInitialPosition.length; i++) {
 			doubleInitialPosition[i] += 0.5;
@@ -342,7 +342,7 @@ public class Unit extends GameObject {
 	@Raw
 	public void setName(String newName) throws IllegalNameException {
 		if (! isValidName(newName))
-			throw new IllegalNameException(newName, this);
+			throw new IllegalNameException(newName);
 		this.name = newName;
 	}
 
@@ -1734,10 +1734,10 @@ public class Unit extends GameObject {
 	@Model
 	private double getDistanceTo(double[] position1, double[] position2) 
 											throws IllegalPositionException {
-		if (!canHaveAsPosition(convertPositionToCoordinate(position1)))
+		if (!canHaveAsPosition(Convert.convertPositionToCoordinate(position1)))
 			throw new IllegalPositionException(position1);
 		
-		if (!canHaveAsPosition(convertPositionToCoordinate(position2)))
+		if (!canHaveAsPosition(Convert.convertPositionToCoordinate(position2)))
 			throw new IllegalPositionException(position2);
 
 		return Math.sqrt(Math.pow(position1[0]-position2[0],2)
@@ -3589,6 +3589,13 @@ public class Unit extends GameObject {
 		getFaction().removeUnit(this);
 		getWorld().removeUnit(this);
 		this.isTerminated = true;
+	}
+
+	
+	
+	public Task getAssignedTask() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	

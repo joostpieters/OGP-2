@@ -10,22 +10,19 @@ package hillbillies.model;
 */
 public class IllegalNameException extends RuntimeException {
 	/**
-	 * Initialize this new illegal name exception with given position
-	 * and unit.
+	 * Initialize this new illegal name exception with given name.
 	 * 
 	 * @param name
 	 * 			The illegal name.
-	 * @param unit
-	 * 			The unit.
+	 * 
 	 * @post The name of this new illegal name exception is equal
 	 * 		to the given name
 	 * 		| new.getName() == name
 	 * 
 	 * ...
 	 */
-	public IllegalNameException(String name, Unit unit) {
+	public IllegalNameException(String name) {
 		this.name = name;
-		this.unit = unit;
 	}
 	
 	public String getName() {
@@ -34,9 +31,5 @@ public class IllegalNameException extends RuntimeException {
 	
 	private final String name;
 	
-	public Unit getUnit() {
-		return unit;
-	}
 	
-	private final Unit unit;
 }

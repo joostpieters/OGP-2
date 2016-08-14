@@ -101,6 +101,19 @@ public class World {
 		return this.terrainTypes;
 	}
 	
+	
+	/*public List<Coordinate> getAllCoordinates() {
+		List<Coordinate> allCoordinates = new ArrayList<Coordinate>();
+		for (int i=0; i<getNbCubesX(); i++) {
+			for (int j=0; j<getNbCubesY(); j++) {
+				for (int z=0; z<getNbCubesZ(); z++) {
+					allCoordinates.add(new Coordinate(i, j , z));
+				}
+			}
+		}
+		return allCoordinates;
+	}*/
+	
 	private int[][][] terrainTypes;
 	
 	
