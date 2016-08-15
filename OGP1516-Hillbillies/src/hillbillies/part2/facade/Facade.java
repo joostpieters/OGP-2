@@ -87,7 +87,7 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	@Override
 	public void addUnit(Unit unit, World world) throws ModelException {
 		try {
-			world.addUnit(unit);
+			world.addNit(unit);
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw new ModelException();
@@ -139,11 +139,11 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 		return unit.getExperiencePoints();
 	}
 	
-	@Override
+	@Deprecated @Override
 	public Unit createUnit(String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) throws ModelException {
 		try {
-			Unit unit = new Unit(name, initialPosition, weight, agility, strength, toughness,
+			Unit unit = new Unit(name, new Coordinate(initialPosition), weight, agility, strength, toughness,
 					enableDefaultBehavior);
 			return unit;
 		}

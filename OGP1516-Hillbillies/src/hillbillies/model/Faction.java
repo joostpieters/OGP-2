@@ -6,15 +6,15 @@ import be.kuleuven.cs.som.annotate.Raw;
 import java.util.*;
 
 /**
- * A class of factions, attached to worlds. A faction contains up to 50 units.
+ * A class of factions, attached to worlds. A faction contains up to 50 nits.
  * 
  * @invar	Each faction must have a proper world to which it is
  * 			attached.
  * 			| hasProperWorld()
  * 
- * @invar	The units associated with each faction must be proper units for
+ * @invar	The nits associated with each faction must be proper nits for
  * 			that faction.
- * 			| hasProperUnits()
+ * 			| hasProperNits()
  * 
  * @author rubencartuyvels
  *
@@ -23,22 +23,21 @@ public class Faction /*implements Comparable<Faction>*/ {
 	
 	
 	/**
-	 * Initialize this new faction with no units attached to it. The faction is not
+	 * Initialize this new faction with no nits attached to it. The faction is not
 	 * yet attached to a world.
 	 * 
-	 * @post	No units are attached to this new faction.
-	 * 			| new.getNbUnits() == 0
+	 * @post	No nits are attached to this new faction.
+	 * 			| new.getNbNits() == 0
 	 */
 	@Raw
 	public Faction () {
-		//this.units.add(unit);
 	}
 	
-	private static int getMaxNbUnits() {
-		return maxUnits;
+	private static int getMaxNbNits() {
+		return maxNits;
 	}
 	
-	private final static int maxUnits = 50;
+	private final static int maxNits = 50;
 	
 	/**
 	 * Variable registering whether or not this faction is terminated.
@@ -59,18 +58,18 @@ public class Faction /*implements Comparable<Faction>*/ {
 	 * @post	This faction is terminated.
 	 * 			| new.isTerminated()
 	 * 
-	 * @effect	Each non-terminated unit in this world is removed from
+	 * @effect	Each non-terminated nit in this world is removed from
 	 * 			this world.
-	 * 			| for each unit in getAllUnits():
-	 * 			|		if (!unit.isTerminated())
-	 * 			|			then this.removeUnit(unit)
+	 * 			| for each nit in getAllNits():
+	 * 			|		if (!nit.isTerminated())
+	 * 			|			then this.removeNit(nit)
 	 * 
 	 */
 	public void terminate() {
-		for (Unit unit: this.units) {
-			if (!unit.isTerminated()) {
-				unit.setWorld(null);
-				this.units.remove(unit);
+		for (Nit nit: this.nits) {
+			if (!nit.isTerminated()) {
+				nit.setWorld(null);
+				this.nits.remove(nit);
 			}
 		}
 		this.isTerminated = true;
@@ -84,171 +83,192 @@ public class Faction /*implements Comparable<Faction>*/ {
 	 **********************************************************/
 	
 	/**
-	 * Set collecting references to units that this faction contains.
+	 * Set collecting references to nits that this faction contains.
 	 * 
-	 * @invar	the set of units is effective.
-	 * 			| units != null
+	 * @invar	the set of nits is effective.
+	 * 			| nits != null
 	 * 
-	 * @invar	Each element in the set references a unit that this faction
-	 * 			can have as unit.
-	 * 			| for each unit in units:
-	 * 			| 		canHaveAsUnit(unit)
+	 * @invar	Each element in the set references a nit that this faction
+	 * 			can have as nit.
+	 * 			| for each nit in nits:
+	 * 			| 		canHaveAsNit(nit)
 	 * 
-	 * @invar	Each unit in the set references this faction as their faction.
-	 * 			| for each unit in units:
-	 * 			|		unit.getFaction() == this
+	 * @invar	Each nit in the set references this faction as their faction.
+	 * 			| for each nit in nits:
+	 * 			|		nit.getFaction() == this
 	 * 
-	 * @invar	The number of units in the set is always smaller than or
+	 * @invar	The number of nits in the set is always smaller than or
 	 * 			equal to 50.
-	 * 			| units.size() <= 50
+	 * 			| nits.size() <= 50
 	 */
-	private final Set<Unit> units = new HashSet<Unit>();
+	private final Set<Nit> nits = new HashSet<Nit>();
 	
 	
 	
 	/**
-	 * Check whether the given unit is a member of this faction.
+	 * Check whether the given nit is a member of this faction.
 	 * 
-	 * @param 	unit
-	 * 			The unit to check.
+	 * @param 	nit
+	 * 			The nit to check.
 	 */
 	@Basic @Raw
-	public boolean hasAsUnit(Unit unit) {
-		return this.units.contains(unit);
+	public boolean hasAsNit(Nit nit) {
+		return this.nits.contains(nit);
 	}
 	
 	/**
-	 * Check whether this faction can contain the given unit.
+	 * Check whether this faction can contain the given nit.
 	 * 
-	 * @param 	unit
-	 * 			The unit to check.
+	 * @param 	nit
+	 * 			The nit to check.
 	 * 
-	 * @return	False if the given unit is not effective.
-	 * 			| if (unit == null)
+	 * @return	False if the given nit is not effective.
+	 * 			| if (nit == null)
 	 * 			| 	then result = false
-	 * 			True if this faction is not terminated or the given unit is
+	 * 			True if this faction is not terminated or the given nit is
 	 * 			also terminated
 	 * 			| else result == ( (!this.isTerminated())
-	 * 			|		|| unit.isTerminated())
+	 * 			|		|| nit.isTerminated())
 	 */
 	@Raw
-	public boolean canHaveAsUnit(Unit unit) {
-		return ( (unit != null) && 
-						( !this.isTerminated() || unit.isTerminated()) );
+	public boolean canHaveAsNit(Nit nit) {
+		return ( (nit != null) && 
+						( !this.isTerminated() || nit.isTerminated()) );
 	}
 	
 	/**
-	 * Check whether this faction contains proper units.
+	 * Check whether this faction contains proper nits.
 	 * 
-	 * @return	True if and only if this faction can contain each of its units
-	 * 			and if each of these units references this faction as their faction.
-	 * 			| result == ( for each unit in Unit:
-	 * 			|		if (this.hasAsUnit(unit) )
-	 * 			|			then ( canHaveAsUnit(unit) &&
-	 * 			|				(unit.getFaction() == this) ) )
+	 * @return	True if and only if this faction can contain each of its nits
+	 * 			and if each of these nits references this faction as their faction.
+	 * 			| result == ( for each nit in Nit:
+	 * 			|		if (this.hasAsNit(nit) )
+	 * 			|			then ( canHaveAsNit(nit) &&
+	 * 			|				(nit.getFaction() == this) ) )
 	 */
 	@Raw
-	public boolean hasProperUnits() {
-		for (Unit unit: this.units) {
-			if (!canHaveAsUnit(unit)) 
+	public boolean hasProperNits() {
+		for (Nit nit: this.nits) {
+			if (!canHaveAsNit(nit)) 
 				return false;
-			if (unit.getFaction() != this)
+			if (nit.getFaction() != this)
 				return false;
 		}
 		return true;
 	}
 	
 	/**
-	 * Return the number of units this faction contains.
+	 * Return the number of nits this faction contains.
 	 * 
-	 * @return	The number of units this faction contains.
-	 * 			| count( {unit in Unit | hasAsUnit(unit)} )
+	 * @return	The number of nits this faction contains.
+	 * 			| count( {nit in Nit | hasAsNit(nit)} )
 	 */
 	@Raw
-	public int getNbUnits() {
-		return this.units.size();
+	public int getNbNits() {
+		return this.nits.size();
 	}
+	
+	/**
+	 * Return a set collecting all nits this faction contains.
+	 * 
+	 * @return	The resulting set is effective.
+	 * 			| result != null
+	 * @return	Each nit in the resulting set is attached to this faction
+	 * 			and vice versa.
+	 * 			| for each nit in Nit:
+	 * 			| 	result.contains(nit) == this.hasAsNit(nit)
+	 */
+	public Set<Nit> getAllNits() {
+		return new HashSet<Nit>(this.nits);
+	}
+	
 	
 	/**
 	 * Return a set collecting all units this faction contains.
 	 * 
 	 * @return	The resulting set is effective.
 	 * 			| result != null
+	 * 
 	 * @return	Each unit in the resulting set is attached to this faction
 	 * 			and vice versa.
 	 * 			| for each unit in Unit:
-	 * 			| 	result.contains(unit) == this.hasAsUnit(unit)
+	 * 			| 	result.contains(unit) == this.hasAsNit(unit)
 	 */
 	public Set<Unit> getAllUnits() {
-		return new HashSet<Unit>(this.units);
+		Set<Unit> units = new HashSet<Unit>();
+		for (Nit nit: this.nits) {
+			if (nit instanceof Unit)
+				units.add((Unit) nit);
+		}
+		return units;
 	}
+
 	
 	/**
-	 * Add the given unit to the set of units that this faction contains.
+	 * Add the given nit to the set of nits that this faction contains.
 	 * 
-	 * @param	unit
-	 * 			The unit to be added.
+	 * @param	nit
+	 * 			The nit to be added.
 	 * 
-	 * @post	This faction has the given unit as one of its units.
-	 * 			| new.hasAsUnit(unit)
+	 * @post	This faction has the given nit as one of its nits.
+	 * 			| new.hasAsNit(nit)
 	 * 
-	 * @post	The given unit references this faction as its faction.
-	 * 			| (new unit).getFaction() == this
-	 * 
-	 * @throws	IllegalArgumentException
-	 * 			This faction cannot have the given unit as one of its units.
-	 * 			| !canHaveAsUnit(unit)
+	 * @post	The given nit references this faction as its faction.
+	 * 			| (new nit).getFaction() == this
 	 * 
 	 * @throws	IllegalArgumentException
-	 * 			The given unit already references some faction.
+	 * 			This faction cannot have the given nit as one of its nits.
+	 * 			| !canHaveAsNit(nit)
 	 * 
 	 * @throws	IllegalArgumentException
-	 * 			The maximum number of units in this faction has already been reached.
+	 * 			The given nit already references some faction.
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The maximum number of nits in this faction has already been reached.
 	 */
-	public void addUnit(Unit unit)  throws IllegalArgumentException, IllegalNbException {
-		if (!canHaveAsUnit(unit))
+	public void addNit(Nit nit)  throws IllegalArgumentException, IllegalNbException {
+		if (!canHaveAsNit(nit))
 			throw new IllegalArgumentException();
-		if (unit.getFaction() != this)
+		if (nit.getFaction() != this)
 			throw new IllegalArgumentException();
-		if (getNbUnits() >= getMaxNbUnits())
+		if (getNbNits() >= getMaxNbNits())
 			try {
 				throw new IllegalNbException();
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
-				/* For some reason I don't know the program crashes after throwing
+				/* For some reason I don't know the program gets stuck after throwing
 				* The IllegalNbException. It keeps throwing ArrayIndexOutOfBoundExceptions
 				* caused by a method that is part of one of the helper classes. So
 				* I shut the program down myself in a clean way.
 				*/
 			}
 		
-		this.units.add(unit);
-		//unit.setFaction(this);
+		this.nits.add(nit);
+		//nit.setFaction(this);
 	}
 	
 	
 	/**
-	 * Remove the given unit from this faction.
+	 * Remove the given nit from this faction.
 	 * 
-	 * @param	unit
-	 * 			The unit to remove.
+	 * @param	nit
+	 * 			The nit to remove.
 	 * 
-	 * @post	This faction does not contain the given unit.
-	 * 			| !new.hasAsUnit(unit)
+	 * @post	This faction does not contain the given nit.
+	 * 			| !new.hasAsNit(nit)
 	 * 
-	 * @post	If this faction contains the given unit, the unit is no
+	 * @post	If this faction contains the given nit, the nit is no
 	 * 			longer attached to any faction.
-	 * 			| if (hasAsUnit(unit))
-	 * 			| 	then ( (new unit).getFaction() == null)
+	 * 			| if (hasAsNit(nit))
+	 * 			| 	then ( (new nit).getFaction() == null)
 	 */
-	public void removeUnit(Unit unit) {
-		if (hasAsUnit(unit)) {
-			this.units.remove(unit);
-			unit.setFaction(null);
+	public void removeNit(Nit nit) {
+		if (hasAsNit(nit)) {
+			this.nits.remove(nit);
+			nit.setFaction(null);
 		}
 	}
-	
 	
 	
 	
@@ -334,6 +354,8 @@ public class Faction /*implements Comparable<Faction>*/ {
 			throw new IllegalArgumentException();
 		this.world = world;
 	}
+
+	
 	
 }
 

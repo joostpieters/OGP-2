@@ -15,19 +15,19 @@ public class IllegalVictimException extends RuntimeException {
 	 * @param ...
 	 * ...
 	 */
-	public IllegalVictimException(Unit attacker, Unit defender) {
+	public IllegalVictimException(Nit attacker, Nit defender2) {
 		this.attacker = attacker;
-		this.defender = defender;
+		this.defender = defender2;
 	}
 	
-	public Unit getAttacker() {
+	public Nit getAttacker() {
 		return attacker;
 	}
 	
-	public Unit getDefender() {
+	public Nit getDefender() {
 		return defender;
 	}
 	
-	private final Unit attacker;
-	private final Unit defender;
+	private final Nit attacker;
+	private final Nit defender;
 }

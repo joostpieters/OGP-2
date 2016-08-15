@@ -24,13 +24,13 @@ public class IllegalTimeException extends RuntimeException {
 	 * 
 	 * ...
 	 */
-	public IllegalTimeException(float time, Unit unit) {
+	public IllegalTimeException(float time, Nit unit) {
 		this.timeF = time;
 		this.unit = unit;
 		this.timeD = 0;
 	}
 	
-	public IllegalTimeException(double time, Unit unit) {
+	public IllegalTimeException(double time, Nit unit) {
 		this.timeD = time;
 		this.unit = unit;
 		this.timeF = 0;
@@ -47,9 +47,9 @@ public class IllegalTimeException extends RuntimeException {
 	private final float timeF;
 	private final double timeD;
 	
-	public Unit getUnit() {
+	public Nit getUnit() {
 		return unit;
 	}
 	
-	private final Unit unit;
+	private final Nit unit;
 }

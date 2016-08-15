@@ -15,7 +15,7 @@ public class IllegalNameException extends RuntimeException {
 	 * 
 	 * @param name
 	 * 			The illegal name.
-	 * @param unit
+	 * @param nit
 	 * 			The unit.
 	 * @post The name of this new illegal name exception is equal
 	 * 		to the given name
@@ -23,9 +23,9 @@ public class IllegalNameException extends RuntimeException {
 	 * 
 	 * ...
 	 */
-	public IllegalNameException(String name, Unit unit) {
+	public IllegalNameException(String name, Nit nit) {
 		this.name = name;
-		this.unit = unit;
+		this.unit = nit;
 	}
 	
 	public String getName() {
@@ -34,9 +34,9 @@ public class IllegalNameException extends RuntimeException {
 	
 	private final String name;
 	
-	public Unit getUnit() {
+	public Nit getUnit() {
 		return unit;
 	}
 	
-	private final Unit unit;
+	private final Nit unit;
 }

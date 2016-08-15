@@ -1,26 +1,61 @@
 package hillbillies.model;
 
+import java.util.Random;
+
 import be.kuleuven.cs.som.annotate.Basic;
+import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
 import hillbillies.model.World.TerrainType;
 
 
-public abstract class GameObject extends TimeSubject {
+public abstract class GameObject {
+	
+	protected GameObject() {
+		
+	}
+	
+	
+	protected GameObject(World world) {
+		setWorld(world);
+		setPosition(getWorld().getRandomNeighbouringSolidCube());
+	}
+	
+	protected GameObject(World world, Coordinate position) {
+		setWorld(world);
+		setPosition(position);
+	}
+	
+	
+	protected static final Random random = new Random();
+	
+	public abstract void advanceTime(double dt);
+	
+	
+	/**
+	 * Check if a given value is a valid game time dt value.
+	 * 
+	 * @param dt
+	 * 			The value to be checked.
+	 * @return true if and only if the value is larger than or equal to
+	 * 			zero and smaller than 0.2.
+	 * 		| result =  (dt >= 0 && dt < 0.2 )
+	 */
+	@Model
+	protected static boolean isValidDT(double dt) {
+		return (dt <= 0.2 && dt >= 0.0);
+	}
+	
+	
 
-	
-	
 	protected boolean canHaveAsPosition(Coordinate coordinates) {
 		if (coordinates == null) {
-			System.out.println("coordinates == null");
 			return false;
 		}
 		if (!getWorld().canHaveAsCoordinates(coordinates)) {
-			System.out.println("world can't have as coordinates");
 			return false; }
 
 		if (!TerrainType.byOrdinal(getWorld().getTerrainTypes()
 				[coordinates.get(0)][coordinates.get(1)][coordinates.get(2)]).isPassable() ) {
-			System.out.println("not passable");
 			return false;
 		}
 		return true;
@@ -31,8 +66,6 @@ public abstract class GameObject extends TimeSubject {
 	protected void setPosition(double[] position) throws IllegalPositionException {
 		if (! canHaveAsPosition(convertPositionToCoordinate(position)) ||
 				position.length != 3) {
-				//System.out.println(isFalling());
-				//System.out.println(hashCode());
 				throw new IllegalPositionException(position);
 			}
 		this.position[0] = position[0];
@@ -60,22 +93,10 @@ public abstract class GameObject extends TimeSubject {
 	}
 	
 	
-	protected /*abstract*/ double[] getVelocity() throws IllegalPositionException {
-		if (isFalling())
-			return new double[]{0.0,0.0,-3.0};
+	protected double[] getVelocity() throws IllegalPositionException {
 		return new double[]{0.0,0.0,0.0};
 	}
 	
-	
-	public boolean isFalling() {
-		return this.isFalling;
-	}
-	
-	public void setFalling(boolean value) {
-		this.isFalling = value;
-	}
-	
-	private boolean isFalling = false;
 	
 	/**
 	 * Return the exact position of the game object in its game world.
@@ -114,34 +135,8 @@ public abstract class GameObject extends TimeSubject {
 	
 	
 	
-	protected void setWorld(World world) throws IllegalArgumentException {
-		//if ( (world != null) && !world.hasAsItem(this) )
-			//throw new IllegalArgumentException();
-		//if ( (world == null) && (getWorld() != null) )
-		//	throw new IllegalArgumentException();
-		//TODO
-		this.world = world;
-	}
-
-	
 	/**
-	 * Variable registering the world to which this item belongs.
-	 */
-	private World world = null;
-	
-	
-	/**
-	 * Return the world to which this item belongs. Returns a null refererence
-	 * if this item does not belong to any world.
-	 */
-	@Basic @Raw
-	public World getWorld() {
-		return this.world;
-	}
-
-	
-	/**
-	 * Check whether this item is terminated.
+	 * Check whether this game object is terminated.
 	 */
 	@Basic @Raw
 	public boolean isTerminated() {
@@ -149,13 +144,104 @@ public abstract class GameObject extends TimeSubject {
 	}
 	
 	
-	public abstract void terminate();
+	public void terminate() {
+		getWorld().removeGameObject(this);
+		this.isTerminated = true;
+	}
 	
 	
 	/**
-	 * Variable registering whether or not this item is terminated.
+	 * Variable registering whether or not this game object is terminated.
 	 */
 	protected boolean isTerminated = false;
+	
+	
+	
+	/* *********************************************************
+	 * 
+	 * 						UNIT - WORLD
+	 *
+	 **********************************************************/
+	
+	
+	/**
+	 * Variable registering the world to which this game object belongs.
+	 */
+	private World world = null;
+	
+	
+	/**
+	 * Return the world to which this game object belongs. Returns a null refererence
+	 * if this game object does not belong to any world.
+	 */
+	@Basic @Raw
+	public World getWorld() {
+		return this.world;
+	}
+	
+	
+	/**
+	 * Check whether this game object can be attached to a given world.
+	 * 
+	 * @param	world
+	 * 			The world to check.
+	 * 
+	 * @return	True if and only if the given world is not effective or if it
+	 * 			can contain this game object.
+	 * 			| result == ( (world == null)
+	 * 			| 				|| world.canHaveAsGameObject(this) )
+	 */
+	@Raw
+	public boolean canHaveAsWorld(World world) {
+		return ( (world == null) || world.canHaveAsGameObject(this) );
+	}
+	
+	
+	/**
+	 * Check whether this game object has a proper world in which it belongs.
+	 * 
+	 * @return	True if and only if this game object can have its world as the world to
+	 * 			which it belongs and if that world is either not effective or contains
+	 * 			this game object.
+	 * 			| result == ( canHaveAsWorld(getWorld()) && ( (getWorld() == null)
+	 * 			|				|| getWorld.hasAsGameObject(this) ) )
+	 */
+	@Raw
+	public boolean hasProperWorld() {
+		return (canHaveAsWorld(getWorld()) && ( (getWorld() == null) 
+					|| getWorld().hasAsGameObject(this) ) );
+	}
+	
+	
+	/**
+	 * Set the world this game object belongs to to the given world.
+	 * 
+	 * @param	world
+	 * 			The world to add the game object to.
+	 * 
+	 * @post	This game object references the given world as the world
+	 * 			it belongs to.
+	 * 			| new.getWorld() == world
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given world is not effective and this game object references an
+	 * 			effective world, that world may not contain this game object.
+	 * 			| (world == null) && (getWorld() != null) 
+	 * 			|					&& (getWorld().hasAsGameObject(this))
+	 */
+	//TODO documentation super
+	public void setWorld(World world) throws IllegalArgumentException {
+		//if ( (world != null) && !world.hasAsGameObject(this) )
+		//	throw new IllegalArgumentException();
+		if ( (world == null) && (getWorld() != null) && (getWorld().hasAsGameObject(this)) )
+			throw new IllegalArgumentException();
+		this.world = world;
+	}
+	
+	
+	
+	
+	
 	
 	
 	/**

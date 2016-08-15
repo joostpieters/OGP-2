@@ -12,7 +12,7 @@ public class Facade implements hillbillies.part1.facade.IFacade {
 	public Unit createUnit(String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) throws ModelException {
 		try {
-			Unit unit = new Unit(name, initialPosition, weight, agility, strength, toughness,
+			Unit unit = new Unit(name, new Coordinate(initialPosition), weight, agility, strength, toughness,
 					enableDefaultBehavior);
 			return unit;
 		}

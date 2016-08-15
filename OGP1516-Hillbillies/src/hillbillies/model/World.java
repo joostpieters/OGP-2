@@ -8,10 +8,10 @@ import java.util.*;
 
 
 /**
- * A class of worlds containing up to 100 units and 5 factions, and a number of items.
+ * A class of worlds containing up to 100 nits and 5 factions, and a number of items.
  * 
- * @invar	The units in each world must be proper units for that world.
- * 			| hasProperUnits()
+ * @invar	The nits in each world must be proper nits for that world.
+ * 			| hasProperNits()
  * 
  * @invar	The factions associated with each world must be proper factions for
  * 			that world.
@@ -31,13 +31,13 @@ public class World {
 	/**
 	 * Initialize this new world with given terrain types for each cube of the
 	 * game world, the given modelListener and a connectedToBorderChecker. 
-	 * The new world contains no units and 5 empty factions.
+	 * The new world contains no nits and 5 empty factions.
 	 * 
 	 * @param	terrainTypes
 	 * 
 	 * @param	modelListener
 	 * 
-	 * @post	This new world contains no units.
+	 * @post	This new world contains no nits.
 	 * 
 	 * @post	This new world contains 5 factions.
 	 * 
@@ -67,11 +67,11 @@ public class World {
 	}
 	
 	
-	protected final static int getMaxNbUnits() {
-		return maxUnits;
+	protected final static int getMaxNbNits() {
+		return maxNits;
 	}
 	
-	private final static int maxUnits = 100;
+	private final static int maxNits = 100;
 	
 	protected final static int getMaxNbFactions() {
 		return maxFactions;
@@ -301,6 +301,24 @@ public class World {
 	}
 	
 	
+	public Coordinate getNearRandomCube(Coordinate coordinate) {
+		int x, y, z;
+		Coordinate position;
+		while(true) {
+			x = random.nextInt(7) - 3;
+			y = random.nextInt(7) - 3;
+			z = random.nextInt(7) - 3;
+			position = new Coordinate(coordinate.get(0)+x, coordinate.get(1)+y, 
+					coordinate.get(2)+z);
+
+			if (canHaveAsCoordinates(position))
+				break;
+
+		}
+		return position;
+	}
+	
+	
 	public Coordinate getRandomNeighbouringCube(Coordinate coordinate) {
 		Set<Coordinate> neighbours = getNeighbours(coordinate);
 		int dice = random.nextInt(neighbours.size());
@@ -318,19 +336,9 @@ public class World {
 		if (!isValidDT(dt))
 			throw new IllegalArgumentException();
 		
-		/*for (Unit unit: units) {
-			unit.advanceTime(dt);
-		}
-		/*for (Log log: logs) {
-			log.advanceTime(dt);
-		}
-		for (Boulder boulder: boulders) {
-			boulder.advanceTime(dt);
-		}*/
+		updateGameObjects();
 		
-		updateTimeSubjects();
-		
-		for (TimeSubject timesubject: this.timeSubjects) {
+		for (GameObject timesubject: this.gameObjects) {
 			timesubject.advanceTime(dt);
 		}
 	}
@@ -349,198 +357,261 @@ public class World {
 		return (dt <= 0.2 && dt >= 0.0);
 	}
 	
+
 	
 	/* *********************************************************
 	 * 
-	 * 							UNITS
+	 * 						GAME OBJECTS
+	 *
+	 **********************************************************/
+	
+	
+	private final List<GameObject> gameObjects = new ArrayList<GameObject>();
+	
+	
+	/*
+	 * Intermediate lists to avoid concurrent modification exceptions.
+	 */
+	private final List<GameObject> toAddToGameObjects = new ArrayList<GameObject>();
+	private final List<GameObject> toRemoveFromGameObjects = new ArrayList<GameObject>();
+	
+	
+	private void updateGameObjects() {
+		for (GameObject ts: this.toAddToGameObjects) {
+			gameObjects.add(ts);
+		}
+		this.toAddToGameObjects.clear();
+		
+		for (GameObject ts: this.toRemoveFromGameObjects) {
+			if (gameObjects.contains(ts))
+				gameObjects.remove(ts);
+		}
+		
+		this.toRemoveFromGameObjects.clear();
+		gameObjects.removeAll(Collections.singleton(null));
+	}
+	
+
+	public boolean canHaveAsGameObject(GameObject gameObject) {
+		if (gameObject instanceof Nit)
+			return canHaveAsNit((Nit) gameObject);
+		if (gameObject instanceof Item)
+			return canHaveAsItem((Item) gameObject);
+		return false;
+	}
+
+
+	public boolean hasAsGameObject(GameObject gameObject) {
+		if (gameObject instanceof Nit)
+			return hasAsNit((Nit) gameObject);
+		if (gameObject instanceof Item)
+			return hasAsItem((Item) gameObject);
+		return false;
+	}
+
+
+	public void removeGameObject(GameObject gameObject) {
+		if (gameObject instanceof Nit)
+			removeNit((Nit) gameObject);
+		if (gameObject instanceof Item)
+			removeItem((Item) gameObject);
+	}
+	
+	
+	/* *********************************************************
+	 * 
+	 * 							NITS
 	 *
 	 **********************************************************/
 	
 	
 	
 	/**
-	 * Spawn a unit with a random position in this world and random initial
+	 * Spawn a unit or enit (equal chance) with a random position in this world and random initial
 	 * attributes.
 	 * 
-	 * @return the spawned unit.
+	 * @return the spawned nit.
 	 */
-	public Unit spawnUnit(boolean enableDefaultBehavior) {
+	public Nit spawnNit(boolean enableDefaultBehavior) {
 		
-		if (getAllUnits().size() >= getMaxNbUnits()) {
+		if (getAllNits().size() >= getMaxNbNits()) {
 			throw new IllegalNbException();
 		}
 		
 		sortFactions();
 		Faction faction = this.factions.get(0);
 		
-		Unit unit = new Unit(this, faction, enableDefaultBehavior);
+		Nit nit;
+		double dice = random.nextDouble();
+		if (dice < 0.5) nit = new Unit(this, faction, enableDefaultBehavior);
+		else nit = new Enit(this, faction, enableDefaultBehavior);
 		
-		addUnit(unit);
-		faction.addUnit(unit);
+		addNit(nit);
+		faction.addNit(nit);
 		
-		return unit;
+		return nit;
 	}
 	
 	
 	/**
-	 * Check whether this world contains the given unit.
+	 * Check whether this world contains the given nit.
 	 * 
-	 * @param 	unit
-	 * 			The unit to check.
+	 * @param 	nit
+	 * 			The nit to check.
 	 */
 	@Basic @Raw
-	public boolean hasAsUnit(Unit unit) {
-		return this.units.contains(unit);
+	public boolean hasAsNit(Nit nit) {
+		return this.nits.contains(nit);
 	}
 	
 	/**
-	 * Check whether this world can contain the given unit.
+	 * Check whether this world can contain the given nit.
 	 * 
-	 * @param 	unit
-	 * 			The unit to check.
+	 * @param 	nit
+	 * 			The nit to check.
 	 * 
-	 * @return	False if the given unit is not effective.
-	 * 			| if (unit == null)
+	 * @return	False if the given nit is not effective.
+	 * 			| if (nit == null)
 	 * 			| 	then result = false
-	 * 			True if this world is not terminated or the given unit is
+	 * 			True if this world is not terminated or the given nit is
 	 * 			also terminated
 	 * 			| else result == ( (!this.isTerminated())
-	 * 			|		|| unit.isTerminated())
+	 * 			|		|| nit.isTerminated())
 	 */
 	@Raw
-	public boolean canHaveAsUnit(Unit unit) {
-		return ( (unit != null) && 
-						( !this.isTerminated() || unit.isTerminated()) );
+	public boolean canHaveAsNit(Nit nit) {
+		return ( (nit != null) && 
+						( !this.isTerminated() || nit.isTerminated()) );
 	}
 	
 	/**
-	 * Check whether this world contains proper units.
+	 * Check whether this world contains proper nits.
 	 * 
-	 * @return	True if and only if this world can contain each of its units
-	 * 			and if each of these units references this world as their world.
-	 * 			| result == ( for each unit in Unit:
-	 * 			|		if (this.hasAsUnit(unit) )
-	 * 			|			then ( canHaveAsUnit(unit) &&
-	 * 			|				(unit.getWorld() == this) ) )
+	 * @return	True if and only if this world can contain each of its nits
+	 * 			and if each of these nits references this world as their world.
+	 * 			| result == ( for each nit in Nit:
+	 * 			|		if (this.hasAsNit(nit) )
+	 * 			|			then ( canHaveAsNit(nit) &&
+	 * 			|				(nit.getWorld() == this) ) )
 	 */
 	@Raw
-	public boolean hasProperUnits() {
-		for (Unit unit: this.units) {
-			if (!canHaveAsUnit(unit)) 
+	public boolean hasProperNits() {
+		for (Nit nit: this.nits) {
+			if (!canHaveAsNit(nit)) 
 				return false;
-			if (unit.getWorld() != this)
+			if (nit.getWorld() != this)
 				return false;
 		}
 		return true;
 	}
 	
 	/**
-	 * Return the number of units this world contains.
+	 * Return the number of nits this world contains.
 	 * 
-	 * @return	The number of units this world contains.
-	 * 			| count( {unit in Unit | hasAsUnit(unit)} )
+	 * @return	The number of nits this world contains.
+	 * 			| count( {nit in Nit | hasAsNit(nit)} )
 	 */
 	@Raw
-	public int getNbUnits() {
-		return this.units.size();
+	public int getNbNits() {
+		return this.nits.size();
 	}
 	
 	/**
-	 * Return a list collecting all units this world contains.
+	 * Return a list collecting all nits this world contains.
 	 * 
 	 * @return	The resulting list is effective.
 	 * 			| result != null
 	 * 
-	 * @return	Each unit in the resulting list is attached to this world
+	 * @return	Each nit in the resulting list is attached to this world
 	 * 			and vice versa.
-	 * 			| for each unit in Unit:
-	 * 			| 	result.contains(unit) == this.hasAsUnit(unit)
+	 * 			| for each nit in Nit:
+	 * 			| 	result.contains(nit) == this.hasAsNit(nit)
 	 */
-	public List<Unit> getAllUnits() {
-		return new ArrayList<Unit>(this.units);
+	public List<Nit> getAllNits() {
+		return new ArrayList<Nit>(this.nits);
 	}
 
 	
-	public Set<Unit> getAllUnitsSet() {
-		return new HashSet<Unit>(this.units);
+	public Set<Nit> getAllNitsSet() {
+		return new HashSet<Nit>(this.nits);
 	}
 	
 	
 	/**
-	 * Add the given unit to the set of units that this world contains.
+	 * Add the given nit to the set of nits that this world contains.
 	 * 
-	 * @param	unit
-	 * 			The unit to be added.
+	 * @param	nit
+	 * 			The nit to be added.
 	 * 
-	 * @post	This world has the given unit as one of its units.
-	 * 			| new.hasAsUnit(unit)
-	 * @post	The given unit references this world as its world.
-	 * 			| (new unit).getWorld() == this
-	 * 
-	 * @throws	IllegalArgumentException
-	 * 			This world cannot have the given unit as one of its units.
-	 * 			| !canHaveAsUnit(unit)
+	 * @post	This world has the given nit as one of its nits.
+	 * 			| new.hasAsNit(nit)
+	 * @post	The given nit references this world as its world.
+	 * 			| (new nit).getWorld() == this
 	 * 
 	 * @throws	IllegalArgumentException
-	 * 			The given unit already references some world.
+	 * 			This world cannot have the given nit as one of its nits.
+	 * 			| !canHaveAsNit(nit)
 	 * 
 	 * @throws	IllegalArgumentException
-	 * 			The maximum number of units in this world has already been reached.
+	 * 			The given nit already references some world.
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The maximum number of nits in this world has already been reached.
 	 */
-	public void addUnit(Unit unit)  throws IllegalArgumentException, IllegalNbException {
-		if (!canHaveAsUnit(unit))
+	public void addNit(Nit nit)  throws IllegalArgumentException, IllegalNbException {
+		if (!canHaveAsNit(nit))
 			throw new IllegalArgumentException();
-		if (unit.getWorld() != this)
+		if (nit.getWorld() != this)
 			throw new IllegalArgumentException();
-		if (getNbUnits() >= getMaxNbUnits())
+		if (getNbNits() >= getMaxNbNits())
 			throw new IllegalNbException();
 		
-		this.units.add(unit);
-		this.toAddToTimeSubjects.add(unit);
+		this.nits.add(nit);
+		this.toAddToGameObjects.add(nit);
 	}
 	
 	
 	/**
-	 * Remove the given unit from this world.
+	 * Remove the given nit from this world.
 	 * 
-	 * @param	unit
-	 * 			The unit to remove.
-	 * @post	This world does not contain the given unit.
-	 * 			| !new.hasAsUnit(unit)
-	 * @post	If this world contains the given unit, the unit is no
+	 * @param	nit
+	 * 			The nit to remove.
+	 * @post	This world does not contain the given nit.
+	 * 			| !new.hasAsNit(nit)
+	 * @post	If this world contains the given nit, the nit is no
 	 * 			longer attached to any world.
-	 * 			| if (hasAsUnit(unit))
-	 * 			| 	then ( (new unit).getWorld() == null)
+	 * 			| if (hasAsNit(nit))
+	 * 			| 	then ( (new nit).getWorld() == null)
 	 */
-	public void removeUnit(Unit unit) {
-		if (hasAsUnit(unit)) {
-			this.units.remove(unit);
-			this.toRemoveFromTimeSubjects.add(unit);
-			unit.setWorld(null);
+	public void removeNit(Nit nit) {
+		if (hasAsNit(nit)) {
+			this.nits.remove(nit);
+			this.toRemoveFromGameObjects.add(nit);
+			nit.setWorld(null);
 		}
 	}
 	
 	
 	/**
-	 * Set collecting references to units that this world contains.
+	 * Set collecting references to nits that this world contains.
 	 * 
-	 * @invar	the set of units is effective.
-	 * 			| units != null
+	 * @invar	the set of nits is effective.
+	 * 			| nits != null
 	 * 
-	 * @invar	Each element in the set references a unit that this world
-	 * 			can have as unit.
-	 * 			| for each unit in units:
-	 * 			| 		canHaveAsUnit(unit)
+	 * @invar	Each element in the set references a nit that this world
+	 * 			can have as nit.
+	 * 			| for each nit in nits:
+	 * 			| 		canHaveAsNit(nit)
 	 * 
-	 * @invar	Each unit in the set references this world as their world.
-	 * 			| for each unit in units:
-	 * 			|		unit.getWorld() == this
+	 * @invar	Each nit in the set references this world as their world.
+	 * 			| for each nit in nits:
+	 * 			|		nit.getWorld() == this
 	 * 
-	 * @invar	The number of units in the set is always smaller than or
+	 * @invar	The number of nits in the set is always smaller than or
 	 * 			equal to 100.
-	 * 			| units.size() <= 100
+	 * 			| nits.size() <= 100
 	 */
-	private final Set<Unit> units = new HashSet<Unit>();
+	private final Set<Nit> nits = new HashSet<Nit>();
 	
 	
 	/* *********************************************************
@@ -666,7 +737,7 @@ public class World {
 	
 	
 	/**
-	 * Remove the given unit from this world.
+	 * Remove the given nit from this world.
 	 * 
 	 * @param	faction
 	 * 			The faction to remove.
@@ -686,7 +757,7 @@ public class World {
 	
 	
 	private void sortFactions() {
-		this.factions.sort(new NbUnitsComparator());
+		this.factions.sort(new NbNitsComparator());
 	}
 	
 	
@@ -898,7 +969,7 @@ public class World {
 		if (log.getWorld() != this)
 			throw new IllegalArgumentException();
 		this.logs.add(log);
-		this.toAddToTimeSubjects.add(log);
+		this.toAddToGameObjects.add(log);
 		log.setWorld(this);
 	}
 	
@@ -920,7 +991,7 @@ public class World {
 	public void removeLog(Log log) {
 		if (hasAsItem(log)) {
 			this.logs.remove(log);
-			this.toRemoveFromTimeSubjects.add(log);
+			this.toRemoveFromGameObjects.add(log);
 			log.setWorld(null);
 		}
 	}
@@ -1043,7 +1114,7 @@ public class World {
 		if (boulder.getWorld() != this)
 			throw new IllegalArgumentException();
 		this.boulders.add(boulder);
-		this.toAddToTimeSubjects.add(boulder);
+		this.toAddToGameObjects.add(boulder);
 		boulder.setWorld(this);
 	}
 	
@@ -1065,7 +1136,7 @@ public class World {
 	public void removeBoulder(Boulder boulder) {
 		if (hasAsItem(boulder)) {
 			this.boulders.remove(boulder);
-			this.toRemoveFromTimeSubjects.add(boulder);
+			this.toRemoveFromGameObjects.add(boulder);
 			boulder.setWorld(null);
 		}
 	}
@@ -1089,36 +1160,8 @@ public class World {
 	private final Set<Boulder> boulders = new HashSet<Boulder>();
 	
 	
+
 	
-	/* *********************************************************
-	 * 
-	 * 							TIMESUBJECTS
-	 *
-	 **********************************************************/
-	
-	
-	
-	private final List<TimeSubject> timeSubjects = new ArrayList<TimeSubject>();
-	
-	
-	private final List<TimeSubject> toAddToTimeSubjects = new ArrayList<TimeSubject>();
-	private final List<TimeSubject> toRemoveFromTimeSubjects = new ArrayList<TimeSubject>();
-	
-	
-	private void updateTimeSubjects() {
-		for (TimeSubject ts: this.toAddToTimeSubjects) {
-			timeSubjects.add(ts);
-		}
-		this.toAddToTimeSubjects.clear();
-		
-		for (TimeSubject ts: this.toRemoveFromTimeSubjects) {
-			if (timeSubjects.contains(ts))
-				timeSubjects.remove(ts);
-		}
-		
-		this.toRemoveFromTimeSubjects.clear();
-		timeSubjects.removeAll(Collections.singleton(null));
-	}
 	
 	/* *********************************************************
 	 * 
@@ -1249,11 +1292,11 @@ public class World {
 	 * @post	This world is terminated.
 	 * 			| new.isTerminated()
 	 * 
-	 * @effect	Each non-terminated unit in this world is removed from
+	 * @effect	Each non-terminated nit in this world is removed from
 	 * 			this world.
-	 * 			| for each unit in getAllUnits():
-	 * 			|		if (!unit.isTerminated())
-	 * 			|			then this.removeUnit(unit)
+	 * 			| for each nit in getAllNits():
+	 * 			|		if (!nit.isTerminated())
+	 * 			|			then this.removeNit(nit)
 	 * 
 	 * @effect	Each non-terminated faction in this world is removed from
 	 * 			this world.
@@ -1274,10 +1317,10 @@ public class World {
 	 * 			|			then this.removeBoulder(boulder)
 	 */
 	public void terminate() {
-		for (Unit unit: this.units) {
-			if (!unit.isTerminated()) {
-				unit.setWorld(null);
-				this.units.remove(unit);
+		for (Nit nit: this.nits) {
+			if (!nit.isTerminated()) {
+				nit.setWorld(null);
+				this.nits.remove(nit);
 			}
 		}
 		//this.factions.clear(); (IF WE CHOOSE TO MAKE FACTIONS A LIST)
@@ -1312,6 +1355,18 @@ public class World {
 	
 	
 	private boolean isTerminated = false;
+
+	public Unit spawnUnit(boolean enableDefaultBehavior) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public Set<Unit> getAllUnitsSet() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 	
 }
