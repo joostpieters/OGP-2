@@ -14,7 +14,10 @@ import hillbillies.model.expression.*;
 
 
 public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task> {
-
+	
+	public TaskFactory() {
+		
+	}
 	
 	@Override
 	public List<Task> createTasks(String name, int priority, Statement activity, List<int[]> selectedCubes) {
@@ -23,12 +26,14 @@ public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task>
 			for (int[] selectedCube : selectedCubes) {
 				Task task = new Task(name, priority, activity, selectedCube);
 				listOfTasks.add(task);
-				//task.getActions().setTask(task);
+				task.getActions().setTask(task);
+				System.out.println(task.toString());
 			} 
 		} else {
 			Task task = new Task(name, priority, activity, null);
 			listOfTasks.add(task);
-			//task.getActions().setTask(task);
+			task.getActions().setTask(task);
+			System.out.println(task.toString());
 		}
 		return listOfTasks;
 	}
@@ -67,8 +72,10 @@ public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task>
 
 	@Override
 	public Statement createMoveTo(Expression<?> position, SourceLocation sourceLocation) {
+		
 		return new MoveTo((Expression<Coordinate>) position);
 	}
+	
 
 	@Override
 	public Statement createWork(Expression<?> position, SourceLocation sourceLocation) {
@@ -157,8 +164,7 @@ public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task>
 
 	@Override
 	public Expression<Coordinate> createSelectedPosition(SourceLocation sourceLocation) {
-		// TODO Auto-generated method stub
-		return null;
+		return new SelectedPosition();
 	}
 
 	@Override

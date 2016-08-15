@@ -12,14 +12,21 @@ public class If extends Statement {
 		this.condition = condition;
 		this.ifBody = ifBody;
 		this.elseBody = elseBody;
+		
+		
 	}
 	
 	
 	@Override
 	public void execute() {
+		this.condition.setTask(getTask());
+		this.ifBody.setTask(getTask());
+		if (this.elseBody != null)
+			this.elseBody.setTask(getTask());
+		
 		if (this.condition.evaluate()) {
 			this.ifBody.execute();
-		} else {
+		} else if (this.elseBody != null) {
 			this.elseBody.execute();
 		}
 	}

@@ -9,10 +9,13 @@ public class IsPassable extends Expression<Boolean> {
 
 	public IsPassable(Expression<Coordinate> position) {
 		this.position = position;
+		
 	}
 	
 	@Override
 	public Boolean evaluate() {
+		this.position.setTask(getTask());
+		
 		return getTask().getAssignedUnit().getWorld().getCubeTypeAt(position.evaluate()).isPassable();
 	}
 

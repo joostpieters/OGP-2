@@ -8,10 +8,13 @@ public class CarriesItem extends Expression<Boolean> {
 
 	public CarriesItem(Expression<Unit> unit2) {
 		this.unit2 = unit2;
+		
 	}
 	
 	@Override
 	public Boolean evaluate() {
+		this.unit2.setTask(getTask());
+		
 		return this.unit2.evaluate().isCarryingItem();
 	}
 

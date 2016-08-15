@@ -16,6 +16,8 @@ public class IsEnemy extends Expression<Boolean> {
 	
 	@Override
 	public Boolean evaluate() {
+		this.unit2.setTask(getTask());
+		
 		return (unit2.evaluate().getFaction() != getTask().getAssignedUnit().getFaction());
 	}
 	

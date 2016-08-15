@@ -12,15 +12,16 @@ public class Task {
 	private final HashSet<Scheduler> schedulersForTask = new HashSet<Scheduler>();
 	private final String name;
 	private int priority;
-	private Unit unit;
+	private Unit unit = null;
 	private boolean beingExecuted;
 	private Statement actions;
 	private Coordinate cube;
 	private final Map<String, Object> variables = new HashMap<String, Object>();
 	private boolean isCompleted = false;
+	private Statement executingActivity;
 
 	
-	public Task(String name, int priority, Statement actions, int[] cube ){
+	public Task(String name, int priority, Statement statement, int[] cube ){
 		if (!isValidName(name)) {
 			throw new IllegalNameException(name);
 		}
@@ -28,7 +29,11 @@ public class Task {
 		
 		setPriority(priority);
 		setCube(new Coordinate(cube[0], cube[1], cube[2]));
-		setActions(actions);
+		setActions(statement);
+		
+		//getActions().setNextStatement(null);
+		this.executingActivity = getActions();
+		
 		//getActions().setTask(this);
 	}
 	
@@ -38,12 +43,12 @@ public class Task {
 		if (beingExecuted() && getAssignedUnit() != null) {
 			//setExecuted(true);
 			
-			getActions().setTask(this);
+			//getActions().setTask(this);
 			
 			getActions().execute();
 			
 			setCompleted();
-			setBeingExecuted(false);
+			
 		}
 	}
 	
@@ -270,12 +275,20 @@ public class Task {
 
 	@Raw
 	public void setAssignedUnit(Unit unit) {
-		if (getAssignedUnit() != null) 
-			throw new RuntimeException();
 		if (!isValidUnit(unit))
 			throw new IllegalArgumentException();
+		if (beingExecuted() && getAssignedUnit() != null) 
+			throw new RuntimeException();
+		if (unit != null && unit.getAssignedTask() != this )
+			throw new IllegalArgumentException();
+		
 		this.unit = unit;
-		System.out.println("Unit assigned to task");
+		/*try {
+			throw new IllegalArgumentException();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Unit assigned to task");*/
 		//unit.setAssignedTask(this);
 	}
 

@@ -262,7 +262,6 @@ public class Unit extends GameObject {
 		setWorld(world);
 		setFaction(faction);
 		
-		System.out.println("HERE");
 		
 		Coordinate position = getWorld().getRandomNeighbouringSolidCube();
 		/*Coordinate position = new Coordinate(14, 14, 14);
@@ -1119,14 +1118,21 @@ public class Unit extends GameObject {
 			
 			
 			
-			if (getFaction().getScheduler().hasUnassignedTask() ) {
+			if (getAssignedTask() == null && getFaction().getScheduler().hasUnassignedTask() ) {
 				Task task = getFaction().getScheduler().getHighestPriorityTask();
 				task.setBeingExecuted(true);
 				setAssignedTask(task);
 				getAssignedTask().execute();
+				
 			}
 			
-			else {
+			else if (hasAssignedTask()) {
+				if (getAssignedTask().isCompleted()) {
+					removeAssignedTask();
+				}
+			}
+			
+			else if (false) {
 			
 				double dice = random.nextDouble();
 				//System.out.println(dice);
@@ -1170,6 +1176,62 @@ public class Unit extends GameObject {
 		}
 	}
 	
+	
+	public boolean hasAssignedTask() {
+		return (getAssignedTask() != null);
+	}
+	
+	public Task getAssignedTask() {
+		return this.assignedTask;
+	}
+	
+	
+	public void setAssignedTask(Task task) throws IllegalArgumentException {
+		if (!canHaveAsTask(task))
+			throw new IllegalArgumentException();
+		this.assignedTask = task;
+		task.setAssignedUnit(this);
+	}
+	
+	
+	public void removeAssignedTask() {
+		if ( hasAssignedTask() ) {
+			getAssignedTask().setBeingExecuted(false);
+			//System.out.println("completed");
+			getAssignedTask().setAssignedUnit(null);
+			getAssignedTask().terminate();
+			this.assignedTask = null;
+		}
+	}
+	
+	
+	public void stopExecutingTask() {
+		setTaskInterrupted(true);
+		//this.assignedTask = null;
+	}
+	
+	
+	public boolean canHaveAsTask(Task task) {
+		if (/*task.getAssignedUnit() != this ||*/ task == null)
+			return false;
+		return true;
+	}
+	
+	private Task assignedTask = null;
+	
+	
+	private boolean isTaskInterrupted() {
+		return this.isTaskInterrupted;
+	}
+	
+	
+	private void setTaskInterrupted(boolean value) {
+		this.isTaskInterrupted = value;
+	}
+	
+	private boolean isTaskInterrupted = false;
+
+
 
 	
 	
@@ -1410,18 +1472,18 @@ public class Unit extends GameObject {
 		
 		int iterations = 0;
 		while(!Tuple.containsCube(path, getCoordinate()) 
-				&& Tuple.hasNext(path) && iterations < 501) {
+				&& Tuple.hasNext(path) /*&& iterations < 501*/) {
 			
 			Tuple nextTuple = Tuple.getNext(path);
 			path = search(nextTuple, path);
 			nextTuple.isChecked = true;
 			iterations++;
 
-			if (iterations >= 501) {
+			/*if (iterations >= 501) {
 				//System.out.println("501");
 				path = null;
 				break;
-			}
+			}*/
 		}
 		return path;
 	}
@@ -3609,44 +3671,4 @@ public class Unit extends GameObject {
 	}
 
 	
-	
-	public Task getAssignedTask() {
-		return this.assignedTask;
-	}
-	
-	
-	public void setAssignedTask(Task task) throws IllegalArgumentException {
-		if (!canHaveAsTask(task))
-			throw new IllegalArgumentException();
-		this.assignedTask = task;
-		task.setAssignedUnit(this);
-	}
-	
-	
-	public void stopExecutingTask() {
-		setTaskInterrupted(true);
-		//this.assignedTask = null;
-	}
-	
-	
-	public boolean canHaveAsTask(Task task) {
-		if (/*task.getAssignedUnit() != this ||*/ task == null)
-			return false;
-		return true;
-	}
-	
-	private Task assignedTask = null;
-	
-	
-	private boolean isTaskInterrupted() {
-		return this.isTaskInterrupted;
-	}
-	
-	
-	private void setTaskInterrupted(boolean value) {
-		this.isTaskInterrupted = value;
-	}
-	
-	private boolean isTaskInterrupted = false;
 }
-

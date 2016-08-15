@@ -9,10 +9,13 @@ public class Attack extends Statement {
 
 	public Attack(Expression<Unit> unit) {
 		this.victim = unit;
+		
 	}
 	
 	@Override
 	public void execute() {
+		this.victim.setTask(getTask());
+		
 		getTask().getAssignedUnit().attack(this.victim.evaluate());
 	}
 }

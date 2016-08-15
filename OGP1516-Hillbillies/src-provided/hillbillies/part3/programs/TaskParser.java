@@ -213,6 +213,7 @@ public class TaskParser<E, S, T> {
 			List<int[]> selectedCubes) throws IOException {
 		TaskParser<?, ?, Task> parser = create(factory);
 		Optional<List<Task>> result = parser.parseFile(filename, selectedCubes);
+		System.out.println(result.get().toString());
 		if (result.isPresent()) {
 			return result.get();
 		} else {

@@ -9,11 +9,13 @@ public class Work extends Statement {
 
 	public Work(Expression<Coordinate> position) {
 		this.position = position;
+		
 	}
 	
 	
 	@Override
 	public void execute() {
+		this.position.setTask(getTask());
 		getTask().getAssignedUnit().workAt(this.position.evaluate());
 	}
 }

@@ -14,6 +14,7 @@ public class Sequence extends Statement {
 	@Override
 	public void execute() {
 		for (Statement statement: this.statements) {
+			statement.setTask(getTask());
 			statement.execute();
 		}
 	}

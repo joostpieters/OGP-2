@@ -9,11 +9,14 @@ public class NextToPosition extends Expression<Coordinate> {
 	
 	public NextToPosition(Expression<Coordinate> position) {
 		this.position = position;
+		//this.position.setTask(getTask());
 	}
 	
 	
 	@Override 
 	public Coordinate evaluate() {
+		this.position.setTask(getTask());
+		
 		Coordinate cube;
 		Unit currentUnit = getTask().getAssignedUnit();
 		do {

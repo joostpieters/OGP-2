@@ -8,11 +8,14 @@ public class IsAlive extends Expression<Boolean> {
 	
 	public IsAlive(Expression<Unit> unit2) {
 		this.unit2 = unit2;
+		
 	}
 	
 	
 	@Override
 	public Boolean evaluate() {
+		this.unit2.setTask(getTask());
+		
 		return !this.unit2.evaluate().isTerminated();
 	}
 

@@ -11,10 +11,15 @@ public class And extends Expression<Boolean> {
 	public And(Expression<Boolean> left, Expression<Boolean> right) {
 		this.left = left;
 		this.right = right;
+		
+		
 	}
 	
 	@Override
 	public Boolean evaluate() {
+		this.left.setTask(getTask());
+		this.right.setTask(getTask());
+		
 		return (this.left.evaluate() && this.right.evaluate());
 	}
 	

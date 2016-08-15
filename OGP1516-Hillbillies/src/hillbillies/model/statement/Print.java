@@ -8,10 +8,13 @@ public class Print extends Statement {
 
 	public Print(Expression<?> value) {
 		this.value = value;
+		
 	}
 	
 	@Override
 	public void execute() {
+		this.value.setTask(getTask());
+		
 		System.out.println(this.value.evaluate().toString());
 	}
 

@@ -8,10 +8,13 @@ public class Not extends Expression<Boolean> {
 
 	public Not(Expression<Boolean> expression) {
 		this.expression = expression;
+		
 	}
 	
 	@Override
 	public Boolean evaluate() {
+		this.expression.setTask(getTask());
+		
 		return !this.expression.evaluate();
 	}
 

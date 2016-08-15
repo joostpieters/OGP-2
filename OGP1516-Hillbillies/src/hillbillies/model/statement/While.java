@@ -11,10 +11,14 @@ public class While extends Statement {
 	public While(Expression<Boolean> condition, Statement body) {
 		this.condition = condition;
 		this.body = body;
+		
 	}
 	
 	@Override
 	public void execute() {
+		this.condition.setTask(getTask());
+		this.body.setTask(getTask());
+		
 		while (this.condition.evaluate()) {
 			this.body.execute();
 		}

@@ -9,10 +9,13 @@ public class Follow extends Statement {
 
 	public Follow(Expression<Unit> unit) {
 		this.unit = unit;
+		
 	}
 	
 	@Override
 	public void execute() {
+		this.unit.setTask(getTask());
+		
 		Unit currentUnit = getTask().getAssignedUnit();
 		Unit unitToFollow = this.unit.evaluate();
 		

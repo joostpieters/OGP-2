@@ -6,6 +6,7 @@ public abstract class Statement {
 	
 	
 	private Task task;
+	private Statement nextStatement;
 	
 	protected Task getTask() {
 		return this.task;
@@ -13,12 +14,21 @@ public abstract class Statement {
 	
 	public void setTask(Task task) {
 		this.task = task;
-		try {
-			throw new IllegalArgumentException();
-		} catch (RuntimeException e ){
-			e.printStackTrace();
-		}
-		System.out.println("set task");
+//		try {
+//			throw new IllegalArgumentException();
+//		} catch (RuntimeException e ){
+//			e.printStackTrace();
+//		}
+//		System.out.println("set task");
+	}
+	
+	
+	public void setNextStatement(Statement nextStatement) {
+		this.nextStatement = nextStatement;
+	}
+	
+	public Statement getNextStatement() {
+		return this.nextStatement;
 	}
 	
 	public abstract void execute();
@@ -29,7 +39,6 @@ public abstract class Statement {
 		return 0;
 	}*/
 	
-	//public abstract String toString();
 	
 	@Override
 	public String toString() {

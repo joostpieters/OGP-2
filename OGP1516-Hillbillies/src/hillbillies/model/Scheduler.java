@@ -56,6 +56,11 @@ public class Scheduler {
 		this.tasks.add(task);
 		task.addScheduler(this);
 		sortTasks();
+		try {
+			throw new IllegalArgumentException();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	

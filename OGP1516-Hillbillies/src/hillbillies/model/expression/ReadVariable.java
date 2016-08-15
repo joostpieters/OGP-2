@@ -11,7 +11,7 @@ public class ReadVariable extends Expression<Object> {
 	
 	@Override
 	public Object evaluate() {
-		return this.getTask().getVariableFromName(this.variableName);
+		return getTask().getVariableFromName(this.variableName);
 	}
 
 }

@@ -10,11 +10,14 @@ public class IsFriend extends Expression<Boolean> {
 	
 	public IsFriend(Expression<Unit> unit2) {
 		this.unit2 = unit2;
+		
 	}
 	
 	
 	@Override
 	public Boolean evaluate() {
+		this.unit2.setTask(getTask());
+		
 		return (unit2.evaluate().getFaction() == getTask().getAssignedUnit().getFaction());
 	}
 

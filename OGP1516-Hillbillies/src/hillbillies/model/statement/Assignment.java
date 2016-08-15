@@ -10,11 +10,15 @@ public class Assignment extends Statement {
 	public Assignment(String variableName, Expression<?> value) {
 		this.variableName = variableName;
 		this.value = value;
+		
+		
 	}
 	
 	
 	@Override
 	public void execute() {
+		this.value.setTask(getTask());
+		
 		getTask().addVariableName(this.variableName, this.value.evaluate());
 	}
 	
