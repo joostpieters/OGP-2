@@ -453,6 +453,25 @@ public class World {
 	}
 	
 	
+	public Unit spawnUnit(boolean enableDefaultBehavior) {
+		if (getAllNits().size() >= getMaxNbNits()) {
+			throw new IllegalNbException();
+		}
+		
+		sortFactions();
+		Faction faction = this.factions.get(0);
+		
+		Unit unit;
+		unit = new Unit(this, faction, enableDefaultBehavior);
+		
+		addNit(unit);
+		faction.addNit(unit);
+		
+		return unit;
+	}
+
+
+	
 	/**
 	 * Check whether this world contains the given nit.
 	 * 
@@ -532,8 +551,29 @@ public class World {
 	}
 
 	
-	public Set<Nit> getAllNitsSet() {
+	/*public Set<Nit> getAllNitsSet() {
 		return new HashSet<Nit>(this.nits);
+	}*/
+	
+	
+	/**
+	 * Return a set collecting all units this world contains.
+	 * 
+	 * @return	The resulting set is effective.
+	 * 			| result != null
+	 * 
+	 * @return	Each unit in the resulting set is attached to this world
+	 * 			and vice versa.
+	 * 			| for each unit in Unit:
+	 * 			| 	result.contains(unit) == this.hasAsNit(unit)
+	 */
+	public Set<Unit> getAllUnits() {
+		Set<Unit> units = new HashSet<Unit>();
+		for (Nit nit: this.nits) {
+			if (nit instanceof Unit)
+				units.add((Unit) nit);
+		}
+		return units;
 	}
 	
 	
@@ -1355,17 +1395,6 @@ public class World {
 	
 	
 	private boolean isTerminated = false;
-
-	public Unit spawnUnit(boolean enableDefaultBehavior) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	public Set<Unit> getAllUnitsSet() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	
 	

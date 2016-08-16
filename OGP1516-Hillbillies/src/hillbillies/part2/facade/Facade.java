@@ -96,7 +96,7 @@ public class Facade implements hillbillies.part2.facade.IFacade {
 	
 	@Override
 	public Set<Unit> getUnits(World world) throws ModelException {
-		return world.getAllUnitsSet();
+		return world.getAllUnits();
 	}
 	
 	

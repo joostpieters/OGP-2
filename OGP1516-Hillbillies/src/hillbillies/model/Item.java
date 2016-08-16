@@ -4,14 +4,8 @@ import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Immutable;
 import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
-import hillbillies.model.World.TerrainType;
-
-import java.util.Random;
 
 
-
-// IS VALID POSITION ETC
-// INVARIANTS WORLD-ITEM IN ITEM EN WORLD CLASS
 
 /**
  * 
@@ -26,7 +20,7 @@ public abstract class Item extends GameObject {
 	/**
 	 * Initialize this new item.
 	 */
-	@Raw @Model
+	@Raw
 	protected Item(Coordinate initialPosition, World world) throws IllegalPositionException,
 															IllegalArgumentException {
 		
