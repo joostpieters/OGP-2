@@ -769,49 +769,130 @@ public abstract class Nit extends GameObject {
 	 * 			|			then rest()
 	 * 			| 		)
 	 */
+	@SuppressWarnings("unused")
 	private void controlWaiting(double dt) throws IllegalPositionException {
 
 		if (isDefaultBehaviorEnabled()) {
-			double dice = random.nextDouble();
-			//System.out.println(dice);
 			
-			if (dice < 1.0/4.0) {
-				Coordinate destCube = getRandomReachableCube();
-				//System.out.println(destCube.toString());
-				//System.out.println(this.isReachable(destCube));
-				moveTo(destCube);
-				
-			} else if ( dice > 1.0/4.0 && dice < 2.0/4.0) {
-				
-				Coordinate targetCube = getRandomNeighbouringCube();
-				
-				//System.out.println(getCoordinate().toString());
-				//System.out.println(targetCube.toString());
-				
-				workAt(targetCube);
+			
+			
+			if (getAssignedTask() == null && getFaction().getScheduler().hasUnassignedTask() ) {
+				Task task = getFaction().getScheduler().getHighestPriorityTask();
+				task.setBeingExecuted(true);
+				setAssignedTask(task);
+				getAssignedTask().execute();
 				
 			}
-			else if ( dice > 2.0/4.0 && dice < 3.0/4.0 
-					&& !isAttacking() && !isAttacked() && enemiesInRange()) {
-				attack(getEnemyInRange());
-				//System.out.println("Attacking");
-			}
-			else {
-				rest();
-				//setDefaultBehavior(false);
-			}
-			if (isMoving() && isSprinting()) {
-				if (random.nextDouble() < 0.5) {
-					startSprinting();
+			
+			else if (hasAssignedTask()) {
+				if (getAssignedTask().isCompleted()) {
+					removeAssignedTask();
 				}
 			}
-			if (isMoving() && !isSprinting()) {
-				if (random.nextDouble() < 0.5) {
-					stopSprinting();
+			
+			else if (false) {
+			
+			
+				double dice = random.nextDouble();
+				//System.out.println(dice);
+				
+				if (dice < 1.0/4.0) {
+					Coordinate destCube = getRandomReachableCube();
+					//System.out.println(destCube.toString());
+					//System.out.println(this.isReachable(destCube));
+					moveTo(destCube);
+					
+				} else if ( dice > 1.0/4.0 && dice < 2.0/4.0) {
+					
+					Coordinate targetCube = getRandomNeighbouringCube();
+					
+					//System.out.println(getCoordinate().toString());
+					//System.out.println(targetCube.toString());
+					
+					workAt(targetCube);
+					
+				}
+				else if ( dice > 2.0/4.0 && dice < 3.0/4.0 
+						&& !isAttacking() && !isAttacked() && enemiesInRange()) {
+					attack(getEnemyInRange());
+					//System.out.println("Attacking");
+				}
+				else {
+					rest();
+					//setDefaultBehavior(false);
+				}
+				if (isMoving() && isSprinting()) {
+					if (random.nextDouble() < 0.5) {
+						startSprinting();
+					}
+				}
+				if (isMoving() && !isSprinting()) {
+					if (random.nextDouble() < 0.5) {
+						stopSprinting();
+					}
 				}
 			}
+			
 		}
 	}
+	
+	
+	
+	public boolean hasAssignedTask() {
+		return (getAssignedTask() != null);
+	}
+	
+	public Task getAssignedTask() {
+		return this.assignedTask;
+	}
+	
+	
+	public void setAssignedTask(Task task) throws IllegalArgumentException {
+		if (!canHaveAsTask(task))
+			throw new IllegalArgumentException();
+		this.assignedTask = task;
+		task.setAssignedUnit(this);
+	}
+	
+	
+	public void removeAssignedTask() {
+		if ( hasAssignedTask() ) {
+			getAssignedTask().setBeingExecuted(false);
+			//System.out.println("completed");
+			getAssignedTask().setAssignedUnit(null);
+			getAssignedTask().terminate();
+			this.assignedTask = null;
+		}
+	}
+	
+	
+	public void stopExecutingTask() {
+		setTaskInterrupted(true);
+		//this.assignedTask = null;
+	}
+	
+	
+	public boolean canHaveAsTask(Task task) {
+		if (/*task.getAssignedUnit() != this ||*/ task == null)
+			return false;
+		return true;
+	}
+	
+	private Task assignedTask = null;
+	
+	
+	private boolean isTaskInterrupted() {
+		return this.isTaskInterrupted;
+	}
+	
+	
+	private void setTaskInterrupted(boolean value) {
+		this.isTaskInterrupted = value;
+	}
+	
+	private boolean isTaskInterrupted = false;
+
+
 
 	
 	
@@ -1272,10 +1353,10 @@ public abstract class Nit extends GameObject {
 	// TODO static?
 	private double getDistanceTo(double[] position1, double[] position2) 
 											throws IllegalPositionException {
-		if (!canHaveAsPosition(convertPositionToCoordinate(position1)))
+		if (!canHaveAsPosition(Convert.convertPositionToCoordinate(position1)))
 			throw new IllegalPositionException(position1);
 		
-		if (!canHaveAsPosition(convertPositionToCoordinate(position2)))
+		if (!canHaveAsPosition(Convert.convertPositionToCoordinate(position2)))
 			throw new IllegalPositionException(position2);
 
 		return Math.sqrt(Math.pow(position1[0]-position2[0],2)
@@ -2304,7 +2385,6 @@ public abstract class Nit extends GameObject {
 	 * Field registering whether the nit is being attacked.
 	 */
 	private boolean isAttacked = false;
-	// TODO Make additional state for isAttacked?
 
 	
 	/**

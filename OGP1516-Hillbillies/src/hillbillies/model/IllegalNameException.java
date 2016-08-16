@@ -22,15 +22,25 @@ public class IllegalNameException extends RuntimeException {
 	 * ...
 	 */
 
+	public IllegalNameException(String name, Nit nit) {
+		this.name = name;
+		this.nit = nit;
+	}
+	
 	public IllegalNameException(String name) {
 		this.name = name;
+		this.nit = null;
 	}
 	
 	public String getName() {
-		return name;
+		return this.name;
+	}
+	
+	public Nit getNit() {
+		return this.nit;
 	}
 	
 	private final String name;
-	
+	private final Nit nit;
 
 }
