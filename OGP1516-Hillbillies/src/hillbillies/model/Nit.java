@@ -2,14 +2,10 @@ package hillbillies.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import be.kuleuven.cs.som.annotate.Basic;
-import be.kuleuven.cs.som.annotate.Immutable;
-import be.kuleuven.cs.som.annotate.Model;
-import be.kuleuven.cs.som.annotate.Raw;
+import be.kuleuven.cs.som.annotate.*;
 import hillbillies.model.World.TerrainType;
 
 
@@ -48,7 +44,7 @@ import hillbillies.model.World.TerrainType;
  * 			| isValidXP(getExperiencePoints())
  * 
  * @invar 	The current state of the nit must always be a valid state.
- * 			| isValidState(getState())
+ * 			| canHaveAsState(getState())
  * 
  * @invar 	The nit can have its current target cube as its target cube.
  * 			| canHaveAsTargetCube(getTargetCube())
@@ -89,7 +85,75 @@ public abstract class Nit extends GameObject {
 
 	
 	
-	@Deprecated
+	/**
+	 * Initialize a new nit with the given attributes, not yet attached to
+	 * a world or a faction.
+	 * 
+	 * @param name
+	 *            The name of the nit.
+	 * @param initialPosition
+	 *            The initial position of the nit.
+	 * @param weight
+	 *            The initial weight of the nit
+	 * @param agility
+	 *            The initial agility of the nit
+	 * @param strength
+	 *            The initial strength of the nit
+	 * @param toughness
+	 *            The initial toughness of the nit
+	 * @param enableDefaultBehavior
+	 *            Whether the default behavior of the nit is enabled
+	 * 
+	 * @post  the new name of the nit is equal to the given name.
+	 * 		| new.getName() == name
+	 * 
+	 * @post the new position of the nit is equal to the given position.
+	 * 		| new.getPosition() == position
+	 * 
+	 * @post if the given weight is valid, the new weight will be
+	 * 			equal to the given weight.
+	 * 		| if (canHaveAsWeight(weight))
+	 * 		| then new.getWeight() == weight
+	 * 
+	 * @post if the given strength is valid, the new strength will be
+	 * 			equal to the given strength.
+	 * 		| if (isValidStrength(strength))
+	 * 		| then new.getStrength() == strength
+	 * 
+	 * @post if the given agility is valid, the new agility will be
+	 * 			equal to the given agility.
+	 * 		| if (isValidAgility(agility))
+	 * 		| then new.getAgility() == agility
+	 * 
+	 * @post if the given toughness is valid, the new toughness will be
+	 * 			equal to the given toughness.
+	 * 		| if (isValidToughness(toughness))
+	 * 		| then new.getToughness() == toughness
+	 * 
+	 * @post The new orientation of the nit is equal to Pi/2.
+	 * 		| new.getOrientation() == Math.PI/2
+	 * 
+	 * @post The new current number of hitpoints of the nit is equal to the max number
+	 * 			of hitpoints for the nit.
+	 * 		| new.getCurrentHitPoints() == new.getMaxHitPoints()
+	 * 
+	 * @post The new current number of stamina points of the nit is equal to the max number
+	 * 			of stamina points for the nit.
+	 * 		| new.getCurrentStaminaPoints() == new.getMaxStaminaPoints()
+	 * 
+	 * @post The default behavior of the nit is equal to the given value for default behavior.
+	 * 		| new.isDefaultBehaviorEnabled() == enableDefaultBehavior
+	 * 
+	 * 
+	 * @throws IllegalPositionException(position, this)
+	 *             The nit cannot have the given position (out of bounds).
+	 *             | ! canHaveAsPosition(position)
+	 *             
+	 * @throws IllegalNameException(name, this)
+	 *             The nit cannot have the given name.
+	 *             | ! canHaveAsName(name)            
+	 */
+	@Deprecated @Raw @Model
 	protected Nit (String name, Coordinate initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) 
 					throws IllegalPositionException, IllegalNameException {
@@ -113,14 +177,73 @@ public abstract class Nit extends GameObject {
 	}
 	
 	
-
+	
+	/**
+	 * Initialize a new nit with the given world as its world, the given default
+	 * behavior and the given faction as its faction, with random attributes 
+	 * and a random name, with an orientation and an empty state, not carrying an item.
+	 * 
+	 * @param 	enableDefaultBehavior
+	 *        	Whether the default behavior of the nit is enabled.
+	 * 
+	 * @param	world
+	 * 			The world for this new nit.
+	 * 
+	 * @param	faction
+	 * 			The faction for this new nit.
+	 * 
+	 * @effect	The nits world is set to the given world
+	 * 			| setWorld(world)
+	 * 
+	 * @effect	The nits position is set to a random position in its world.
+	 * 			| setPosition(getWorld().getRandomNeighbouringSolidCube())
+	 * 
+	 * @effect	The nits name is set to a random name.
+	 * 			| setName(generateName())
+	 * 
+	 * @effect	The nits agility is set to a random initial agility.
+	 * 			| setAgility(generateInitialSkill())
+	 * 
+	 * @effect	The nits strength is set to a random initial strength.
+	 * 			| setStrength(generateInitialSkill())
+	 * 
+	 * @effect	The nits toughness is set to a random initial toughness.
+	 * 			| setToughness(generateInitialSkill())
+	 * 
+	 * @effect	The nits weight is set to a random initial weight.
+	 * 			| setWeight(generateInitialWeight())
+	 * 
+	 * @effect	The nits HP are set to the current maximum.
+	 * 			| updateCurrentHitPoints(getMaxHitPoints())
+	 * 
+	 * @effect	The nits stamina points are set to the current maximum.
+	 * 			| updateCurrentStaminaPoints(getMaxStaminaPoints())
+	 * 
+	 * @effect	The nits orientation is set to an initial value.
+	 * 			| setOrientation((Math.PI/2.0))
+	 * 
+	 * @effect	The nits state is set to empty.
+	 * 			| setState(State.EMPTY)
+	 * 
+	 * @effect	The default behavior of the nit is set to the given
+	 * 			default behavior.
+	 * 			| setDefaultBehavior(enableDefaultBehavior)
+	 * 
+	 * @throws	IllegalPositionException(position, this)
+	 *         	The nit cannot have the given position.
+	 *          | ! canHaveAsPosition(position)
+	 *             
+	 * @throws	IllegalNameException(name, this)
+	 *          The nit cannot have the given name.
+	 *          | ! isValidName(name)            
+	 */
+	@Raw @Model
 	protected Nit (World world, Faction faction, boolean enableDefaultBehavior) 
 			throws IllegalPositionException, IllegalNameException {
 		
 		super(world);
 		
-		//setWorld(world);
-		setFaction(faction);
+		faction.addNit(this);
 
 		//Coordinate position = getWorld().getRandomNeighbouringSolidCube();
 		//setPosition(position);
@@ -161,28 +284,43 @@ public abstract class Nit extends GameObject {
 	}
 	
 	
+	/**
+	 * Generate a valid name for the nit.
+	 * 
+	 * @return 	The nit can have the generated name as its name.
+	 * 			| canHaveAsName(result)
+	 */
+	@Model
 	protected abstract String generateName();
 	
+	
+	/**
+	 * Check if the nit can have the given name as its name.
+	 * 
+	 * @param name
+	 * 			the name to check.
+	 */
 	public abstract boolean canHaveAsName(String name);
 
 	
+	
 	/**
 	 * Set the name of the nit to the given name.
-	 * 
-	 * @param newName
+	 * 	
+	 * @param 	newName
 	 * 			The new name for this nit.
 	 * 
-	 * @post The new name of this nit is equal to the
-	 * 		given name.
-	 * 		| new.getName() == newName
+	 * @post 	The new name of this nit is equal to the
+	 * 			given name.
+	 * 			| new.getName() == newName
 	 * 
-	 * @throws IllegalNameException(newName, this)
-	 * 			The given name is not valid.
-	 * 		| !isValidName(newName)
+	 * @throws 	IllegalNameException
+	 * 			The nit cannot have the given name as its name.
+	 * 			| !canHaveAsName(newName)
 	 */
 	@Raw
 	public void setName(String newName) throws IllegalNameException {
-		if (! canHaveAsName(newName))
+		if (!canHaveAsName(newName))
 			throw new IllegalNameException(newName, this);
 		this.name = newName;
 	}
@@ -220,6 +358,7 @@ public abstract class Nit extends GameObject {
 			this.weight = newValue;
 	}
 	
+	
 	/**
 	 * Check whether the given weight is valid.
 	 * 
@@ -244,7 +383,11 @@ public abstract class Nit extends GameObject {
 	 * 
 	 * @return	a weight value between the mean of the agility and the strength,
 	 * 			and the maximum initial value for the weight.
+	 * 			| canHaveAsWeight(result) &&
+	 * 			|	result >= (getStrength()+getAgility())/2)
+	 * 			|	&& result <= getMaxInitialSkill()
 	 */
+	@Model
 	private int generateInitialWeight() {
 		return (getStrength() + getAgility())/2
 				+ random.nextInt(getMaxInitialSkill() - (getStrength()+getAgility())/2);
@@ -258,7 +401,7 @@ public abstract class Nit extends GameObject {
 	 * @post	the nit can have its new weight as its weight.
 	 * 			| canHaveAsWeight(new.getWeight())
 	 */
-	protected void updateWeight() {
+	private void updateWeight() {
 		int i = 0;
 		while (!canHaveAsWeight(getWeight()+i)) {
 			i++;
@@ -320,6 +463,7 @@ public abstract class Nit extends GameObject {
 			this.strength = newValue;
 	}
 	
+	
 	/**
 	 * Check whether the given strength is valid.
 	 * 
@@ -333,6 +477,7 @@ public abstract class Nit extends GameObject {
 	public static boolean isValidStrength(int value) {
 		return (value > 0 && value < 201);
 	}
+	
 	
 	/**
 	 * Variable registering the strength of the nit.
@@ -441,7 +586,11 @@ public abstract class Nit extends GameObject {
 	 * 
 	 * @return 	an integer value between the minimum initial value and maximum 
 	 * 			initial value for a skill.
+	 * 			| isValidStrength(result)
+	 * 			|	&& result >= getMinInitialSkill()
+	 * 			| 	&& result <= getMaxInitialSkill()
 	 */
+	@Model
 	private int generateInitialSkill() {
 		return random.nextInt(getMaxInitialSkill() - getMinInitialSkill() + 1)
 				+ getMinInitialSkill();
@@ -452,7 +601,7 @@ public abstract class Nit extends GameObject {
 	 * Return the minimum initial value for a nits strength, toughness and agility.
 	 */
 	@Basic @Immutable
-	protected final static int getMinInitialSkill() {
+	public final static int getMinInitialSkill() {
 		return minInitialSkill;
 	}
 	
@@ -461,7 +610,7 @@ public abstract class Nit extends GameObject {
 	 * Return the maximum initial value for a nits strength, toughness and agility.
 	 */
 	@Basic @Immutable
-	protected final static int getMaxInitialSkill() {
+	public final static int getMaxInitialSkill() {
 		return maxInitialSkill;
 	}
 	
@@ -491,7 +640,7 @@ public abstract class Nit extends GameObject {
 	/**
 	 * Check if a given value is a valid hitpoints value.
 	 * 
-	 * @param value
+	 * @param  value
 	 * 			The value to be checked.
 	 * @return true if and only if the value is larger than or equal to the
 	 * 			minimum and smaller than or equal to the maximum amount of
@@ -531,12 +680,16 @@ public abstract class Nit extends GameObject {
 	/**
 	 * Return the nits minimum number of hitpoints.
 	 */
-	@Basic @Immutable
+	@Basic @Immutable @Raw
 	public final static int getMinHitPoints() {
 		return minHP;
 	}
 	
 	
+	/**
+	 * Return the nits maximum number of HP.
+	 */
+	@Raw
 	public abstract int getMaxHitPoints();
 	
 	
@@ -592,6 +745,10 @@ public abstract class Nit extends GameObject {
 	}
 
 	
+	/**
+	 * Return the nits maximum number of HP.
+	 */
+	@Raw
 	public abstract int getMaxStaminaPoints();
 	
 
@@ -754,11 +911,29 @@ public abstract class Nit extends GameObject {
 	 * 			the game time interval in which to manage the falling behavior.
 	 * 
 	 * @effect	If the default behavior is not enabled, nothing happens.
-	 * 			Else, there is an equal chance that the nit will execute each
+	 * 			Else, if the nit does not already have a task,
+	 * 			the nit checks if its factions scheduler has a task that has not
+	 * 			yet been assigned to a nit. if so, the nits task is set to the unassigned
+	 * 			task with the highest priority that the nit has not tried to execute as last
+	 * 			task and was interrupted.
+	 * 			| if (isDefaultBehaviorEnabled() 
+	 * 			|		if(!hasAssignedTask() 
+	 * 			|			&& getFaction().getScheduler().hasUnassignedTask() 
+	 * 			|			&& getInterruptedTask() != getFaction().getScheduler().getHighestPriorityTask())
+	 * 			| then setAssignedTask(getFaction().getScheduler().getHighestPriorityTask())
+	 * 
+	 * @effect	If the nit already has a task and this task is not completed yet, is will
+	 * 			execute this task. If the task is completed, it is removed.
+	 * 			| 		if (hasAssignedTask())
+	 * 			|			if (!getAssignedTask().isCompleted())
+	 * 			|				then getAssignedTask().execute(dt)
+	 * 			|			else removeAssignedTask()
+	 * 
+	 * @effect	if the default behavior is enabled and the above conditions are not met,
+	 * 			there is an equal chance that the nit will execute each
 	 * 			of the following activities: move to a random cube, start working at
 	 * 			a random cube, rest or attack an enemy if there is one in range.
-	 * 			| if (isDefaultBehaviorEnabled())
-	 * 			|	then (
+	 * 			|	else (
 	 * 			|		if (random < 0.25 && random > 0.0)
 	 * 			|			then moveTo(getRandomReachableCube())
 	 * 			|		else if (random < 0.5 && random > 0.25)
@@ -769,28 +944,45 @@ public abstract class Nit extends GameObject {
 	 * 			|			then rest()
 	 * 			| 		)
 	 */
-	@SuppressWarnings("unused")
 	private void controlWaiting(double dt) throws IllegalPositionException {
 
 		if (isDefaultBehaviorEnabled()) {
 			
-			
-			
-			if (getAssignedTask() == null && getFaction().getScheduler().hasUnassignedTask() ) {
-				Task task = getFaction().getScheduler().getHighestPriorityTask();
-				task.setBeingExecuted(true);
-				setAssignedTask(task);
-				getAssignedTask().execute();
+			//TODO
+			if (!hasAssignedTask() && getFaction().getScheduler().hasUnassignedTask() ) {
+				Iterator<Task> it = getFaction().getScheduler().getIterator();
 				
+				Task task = getFaction().getScheduler().getHighestPriorityTask();
+				while ((task == getInterruptedTask() || task.beingExecuted() )  && it.hasNext() ) {
+					task = it.next();
+				}
+				//System.out.println(task.toString());
+				if (getInterruptedTask() != task) {
+					task.setBeingExecuted(true);
+					//System.out.println(task.toString());
+					setAssignedTask(task);
+					
+				//if (getAssignedTask().isCompleted()) {
+				//	removeAssignedTask();
+				//}
+				}
 			}
 			
 			else if (hasAssignedTask()) {
+				if (!getAssignedTask().isCompleted()) {
+					//System.out.println(getAssignedTask().toString());
+					try {
+						getAssignedTask().execute(dt);
+					} catch (Exception e) {
+						stopExecutingTask();
+					}
+				}
 				if (getAssignedTask().isCompleted()) {
 					removeAssignedTask();
 				}
 			}
 			
-			else if (false) {
+			else  {
 			
 			
 				double dice = random.nextDouble();
@@ -821,81 +1013,155 @@ public abstract class Nit extends GameObject {
 					rest();
 					//setDefaultBehavior(false);
 				}
-				if (isMoving() && isSprinting()) {
-					if (random.nextDouble() < 0.5) {
-						startSprinting();
-					}
-				}
-				if (isMoving() && !isSprinting()) {
-					if (random.nextDouble() < 0.5) {
-						stopSprinting();
-					}
-				}
+				
 			}
 			
 		}
 	}
 	
 	
-	
+	/**
+	 * Check if the nit has an assigned task.
+	 * 
+	 * @return	true if the nit has an assigned task.
+	 * 			| result == (getAssignedTask != null)
+	 */
 	public boolean hasAssignedTask() {
 		return (getAssignedTask() != null);
 	}
 	
+	
+	/**
+	 * Return the nits assigned task.
+	 */
+	@Basic
 	public Task getAssignedTask() {
 		return this.assignedTask;
 	}
 	
 	
+	/**
+	 * Set the nits assigned task to a given task.
+	 * 
+	 * @param 	task
+	 * 			the given task.
+	 * 
+	 * @post	the nits assigned task is equal to the given task.
+	 * 			| new.getAssignedTask() == task
+	 * 
+	 * @post	the task references this nit as the nit it is assigned to.
+	 * 			| (new task).getAssignedUnit() == this
+	 * 
+	 * @throws IllegalArgumentException
+	 * 			the nit cannot have the given task as its task.
+	 */
 	public void setAssignedTask(Task task) throws IllegalArgumentException {
 		if (!canHaveAsTask(task))
 			throw new IllegalArgumentException();
 		this.assignedTask = task;
-		task.setAssignedUnit(this);
+		task.setAssignedNit(this);
 	}
 	
 	
+	/**
+	 * Remove the currently assigned task as the nits task.
+	 * 
+	 * @effect	if the nit has a task, this task is no longer executed,
+	 * 			|	getAssignedTask().setBeingExecuted(false);
+	 * 
+	 * @effect	the task will no longer reference a nit as the nit it is
+	 * 			assigned to,
+	 * 			| 	getAssignedTask().setAssignedNit(null)
+	 * 
+	 * @effect	the task is terminated,
+	 * 			| getAssignedTask().terminate()
+	 * 
+	 * @post	and this nit does no longer reference a task.
+	 * 			| new.getAssignedTask() == null
+	 */
 	public void removeAssignedTask() {
 		if ( hasAssignedTask() ) {
 			getAssignedTask().setBeingExecuted(false);
-			//System.out.println("completed");
-			getAssignedTask().setAssignedUnit(null);
+			getAssignedTask().setAssignedNit(null);
 			getAssignedTask().terminate();
 			this.assignedTask = null;
 		}
 	}
 	
 	
+	/**
+	 * Stop executing a task, this happens when the task is interrupted. The
+	 * interrupted task is stored.
+	 * 
+	 * @effect	the nits last interrupted task is set to the current task
+	 * 			|	setInterruptedTask(getAssignedTask())
+	 * 
+	 * @effect	the current task is interrupted.
+	 * 			| 	getAssignedTask().interrupt()
+	 * 
+	 * @post	the nit no longer references a task.
+	 * 			|	new.getAssignedTask() == null
+	 */
 	public void stopExecutingTask() {
-		setTaskInterrupted(true);
-		//this.assignedTask = null;
+		setInterruptedTask(getAssignedTask());
+		getAssignedTask().interrupt();
+		this.assignedTask = null;
 	}
 	
 	
+	/**
+	 * Check if the nit can have a given task as its assigned task.
+	 * 
+	 * @param 	task
+	 * 			the task to check.
+	 * 
+	 * @return	true if and only if the given task is not equal to null.
+	 * 			| result == (task != null)
+	 */
 	public boolean canHaveAsTask(Task task) {
 		if (/*task.getAssignedUnit() != this ||*/ task == null)
 			return false;
 		return true;
 	}
 	
+	
+	/**
+	 * Variable registering the nits current assigned task.
+	 */
 	private Task assignedTask = null;
 	
 	
-	private boolean isTaskInterrupted() {
-		return this.isTaskInterrupted;
+	/**
+	 * Return the nits last interrupted task.
+	 */
+	@Basic
+	private Task getInterruptedTask() {
+		return this.interruptedTask;
 	}
 	
 	
-	private void setTaskInterrupted(boolean value) {
-		this.isTaskInterrupted = value;
+	/**
+	 * Set the units last interrupted task to a given task.
+	 * 
+	 * @param 	task
+	 * 			the given task.
+	 * 
+	 * @post	the units interrupted task is equal to the given task.
+	 * 			| new.getInterruptedTask() == task
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			The unit can not have the given task as a task.
+	 * 			| !canHaveAsTask(task)
+	 */
+	private void setInterruptedTask(Task task) throws IllegalArgumentException {
+		if (!canHaveAsTask(task))
+			throw new IllegalArgumentException();
+		this.interruptedTask = task;
 	}
 	
-	private boolean isTaskInterrupted = false;
+	private Task interruptedTask = null;
 
 
-
-	
-	
 	
 	/**
 	 * Returns true if the nit is moving.
@@ -915,18 +1181,17 @@ public abstract class Nit extends GameObject {
 	 * 			The relative directions of the cube to which the nit has to move.
 	 * 
 	 * @post	The destination of the nit is set to the right adjacent cube, if
-	 * 			the nit is not already moving or in the initial resting state or attacked
-	 * 			or falling.
-	 * 			| new.getDestination() == determineCube(cubeDirection)
+	 * 			the nit is not already moving and if it can move.
+	 * 			| if (!isMoving && canMove() )
+	 * 			| 	then new.getDestination() == determineCube(cubeDirection)
 	 * 
 	 * @post	The orientation of the nit is set towards the destination, if
-	 * 			the nit is not already moving or in the initial resting state or attacked
-	 * 			or falling.
-	 * 			| new.getOrientation() == Math.atan2(getVelocity()[0], getVelocity()[2] )
+	 * 			the nit is not already moving and if it can move.
+	 * 			| 		new.getOrientation() == Math.atan2(getVelocity()[0], getVelocity()[2] )
 	 * 
 	 * @effect	The nits state is set to moving, if the nit is not already moving 
-	 * 			or in the initial resting state or attacked or falling.
-	 * 			| startMoving()
+	 * 			and if it can move.
+	 * 			| 		startMoving()
 	 * 
 	 * @throws  IllegalArgumentException
 	 * 			The given direction is not a valid direction.
@@ -938,7 +1203,7 @@ public abstract class Nit extends GameObject {
 		if (!isValidCubeDirection(cubeDirection))
 			throw new IllegalArgumentException();
 
-		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 ) {
+		if (!isMoving() && canMove() ) {
 			startMoving();
 			
 			Coordinate newPosition = new Coordinate(getCoordinate().get(0) + cubeDirection[0],
@@ -958,25 +1223,34 @@ public abstract class Nit extends GameObject {
 	
 	
 	
-	
 	/**
 	 * Move to a target cube.
 	 * 
 	 * @param 	destCube
 	 * 			The coordinates of the destination cube.
 	 * 
-	 * @post	The long term destination of the nit will be equal to
-	 * 			the destination cube.
-	 * 			| new.destCubeLT == destCube
+	 * @post	If the nit can move, the long term destination of the nit will be equal to
+	 * 			the destination cube,
+	 * 			| if (canMove())
+	 * 			| 	then new.getDestCubeLT() == destCube
 	 * 
-	 * @post	The long term destination reached field will be equal to false.
-	 * 			| new.isDestCubeLTReached() == false
+	 * @post	the long term destination reached field will be equal to false,
+	 * 			| 		new.isDestCubeLTReached() == false
 	 * 
-	 * @effect	If the nit is not in the initial resting state and not falling,
-	 * 			a path will be computed. If the path is equal to null the destination
+	 * @effect	a path will be computed. If the path is equal to null the destination
 	 * 			is not reachable and the long term destination reached field 
 	 * 			is set to true, hence the nit will not move. Otherwise, if a path
 	 * 			is found, the nit will move towards the first cube of the path.
+	 * 			|	if (getState() != State.RESTING_1 && computePath(getDestCubeLT()) != null )
+	 * 			|		then moveTowards(getNeighbourWSmallestN(computePath(getDestCubeLT()), getCoordinate()))
+	 * 
+	 * @effect	If the computed path is equal to null, the long term destination reached field
+	 * 			is set to true, to cancel the movement, and if the unit has an assigned task
+	 * 			this task is stopped.
+	 * 			| 	if (computePath(getDestCubeLT()) == null)
+	 * 			|		then this.destCubeLTReached = true
+	 *			|		if (hasAssignedTask())
+	 *			|			then stopExecutingTask()
 	 * 
 	 * @throws 	IllegalPositionException
 	 * 			The given destination cube is not valid.
@@ -989,40 +1263,50 @@ public abstract class Nit extends GameObject {
 			throw new IllegalPositionException(destCube);
 		}
 		
-		setDestCubeLT(destCube);
-		this.destCubeLTReached = false;
-		
-		
-		if (getState() != State.RESTING_1) {
-			
-			Coordinate startCube = getCoordinate();
-			List<Tuple> path = computePath(getDestCubeLT());
+		if (canMove()) {
+			setDestCubeLT(destCube);
+			this.destCubeLTReached = false;
 			
 			
-			if (path == null)
-				this.destCubeLTReached = true;
-			
-			else if (Tuple.containsCube(path, startCube)) {
-				Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
+			if (getState() != State.RESTING_1) {
 				
-				if (nextTuple != null)
-					moveTowards(nextTuple.cube);
+				Coordinate startCube = getCoordinate();
+				List<Tuple> path = computePath(getDestCubeLT());
+				
+				
+				if (path == null) {
+					this.destCubeLTReached = true;
+					if (hasAssignedTask())
+						stopExecutingTask();
+				}
+				
+				else if (Tuple.containsCube(path, startCube)) {
+					Tuple nextTuple = getNeighbourWSmallestN(path, startCube);
+					
+					if (nextTuple != null)
+						moveTowards(nextTuple.cube);
+				}
 			}
-			
 		}
 	}
 	
+	
+	/**
+	 * Check if the nit can move.
+	 */
+	protected abstract boolean canMove();
 	
 	
 	/**
 	 * Get a random cube neighboring the cube currently occupied by the nit.
 	 * 
-	 * @return	a random cube neighboring the current cube.
-	 * 			| getWorld().getRandomNeighbouringCube(getCoordinate())
+	 * @return	the result is neighboring the current cube.
+	 * 			| getWorld().isNeighbouring(result, getCoordinate())
 	 */
 	private Coordinate getRandomNeighbouringCube() {
 		return getWorld().getRandomNeighbouringCube(getCoordinate());
 	}
+	
 	
 	
 	/**
@@ -1035,12 +1319,12 @@ public abstract class Nit extends GameObject {
 	 * @param 	cube
 	 * 			The cube to find the neighbour of.
 	 * 	
-	 * @return	The the cube that is neighboring the given cube with the smallest 
+	 * @return	The tuple with the cube that is neighboring the given cube with the smallest 
 	 * 			weight.
 	 */
 	private Tuple getNeighbourWSmallestN(List<Tuple> path, Coordinate cube) {
 		Set<Coordinate> neighbours = getWorld().getNeighbours(cube);
-		LinkedList<Tuple> neighboursInPath = new LinkedList<Tuple>();
+		List<Tuple> neighboursInPath = new ArrayList<Tuple>();
 		
 		for (Coordinate neighbour: neighbours) {
 			if (Tuple.containsCube(path, neighbour)) {
@@ -1053,17 +1337,27 @@ public abstract class Nit extends GameObject {
 	}
 	
 	
-	private static Tuple smallestN(LinkedList<Tuple> elements) {
-		if (! elements.isEmpty()){
-			Tuple smallest = elements.getFirst();
-			for(Tuple element: elements){
+	/**
+	 * Find the tuple from a given list of tuples with the smallest weight.
+	 * 
+	 * @param	lst
+	 * 			the given list of cubes.
+	 * 
+	 * @return	the tuple with the smallest weight.
+	 * 			|	for each tuple in lst:
+	 * 			|		tuple.n >= result.n
+	 */
+	private static Tuple smallestN(List<Tuple> lst) {
+		if (lst.isEmpty()){
+			return null;
+		} else {
+			Tuple smallest = lst.get(0);
+			for (Tuple element: lst){
 				if (element.n < smallest.n){
 					smallest = element;
 				}
 			}
 			return smallest;
-		}else{
-			return null;
 		}
 	}
 	
@@ -1083,6 +1377,9 @@ public abstract class Nit extends GameObject {
 	}
 	
 	
+	/**
+	 * Return a random cube in the game world that is reachable for this nit.
+	 */
 	protected abstract Coordinate getRandomReachableCube();
 	
 	
@@ -1095,6 +1392,10 @@ public abstract class Nit extends GameObject {
 	 * 
 	 * @return	if a path can be found within a reasonable time, this path is
 	 * 			returned.
+	 * 			| (for some tuple in result: tuple.cube == getCoordinate()
+	 * 			|	&& for some tuple in result: tuple.cube == destCube
+	 * 			|		&& (for each tuple in result: 
+	 * 			|			for some tuple2 in result: getWorld().isNeighbouring(tuple, tuple2) ) )
 	 * 
 	 * @return	if no path can be found within a reasonable time, null is returned.
 	 * 			| result == null
@@ -1105,14 +1406,14 @@ public abstract class Nit extends GameObject {
 		
 		int iterations = 0;
 		while(!Tuple.containsCube(path, getCoordinate()) 
-				&& Tuple.hasNext(path) && iterations < 501) {
+				&& Tuple.hasNext(path) && iterations < 3001) {
 			
 			Tuple nextTuple = Tuple.getNext(path);
 			path = search(nextTuple, path);
 			nextTuple.isChecked = true;
 			iterations++;
 
-			if (iterations >= 501) {
+			if (iterations >= 3001) {
 				path = null;
 				break;
 			}
@@ -1121,7 +1422,11 @@ public abstract class Nit extends GameObject {
 	}
 	
 	
+	/**
+	 * Search for a path in a given list of tuples.
+	 */
 	protected abstract List<Tuple> search(Tuple currentTuple, List<Tuple> path);
+	
 	
 	
 	/**
@@ -1142,21 +1447,22 @@ public abstract class Nit extends GameObject {
 	 * @param 	dt
 	 * 			the game time interval in which to manage the moving behavior.
 	 * 
-	 * @effect	if the nit is not occupying a cube neighbouring a solid cube, it will fall
-	 * 			and this method will have no other effect.
-	 * 			| if (!isNeighbouringSolid(getCoordinate())
-	 * 			|	then fall()
-	 * 
-	 * @effect	else if the nit is sprinting, its stamina points will be updated. If the
+	 * @effect	if the nit is sprinting, its stamina points will be updated. If the
 	 * 			nit is out of stamina points it will stop sprinting and its stamina points
-	 * 			will be set to zero (they might be less than zero for a little while due
-	 * 			to the calculation method).
+	 * 			will be set to the minimum value.
 	 * 			| if (isSprinting())
 	 * 			|		then updateCurrentStaminaPoints( 
 	 * 			|				(getCurrentStaminaPoints() - (dt/0.1))  )
-	 * 			|		if (getCurrentStaminaPoints() <= 0)
+	 * 			|		if (getCurrentStaminaPoints() <= getMinStaminaPoints())
 	 * 			|			then stopSprinting()
-	 * 			|				 updateCurrentStaminaPoints(0)
+	 * 			|				 updateCurrentStaminaPoints(getMinStaminaPoints())
+	 * 
+	 * @effect	if the nits default behavior is enabled, and its stamina points are above
+	 * 			the minimum, there is a 0.1 chance that the nit will start sprinting.
+	 * 			| if (isDefaultBehaviorEnabled() 
+	 * 			|		&& getCurrentStaminaPoints() > getMinStaminaPoints()
+	 * 			|		&& random < 0.1)
+	 * 			|	then startSprinting()
 	 * 
 	 * @effect	if the nit does not reach its destination (short term) within this
 	 * 			time interval, its position is updated.
@@ -1175,13 +1481,18 @@ public abstract class Nit extends GameObject {
 	 * 			reached field is set to true, and if it was sprinting it stops sprinting.
 	 * 			| if (reached(dt) && getCoordinate().equals(getDestCubeLT()) )
 	 * 			|	then this.destCubeLTReached = true
-				|			if (isSprinting()) 
-				|				then stopSprinting()
+	 *			|			if (isSprinting()) 
+	 *			|				then stopSprinting()
 	 * 
 	 * @effect	if the nit does reach its short term destination within this time interval,
 	 * 			its state is set to empty.
 	 * 			| if (reached(dt))
 	 * 			| 	then setState(State.EMPTY)
+	 * 
+	 * @effect	if the nit is not occupying a cube neighbouring a solid cube, it MAY fall
+	 * 			and this method will have no other effect.
+	 * 			| if (!isNeighbouringSolid(getCoordinate())
+	 * 			|	then fall()?
 	 * 
 	 */
 	protected void controlMoving(double dt) throws IllegalPositionException, 
@@ -1189,17 +1500,19 @@ public abstract class Nit extends GameObject {
 		
 			if (isSprinting()) {
 				updateCurrentStaminaPoints( (int) (getCurrentStaminaPoints() - (dt/0.1)));
-				if (getCurrentStaminaPoints() <= 0) {
+				if (getCurrentStaminaPoints() <= getMinStaminaPoints()) {
 					stopSprinting();
-					updateCurrentStaminaPoints(0);
-				}
+					updateCurrentStaminaPoints(getMinStaminaPoints());
+				}	
 			}
-			else if (this.isDefaultBehaviorEnabled()) {
+		
+			if (isDefaultBehaviorEnabled() && getCurrentStaminaPoints() > getMinStaminaPoints()) {
 				double dice = random.nextDouble();
-				if (dice < 0.5) {
+				if (dice < 0.1) {
 					startSprinting();
 				}
 			}
+			
 			if (! reached(dt)) {
 				updatePosition(dt);
 			}
@@ -1325,44 +1638,10 @@ public abstract class Nit extends GameObject {
 	 */
 	private boolean reached(double dt) throws IllegalPositionException {
 		
-		return (getDistanceTo(getPosition(), World.getCubeCenter(getDestination())) < getCurrentSpeed()*dt);
+		return (getWorld().getDistanceTo(getPosition(), World.getCubeCenter(getDestination())) < getCurrentSpeed()*dt);
 	}
 
 
-	/**
-	 * Returns the distance between two given positions.
-	 * 
-	 * @param	position1
-	 * 			The first position.
-	 * 
-	 * @param	position2
-	 * 			The second position.
-	 * 
-	 * @return	the distance between the positions, which is equal to the square root of 
-	 * 			the square of the differences between the x, y and z coordinates of the
-	 * 			first position and second position.
-	 * 			| result = Math.sqrt(Math.pow(position1[0]-position2[0],2)
-	 * 			|	+ Math.pow(position1[1]-position2[1],2) 
-	 * 			|	+ Math.pow(position1[2]-position2[2],2))
-	 * 
-	 * @throws	IllegalPositionException
-	 * 			One of the given positions is not a valid position.
-	 * 			| !canHaveAsPosition(position)
-	 */
-	@Model
-	// TODO static?
-	private double getDistanceTo(double[] position1, double[] position2) 
-											throws IllegalPositionException {
-		if (!canHaveAsPosition(Convert.convertPositionToCoordinate(position1)))
-			throw new IllegalPositionException(position1);
-		
-		if (!canHaveAsPosition(Convert.convertPositionToCoordinate(position2)))
-			throw new IllegalPositionException(position2);
-
-		return Math.sqrt(Math.pow(position1[0]-position2[0],2)
-				+ Math.pow(position1[1]-position2[1],2) 
-				+ Math.pow(position1[2]-position2[2],2));
-	}
 	
 	
 	/**
@@ -1386,17 +1665,16 @@ public abstract class Nit extends GameObject {
 	/**
 	 * Set the long term destination of the nit to the given coordinates.
 	 * 
-	 * @param destCubeLT
+	 * @param 	destCubeLT
 	 * 			The new long term destination cube coordinates.
 	 * 
-	 * @post The new long term destination of this nit is equal to the
-	 * 		given cube coordinates.
-	 * 		| new.getDestCubeLT() == destCubeLT
+	 * @post 	The new long term destination of this nit is equal to the
+	 * 			given cube coordinates.
+	 * 			| new.getDestCubeLT() == destCubeLT
 	 * 
-	 * @throws IllegalPositionException
+	 * @throws 	IllegalPositionException
 	 * 			The given position is not valid.
-	 * 		| !(canHaveAsPosition(convertPositionToDouble(destCubeLT)) 
-	 * 				|| destCubeLT == null )
+	 * 			| !(canHaveAsPosition(destCubeLT)
 	 */
 	@Raw
 	protected void setDestCubeLT(Coordinate destCubeLT) throws IllegalPositionException {
@@ -1461,11 +1739,10 @@ public abstract class Nit extends GameObject {
 	 * Returns the nits velocity.
 	 * 
 	 * @return	The nits current velocity vector,
-	 * 			which is equal to its speed multiplied by
+	 * 			which is smaller than or equal to to its speed multiplied by
 	 * 			the difference of its target position coordinates and its current
 	 * 			position coordinates, divided by the distance to the destination.
-	 * 			| if (!isFalling())
-	 * 			| 	then result == getCurrentSpeed()*(World.getCubeCenter(getDestination()) 
+	 * 			| 	result <= getCurrentSpeed()*(World.getCubeCenter(getDestination()) 
 	 * 			|					- getPosition() )
 	 * 			|		/ getDistanceTo(getPosition(), World.getCubeCenter(getDestination()))
 	 */
@@ -1474,7 +1751,7 @@ public abstract class Nit extends GameObject {
 		if (!isMoving())
 			return super.getVelocity();
 		
-		double d = getDistanceTo(getPosition(), World.getCubeCenter(getDestination()));
+		double d = getWorld().getDistanceTo(getPosition(), World.getCubeCenter(getDestination()));
 		double[] v = new double[3];
 		for (int i=0; i<3; ++i) {
 			v[i] = getCurrentSpeed()*(World.getCubeCenter(getDestination())[i]-getPosition()[i])/d;
@@ -1518,17 +1795,22 @@ public abstract class Nit extends GameObject {
 	/**
 	 * Makes the nit start sprinting.
 	 * 
-	 * @post	If the nit is moving and if it has enough stamina points
+	 * @post	If the nit can sprint
 	 * 			then its sprinting field is set to true.
-	 * 			| if (isMoving() && getCurrentStaminaPoints() > 0 && !isFalling())
+	 * 			| if (canSprint())
 	 * 			| 	then new.isSprinting() == true
 	 */
 	public void startSprinting() {
-		if (isMoving() && getCurrentStaminaPoints() > 0) {
+		if (canSprint()) {
 			this.isSprinting = true;
 		}
 	}
 	
+	
+	/**
+	 * Check whether the nit can start sprinting or not.
+	 */
+	protected abstract boolean canSprint();
 	
 	
 	/**
@@ -1562,20 +1844,17 @@ public abstract class Nit extends GameObject {
 	/**
 	 * Makes the nit work at a given target cube.
 	 * 
-	 * @effect	if the nit is not moving and not in its initial
-	 * 			resting state, the nits target cube will be set to the given
+	 * @effect	if the nit can work, the nits target cube will be set to the given
 	 * 			target cube.
-	 * 			| if (!isMoving() && getState() != State.RESTING_1 && !isFalling())
+	 * 			| if (canWork())
 	 * 			| 	then setTargetCube(targetCube)
 	 * 
-	 * @effect	if the nit is not moving and not in its initial
-	 * 			resting state, the nit will start working
-	 * 			| if (!isMoving() && getState() != State.RESTING_1 && !isFalling())
+	 * @effect	if the nit can work, the nit will start working
+	 * 			| if (canWork())
 	 * 			| 	then startWorking()
 	 * 
-	 * @effect	if the nit is not moving and not in its initial
-	 * 			resting state, its orientation is set towards the target cube.
-	 * 			| if (!isMoving() && getState() != State.RESTING_1 && !isFalling())
+	 * @effect	if the nit can work, its orientation is set towards the target cube.
+	 * 			| if (canWork())
 	 * 			| 	then setOrientation( (float) Math.atan2(getPosition()[1] 
 	 * 			|					- World.getCubeCenter(getTargetCube())[1],
 	 *			|		targetPosition[0] - World.getCubeCenter(getTargetCube())()[0]))
@@ -1586,7 +1865,7 @@ public abstract class Nit extends GameObject {
 	 */
 	public void workAt(Coordinate targetCube) throws IllegalTargetException {
 		
-		if (!isMoving() && getState() != State.RESTING_1) {
+		if (canWork()) {
 			
 			try {
 				setTargetCube(targetCube);
@@ -1604,6 +1883,11 @@ public abstract class Nit extends GameObject {
 		}
 	}
 	
+	
+	/**
+	 * Check if this nit can work.
+	 */
+	protected abstract boolean canWork();
 	
 
 	/**
@@ -1717,7 +2001,6 @@ public abstract class Nit extends GameObject {
 	 * 			| if (getTimeToCompletion() <= 0.0)
 	 * 			| 		then setState(State.EMPTY)
 	 */
-	// TODO documentation
 	private void controlWorking(double dt) throws IllegalTimeException, 
 							ArithmeticException, IllegalArgumentException {
 		if (getTimeToCompletion() > 0.0) {
@@ -1775,18 +2058,17 @@ public abstract class Nit extends GameObject {
 	 * 			| if (getWorld().getCubeTypeAt(getTargetCube())==TerrainType.WORKSHOP
 	 * 			|		&& getWorld().containsLog(getWorld().getObjectsAt(getTargetCube()))
 	 * 			|		&& getWorld().containsBoulder(getWorld().getObjectsAt(getTargetCube()))  )
-	 * 			| then (for each boulder in items:
+	 * 			| then (for some boulder in getWorld().getObjectsAt(getTargetCube()):
 	 * 			|			boulder.terminate()
-	 * 			|			break )
-	 * 			|	   (for each log in items:
+	 * 			|			 )
+	 * 			|	   (for some log in getWorld().getObjectsAt(getTargetCube()):
 	 * 			|			log.terminate()
-	 * 			|			break )
+	 * 			|			 )
 	 * 			and the weight and toughness of the nit are incremented.
 	 * 			|		setWeight(getWeight() + 1)
 	 * 			|		setToughness(getToughness() +1)
 	 * 
 	 */
-	//TODO increase by 1, correct?
 	private void improveEquipment() {
 		boolean logT = false, boulderT = false;
 		
@@ -1844,6 +2126,7 @@ public abstract class Nit extends GameObject {
 				|| getCoordinate().equals(targetCube) ) );
 	}
 
+	
 	/**
 	 * Set the nits target cube.
 	 * 
@@ -1879,7 +2162,6 @@ public abstract class Nit extends GameObject {
 	 * 			this item is a boulder.
 	 * 			| result == (getCarriedItem() instanceof Boulder)
 	 */
-	@Raw
 	public boolean isCarryingBoulder() {
 		return (getCarriedItem() instanceof Boulder);
 	}
@@ -1892,7 +2174,6 @@ public abstract class Nit extends GameObject {
 	 * 			this item is a log.
 	 * 			| result == (getCarriedItem() instanceof Log)
 	 */
-	@Raw
 	public boolean isCarryingLog() {
 		return (getCarriedItem() instanceof Log);
 	}
@@ -1904,7 +2185,6 @@ public abstract class Nit extends GameObject {
 	 * @return	true if and only if the nit is carrying an item.
 	 * 			| result == (getCarriedItem() != null)
 	 */
-	@Raw
 	public boolean isCarryingItem() {
 		return (getCarriedItem() != null);
 	}
@@ -1920,6 +2200,7 @@ public abstract class Nit extends GameObject {
 	 * 			if the item references the same world as this nit.
 	 * 			| result == (item != null && getWorld() == item.getWorld())
 	 */
+	@Raw
 	public boolean canHaveAsItem(Item item) {
 		return (item != null && item.getWorld() == this.getWorld());
 	}
@@ -1988,7 +2269,7 @@ public abstract class Nit extends GameObject {
 	 * 			The nit cannot have this item as the item its carrying.
 	 * 			| !canHaveAsItem(item)
 	 */
-	@Model
+	@Model @Raw
 	protected void pickUpItem(Item item) throws IllegalArgumentException {
 		if (!canHaveAsItem(item))
 			throw new IllegalArgumentException();
@@ -2023,26 +2304,27 @@ public abstract class Nit extends GameObject {
 	 * @param 	defender
 	 * 			The nit to attack.
 	 * 
-	 * @effect	If the nit is not currently moving or falling, it starts attacking.
-	 * 			| startAttacking()
+	 * @effect	If the nit can execute an attack it starts attacking.
+	 * 			| if (canExecuteAttack())
+	 * 			|  	then startAttacking()
 	 * 
-	 * @post	If the nit is not currently moving or falling, this nits defender field 
+	 * @post	If the nit can execute an attack this nits defender field 
 	 * 			is set to the given other nit.
-	 * 			| new.getDefender() == defender
+	 * 			| 	new.getDefender() == defender
 	 * 
-	 * @effect	If the nit is not currently moving or falling, the nit this nit is attacking
+	 * @effect	If the nit can execute an attack the nit this nit is attacking
 	 * 			its is attacked field is set to true.
-	 * 			| getDefender().setAttacked(true)
+	 * 			| 	getDefender().setAttacked(true)
 	 * 
-	 * @post	If the nit is not currently moving or falling, its orientation is set towards
+	 * @post	If the nit can execute an attack its orientation is set towards
 	 * 			the attacked nit.
-	 * 			| new.getOrientation() == arctangent(defender.getPosition()[1]-this.getPosition()[1],
-	 * 			|	defender.getPosition()[0]-this.getPosition()[0]))
+	 * 			| 	new.getOrientation() == arctangent(defender.getPosition()[1]-this.getPosition()[1],
+	 * 			|		defender.getPosition()[0]-this.getPosition()[0]))
 	 * 
-	 * @post	If the nit is not currently moving or falling, the attacked nits orientation is set
+	 * @post	If the nit can execute an attack the attacked nits orientation is set
 	 * 			towards this nit, i.e. the attacking nit.
-	 * 			| (new defender).getOrientation() == arctangent(this.getPosition()[1]-
-	 * 			|	defender.getPosition()[1], this.getPosition()[0]-defender.getPosition()[0]))
+	 * 			| 	(new defender).getOrientation() == arctangent(this.getPosition()[1]-
+	 * 			|		defender.getPosition()[1], this.getPosition()[0]-defender.getPosition()[0]))
 	 *  
 	 * @throws 	IllegalVictimException
 	 * 			The nit cannot attack the given other nit.
@@ -2052,7 +2334,7 @@ public abstract class Nit extends GameObject {
 		if (!canAttack(defender))
 			throw new IllegalVictimException(this, defender);
 
-		if (!isMoving() && !isAttacked() && !isAttacking() ) {
+		if (canExecuteAttack()) {
 			startAttacking();
 						
 			setDefender(defender);
@@ -2070,20 +2352,27 @@ public abstract class Nit extends GameObject {
 	
 	
 	/**
-	 * Returns true if the nit can attack another given nit.
+	 * Check whether this nit can execute an attack.
+	 */
+	protected abstract boolean canExecuteAttack();
+	
+	
+	/**
+	 * Returns true if the unit can attack another given nit.
 	 * 
 	 * @param	victim
 	 * 			The nit to check.
 	 * 
 	 * @return	True if and only if the given nit occupies the same
 	 * 			or a neighboring cube of the game world, and if the given
-	 * 			nit is not falling and it does not belong to the same faction as this
-	 * 			nit.
+	 * 			nit is not falling if it is a unit, and if it does not belong 
+	 * 			to the same faction as this nit, and if it is not already attacking some
+	 * 			nit or itself being attacked.
 	 * 			| result == (  ( getWorld().isNeighbouring(getCoordinate(), victim.getCoordinate())
 	 * 			|		|| getCoordinate().equals(victim.getCoordinate())  )
-	 * 			|		&& !victim.isFalling() && getFaction() != victim.getFaction()  )
+	 * 			|		&& !victim.isFalling() && getFaction() != victim.getFaction() 
+	 * 			|		&& !victim.isAttacked() && !victim.isAttacking() )
 	 */
-	// TODO formal documentation return tag
 	@Model
 	protected boolean canAttack(Nit victim) {
 		if (! ( getWorld().isNeighbouring(getCoordinate(), victim.getCoordinate())
@@ -2092,6 +2381,8 @@ public abstract class Nit extends GameObject {
 		if ( victim.isAttacked() || victim.isAttacking())
 			return false;
 		if (getFaction() == victim.getFaction())
+			return false;
+		if (victim instanceof Unit && ((Unit) victim).isFalling())
 			return false;
 		return true;
 	}
@@ -2106,7 +2397,6 @@ public abstract class Nit extends GameObject {
 	 * 			|				canAttack(victim)   )
 	 */
 	private boolean enemiesInRange() {
-		//TODO getAllNits!!!!
 		Iterator<Nit> it = getWorld().getAllNits().iterator();
 		
 		Nit victim;
@@ -2196,14 +2486,6 @@ public abstract class Nit extends GameObject {
 			getDefender().setAttacked(false);
 			setState(State.EMPTY);
 
-			//System.out.println("defender state  " + getDefender().getState().toString());
-			//System.out.println("defender IA  " + getDefender().isAttacked());
-
-			//System.out.println("this state  " + getState().toString());
-			//System.out.println("attacker IA  " + isAttacking());
-
-			//System.out.println("defender is attacked" + getDefender().isAttacked());
-			//System.out.println("State empty, attack voltooid");
 		}
 	}
 	
@@ -2292,8 +2574,8 @@ public abstract class Nit extends GameObject {
 	 * 
 	 * @post	The nits position is set to a random adjacent cube on the same Z level.
 	 * 			| new.getPosition().equals(new Coordinate(getCoordinate().get(0) + random.nextInt(3) - 1,
-				|		getCoordinate().get(1) + random.nextInt(3) - 1, 
-				|		getCoordinate().get(2)) )
+	 *			|		getCoordinate().get(1) + random.nextInt(3) - 1, 
+	 *			|		getCoordinate().get(2)) )
 	 * 
 	 * @throws 	IllegalPositionException
 	 * 			The nit cannot have the calculated random adjacent position
@@ -2520,18 +2802,24 @@ public abstract class Nit extends GameObject {
 	
 	
 	/**
-	 * Make the nit rest, if it's not currently moving or falling.
+	 * Make the nit rest, if it can rest.
 	 * 
-	 * @effect	If the nit is not currently moving or falling, it starts
+	 * @effect	If the nit can rest, it starts
 	 * 			resting.
-	 * 			| if ( !isMoving && !isFalling() )
+	 * 			| if ( canRest() )
 	 * 			| 	then startResting()
 	 */
 	public void rest() throws IllegalTimeException {
-		if (!isMoving() && !isAttacked()) {
+		if (canRest()) {
 			startResting();
 		}
 	}
+	
+	
+	/**
+	 * Check whether the nit can currently rest.
+	 */
+	protected abstract boolean canRest();
 	
 	
 	/**
@@ -2712,6 +3000,7 @@ public abstract class Nit extends GameObject {
 		this.timeResting = newValue;
 	}
 	
+	
 	/**
 	 * Set the time after the nit has last rested to a given value.
 	 * 
@@ -2785,16 +3074,17 @@ public abstract class Nit extends GameObject {
 	
 	
 	/**
-	 * Checks if the given state is a valid state.
+	 * Checks if the given state is a valid state for this nit.
 	 * 
 	 * @param 	State
 	 * 			The state to check.
 	 * 
-	 * @return	True if and only if the value class of states 
-	 * 			contains the given state.
-	 * 			| result == (State.contains(state))
+	 * @return	False if the value class of states does not
+	 * 			contain the given state.
+	 * 			| if (!State.contains(state))
+	 * 			| 	then result == false
 	 */
-	public static boolean isValidState(State state) {
+	public boolean canHaveAsState(State state) {
 		return State.contains(state);
 	}
 	
@@ -2810,11 +3100,11 @@ public abstract class Nit extends GameObject {
 	 * 
 	 * @throws	IllegalArgumentException
 	 * 			the given state value is not a valid state for the nit.
-	 * 			| !!isValidState(state)
+	 * 			| !canHaveAsState(state)
 	 */
 	@Raw
 	public void setState(State state) {
-		if (!isValidState(state) )
+		if (!canHaveAsState(state) )
 			throw new IllegalArgumentException();
 		this.state = state;
 	}
@@ -3047,13 +3337,14 @@ public abstract class Nit extends GameObject {
 	
 	
 	/**
-	 * Return the faction to which this nit belongs. Returns a null refererence
+	 * Return the faction to which this nit belongs. Returns a null reference
 	 * if this nit does not belong to any faction.
 	 */
 	@Basic @Raw
 	public Faction getFaction() {
 		return this.faction;
 	}
+	
 	
 	/**
 	 * Check whether this nit can join a given faction.
@@ -3070,6 +3361,7 @@ public abstract class Nit extends GameObject {
 	public boolean canHaveAsFaction(Faction faction) {
 		return ( (faction == null) || faction.canHaveAsNit(this) );
 	}
+	
 	
 	/**
 	 * Check whether this nit has a proper faction to which it belongs.
@@ -3102,12 +3394,19 @@ public abstract class Nit extends GameObject {
 	 * 			effective faction, that faction may not contain this nit.
 	 * 			| (faction == null) && (getFaction() != null) 
 	 * 			|					&& (getFaction().hasAsNit(this))
+	 * 
+	 * @throws	IllegalArgumentException
+	 * 			If the given faction is effective it must reference this unit as one of
+	 * 			its units.
+	 * 			| (faction == null) && (getFaction() != null) 
+	 * 			|					&& (getFaction().hasAsNit(this))
 	 */
 	@Raw
 	public void setFaction(Faction faction) throws IllegalArgumentException {
-		//if ( (faction != null) && !faction.hasAsNit(this) )
-		//	throw new IllegalArgumentException();
+		
 		if ( (faction == null) && (getFaction() != null) && (getFaction().hasAsNit(this)) )
+			throw new IllegalArgumentException();
+		if (!faction.hasAsNit(this) && faction != null)
 			throw new IllegalArgumentException();
 		this.faction = faction;
 	}

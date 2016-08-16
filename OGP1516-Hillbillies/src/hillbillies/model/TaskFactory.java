@@ -22,7 +22,8 @@ public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task>
 	@Override
 	public List<Task> createTasks(String name, int priority, Statement activity, List<int[]> selectedCubes) {
 		List<Task> listOfTasks = new ArrayList<Task>();
-		if (selectedCubes != null) {
+		//System.out.println("create task in TF");
+		if (selectedCubes != null && selectedCubes.size() > 0) {
 			for (int[] selectedCube : selectedCubes) {
 				Task task = new Task(name, priority, activity, selectedCube);
 				listOfTasks.add(task);
@@ -30,11 +31,12 @@ public class TaskFactory implements ITaskFactory<Expression<?>, Statement, Task>
 				System.out.println(task.toString());
 			} 
 		} else {
-			Task task = new Task(name, priority, activity, null);
+			Task task = new Task(name, priority, activity);
 			listOfTasks.add(task);
 			task.getActions().setTask(task);
 			System.out.println(task.toString());
 		}
+		
 		return listOfTasks;
 	}
 	

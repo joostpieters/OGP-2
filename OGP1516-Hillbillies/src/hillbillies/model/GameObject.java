@@ -7,8 +7,14 @@ import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
 import hillbillies.model.World.TerrainType;
 
-
+/**
+ * A class of game objects, with a given position and world.
+ * 
+ * @author 	rubencartuyvels
+ * @version	2.5
+ */
 public abstract class GameObject {
+	
 	
 	protected GameObject() {
 		
@@ -38,7 +44,6 @@ public abstract class GameObject {
 	 * 			The value to be checked.
 	 * @return true if and only if the value is larger than or equal to
 	 * 			zero and smaller than 0.2.
-	 * 		| result =  (dt >= 0 && dt < 0.2 )
 	 */
 	@Model
 	protected static boolean isValidDT(double dt) {
@@ -47,7 +52,7 @@ public abstract class GameObject {
 	
 	
 
-	protected boolean canHaveAsPosition(Coordinate coordinates) {
+	public boolean canHaveAsPosition(Coordinate coordinates) {
 		if (coordinates == null) {
 			return false;
 		}
@@ -229,7 +234,7 @@ public abstract class GameObject {
 	 * 			| (world == null) && (getWorld() != null) 
 	 * 			|					&& (getWorld().hasAsGameObject(this))
 	 */
-	//TODO documentation super
+	//TODO
 	public void setWorld(World world) throws IllegalArgumentException {
 		//if ( (world != null) && !world.hasAsGameObject(this) )
 		//	throw new IllegalArgumentException();

@@ -3,32 +3,13 @@ package hillbillies.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
 
 
 /**
  * A class of enits as a kind of nits.
  * 
- * @invar	The position of a unit must always be valid, within the game world.
- * 			| canHaveAsPosition(getCoordinate())
- * 
- * @invar	The enit can have its name as its name.
- * 			| canHaveAsName(getName())
- * 
- * @invar 	The current number of hitpoints must always be valid for this unit.
- * 			| canHaveAsHitPoints(getCurrentHitPoints())
- * 
- * @invar 	The current number of stamina points must always be valid for this unit.
- * 			| canHaveAsStaminaPoints(getCurrentStaminaPoints())
- * 
- * @invar 	The unit can always have its long term destination cube as its position.
- * 			| canHaveAsPosition(getDestCubeLT())
- * 
- * @invar 	The unit can always have its destination cube as its position.
- * 			| canHaveAsPosition(getDestination())
- * 
- * @invar 	The unit can attack the unit it is attacking.
- * 			| canAttack(getDefender())
  * 
  *@author Ruben Cartuyvels
  *@version	2.2
@@ -38,62 +19,30 @@ public class Enit extends Nit {
 	
 	
 	/**
-	 * Initialize a new unit with the given world as its world, the given default
+	 * Initialize a new enit with the given world as its world, the given default
 	 * behavior and the given faction as its faction, with random attributes 
 	 * and a random name, with an orientation and an empty state, not carrying an item.
 	 * 
 	 * @param 	enableDefaultBehavior
-	 *        	Whether the default behavior of the unit is enabled.
+	 *        	Whether the default behavior of the enit is enabled.
 	 * 
 	 * @param	world
-	 * 			The world for this new unit.
+	 * 			The world for this new enit.
 	 * 
 	 * @param	faction
-	 * 			The faction for this new unit.
+	 * 			The faction for this new enit.
 	 * 
-	 * @effect	The units world is set to the given world
-	 * 			| setWorld(world)
-	 * 
-	 * @effect	The units position is set to a random position in its world.
-	 * 			| setPosition(getWorld().getRandomNeighbouringSolidCube())
-	 * 
-	 * @effect	The units name is set to a random name.
-	 * 			| setName(generateName())
-	 * 
-	 * @effect	The units agility is set to a random initial agility.
-	 * 			| setAgility(generateInitialSkill())
-	 * 
-	 * @effect	The units strength is set to a random initial strength.
-	 * 			| setStrength(generateInitialSkill())
-	 * 
-	 * @effect	The units toughness is set to a random initial toughness.
-	 * 			| setToughness(generateInitialSkill())
-	 * 
-	 * @effect	The units weight is set to a random initial weight.
-	 * 			| setWeight(generateInitialWeight())
-	 * 
-	 * @effect	The units HP are set to the current maximum.
-	 * 			| updateCurrentHitPoints(getMaxHitPoints())
-	 * 
-	 * @effect	The units stamina points are set to the current maximum.
-	 * 			| updateCurrentStaminaPoints(getMaxStaminaPoints())
-	 * 
-	 * @effect	The units orientation is set to an initial value.
-	 * 			| setOrientation((Math.PI/2.0))
-	 * 
-	 * @effect	The units state is set to empty.
-	 * 			| setState(State.EMPTY)
-	 * 
-	 * @effect	The default behavior of the unit is set to the given
-	 * 			default behavior.
-	 * 			| setDefaultBehavior(enableDefaultBehavior)
+	 * @effect	the enit is initialized as a nit with the given world, faction and 
+	 * 			default behavior, with random attributes 
+	 * 			and a random name, with an orientation and an empty state, not carrying an item.
+	 * 			| super(world, faction, enableDefaultBehavior)
 	 * 
 	 * @throws	IllegalPositionException(position, this)
-	 *         	The unit cannot have the given position.
+	 *         	The enit cannot have the given position.
 	 *          | ! canHaveAsPosition(position)
 	 *             
 	 * @throws	IllegalNameException(name, this)
-	 *          The unit cannot have the given name.
+	 *          The enit cannot have the given name.
 	 *          | ! isValidName(name)            
 	 */
 	@Raw
@@ -119,10 +68,10 @@ public class Enit extends Nit {
 	/**
 	 * Check whether the given name is a valid name for an enit.
 	 * 
-	 * @param name
+	 * @param 	name
 	 * 			The name to be checked.
 	 * 
-	 * @return True if and only if the name is effective, if its
+	 * @return 	True if and only if the name is effective, if its
 	 * 			length is larger than 1, if the first character is an uppercase
 	 * 			letter and if it only exists of lowercase or uppercase
 	 * 			letters.
@@ -138,7 +87,13 @@ public class Enit extends Nit {
 	}
 	
 	
-	@Override
+	/**
+	 * Return a name.
+	 * 
+	 * @return 	The enit can have the generated name as its name.
+	 * 			| canHaveAsName(result)
+	 */
+	@Override @Model
 	protected String generateName() {
 		return "Tom";
 	}
@@ -211,9 +166,7 @@ public class Enit extends Nit {
 	 * Get a random cube that is reachable from the enits current position.
 	 *  
 	 * @return	A random reachable cube coordinate.
-	 * 			| do ( cube = getWorld().getNearRandomCube() )
-	 * 			| while (!isReachable(cube)
-	 * 			| result == cube
+	 * 			| isReachable(result)
 	 */
 	@Override
 	protected Coordinate getRandomReachableCube() {
@@ -266,5 +219,98 @@ public class Enit extends Nit {
 	}
 	
 	
-
+	/**
+	 * Check if the enit can currently start sprinting.
+	 * 
+	 * @return	true if and only if the enit is moving and its stamina points
+	 * 			are above the minimum level.
+	 * 			| result == (isMoving() && getCurrentStaminaPoints() > 0 )
+	 */
+	@Override @Model
+	protected boolean canSprint() {
+		return (isMoving() && getCurrentStaminaPoints() > 0);
+	}
+	
+	
+	
+	/**
+	 * Check if the enit can currently work.
+	 * 
+	 * @return	true if and only if the enit is not attacked, not in its initial
+	 * 			resting state and not moving.
+	 * 			|	result == (!isAttacked() && !isMoving() && getState() != State.RESTING_1 )
+	 */
+	@Override @Model
+	protected boolean canWork() {
+		if (!isMoving() && getState() != State.RESTING_1)
+			return true;
+		return false;
+	}
+	
+	
+	/**
+	 * Check if the enit can currently move.
+	 * 
+	 * @return	true if and only if the enit is not attacked and not in its initial
+	 * 			resting state.
+	 * 			|	result == (!isAttacked() && getState() != State.RESTING_1 )
+	 */
+	@Override @Model
+	protected boolean canMove() {
+		return (!isAttacked() && getState() != State.RESTING_1);
+	}
+	
+	
+	
+	/**
+	 * Check if the enit can currently execute an attack.
+	 * 
+	 * @return true if and only if the enit is not attacked, not in its initial
+	 * 			resting state, not moving and not already attacking.
+	 * 			|	result == (!isAttacked() && !isMoving() && getState() != State.RESTING_1
+	 * 			|			&& !isAttacking() )
+	 */
+	@Override @Model
+	protected boolean canExecuteAttack() {
+		if (!isMoving() && !isAttacked() && !isAttacking() && getState() != State.RESTING_1)
+			return true;
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Check if the unit can currently rest.
+	 * 
+	 * @return true if and only if the unit is not attacked, not in its initial
+	 * 			resting state and not moving.
+	 * 			|	result == (!isAttacked() && !isMoving() && getState() != State.RESTING_1)
+	 */
+	@Override @Model
+	protected boolean canRest() {
+		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1)
+			return true;
+		return false;
+	}
+	
+	
+	
+	
+	/**
+	 * Checks if the given state is a valid state for this enit.
+	 * 
+	 * @param 	State
+	 * 			The state to check.
+	 * 
+	 * @return	True if and only if the value class of states 
+	 * 			contains the given state and if the state is not falling
+	 * 			| result == (State.contains(state)
+	 * 			|		&& !state.equals(State.FALLING))
+	 */
+	@Override @Model
+	public boolean canHaveAsState(State state) {
+		return (State.contains(state) && !state.equals(State.FALLING));
+	}
+	
+	
 }

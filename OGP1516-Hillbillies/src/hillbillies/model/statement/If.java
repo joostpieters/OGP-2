@@ -1,8 +1,10 @@
 package hillbillies.model.statement;
 
+import java.util.Iterator;
+
 import hillbillies.model.expression.Expression;
 
-public class If extends Statement {
+public class If extends ComposedStatement {
 	
 	private final Expression<Boolean> condition;
 	private final Statement ifBody;
@@ -16,19 +18,71 @@ public class If extends Statement {
 		
 	}
 	
+	public Statement getIfBody() {
+		return this.ifBody;
+	}
+	
+	public Expression<Boolean> getCondition() {
+		return this.condition;
+	}
+	
+	public Statement getElse() {
+		return this.elseBody;
+	}
+	
 	
 	@Override
 	public void execute() {
 		this.condition.setTask(getTask());
 		this.ifBody.setTask(getTask());
+		
 		if (this.elseBody != null)
 			this.elseBody.setTask(getTask());
 		
-		if (this.condition.evaluate()) {
-			this.ifBody.execute();
-		} else if (this.elseBody != null) {
-			this.elseBody.execute();
+	}
+	
+	
+	
+	@Override
+	public void setNextToExecStatement(Statement nextToExecStatement) {
+		super.setNextToExecStatement(this.getIfBody());
+		if (this.getElse() == null) {
+			this.getIfBody().setNextToExecStatement(nextToExecStatement);
+		} else {
+			this.getIfBody().setNextToExecStatement(this.getElse());
+			this.getElse().setNextToExecStatement(nextToExecStatement);
 		}
 	}
-
+	
+	
+	@Override
+	public Statement getNextStatement () {
+		if (getCondition().evaluate()) {
+			return getIfBody();
+		} else if (getElse() == null) {
+			return getNextStatement();
+		} else {
+			return getElse();
+		}
+	}
+	
+	
+	@Override
+	public void setNextStatement(Statement nextStatement) {
+		super.setNextStatement(nextStatement);
+		getIfBody().setNextStatement(nextStatement);
+		if (getElse() != null) {
+			getElse().setNextStatement(nextStatement);
+		}
+	}
+	
+	/*
+	@Override
+	public void setTask (Task task) {
+		super.setTask(task);
+		this.ifBody.setTask(task);
+		if (this.elseBody != null) {
+			this.elseBody.setTask(task);
+		}
+	}*/
 }

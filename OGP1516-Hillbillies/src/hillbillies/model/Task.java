@@ -8,20 +8,116 @@ import hillbillies.model.expression.*;
 
 public class Task {
 	
-	
+	/**
+	 * A set containing all the schedulers that have this task.
+	 * 
+	 * @invar	the set of schedulers is effective.
+	 * 			| schedulersForTask != null
+	 * 
+	 * @invar	Each element in the set references a scheduler that this task
+	 * 			can have as scheduler.
+	 * 			| for each scheduler in schedulersForTask:
+	 * 			| 		canHaveAsScheduler(scheduler)
+	 * 
+	 * @invar	Each scheduler in the set references this task as one
+	 * 			of their tasks.
+	 * 			| for each scheduler in schedulersForTask:
+	 * 			|		scheduler.hasAsTask(this)
+	 * 
+	 */
 	private final HashSet<Scheduler> schedulersForTask = new HashSet<Scheduler>();
-	private final String name;
-	private int priority;
-	private Unit unit = null;
-	private boolean beingExecuted;
-	private Statement actions;
-	private Coordinate cube;
-	private final Map<String, Object> variables = new HashMap<String, Object>();
-	private boolean isCompleted = false;
-	private Statement executingActivity;
-
 	
-	public Task(String name, int priority, Statement statement, int[] cube ){
+	
+	/**
+	 * A variable registering the name of the task.
+	 */
+	private final String name;
+	
+	
+	/**
+	 * A variable registering the priority of the task.
+	 */
+	private int priority = 0;
+	
+	
+	/**
+	 * A variable registering unit this task is assigned to.
+	 */
+	private Nit unit = null;
+	
+	
+	/**
+	 * A variable registering whether the task is being executed.
+	 */
+	private boolean beingExecuted = false;
+	
+	
+	/**
+	 * A variable registering the statements of this task.
+	 */
+	private Statement actions = null;
+	
+	
+	/**
+	 * A variable registering the selected cube of this task.
+	 */
+	private Coordinate cube = null;
+	
+	
+	/**
+	 * A variable registering the assigned variables in this task.
+	 */
+	private final Map<String, Object> variables = new HashMap<String, Object>();
+	
+	
+	/**
+	 * A variable registering whether the task is completed.
+	 */
+	private boolean isCompleted = false;
+	
+	
+	/**
+	 * A variable keeping track of the currently executed activity of the task.
+	 */
+	private Statement executingActivity = null;
+	
+	
+	
+	/**
+	 * Initialize this task with the given name, priority, statement and cube.
+	 * 
+	 * @param name
+	 * 			
+	 * @param priority
+	 * 
+	 * @param statement
+	 * 
+	 * @param cube
+	 * 
+	 * @post	The new tasks name is equal to the given name.
+	 * 			| new.getName() == name
+	 * 
+	 * @effect	The new tasks priority is set to the given priority.
+	 * 			| setPriority(priority)
+	 * 
+	 * @effect	The new tasks cube is set to the given cube.
+	 * 			| setCube(cube)
+	 * 
+	 * @effect	The new tasks statement is set to the given statement.
+	 * 			| setActions(statement)
+	 * 
+	 * @post	The new tasks executingActivity is set to its statement.
+	 * 			| new.getExecutingActivity() = getActivity()
+	 * 
+	 * @effect	The task of the new tasks statements is set to this task.
+	 * 			| getActions().setTask(this)
+	 * 
+	 * @throws	IllegalNameException
+	 * 			The given name is not a valid name.
+	 * 			| !isValidName(name)
+	 * 
+	 */
+	public Task(String name, int priority, Statement statement, int[] cube ) throws IllegalNameException {
 		if (!isValidName(name)) {
 			throw new IllegalNameException(name);
 		}
@@ -31,30 +127,115 @@ public class Task {
 		setCube(new Coordinate(cube[0], cube[1], cube[2]));
 		setActions(statement);
 		
-		//getActions().setNextStatement(null);
-		this.executingActivity = getActions();
+		setExecutingActivity(getActions());
 		
-		//getActions().setTask(this);
+		getActions().setTask(this);
 	}
 	
 	
-	public void execute() {
-		//setExecuted(true);
-		if (beingExecuted() && getAssignedUnit() != null) {
-			//setExecuted(true);
-			
-			//getActions().setTask(this);
-			
-			getActions().execute();
-			
-			setCompleted();
-			
+	
+	/**
+	 * Initialize this task with the given name, priority, statement and cube.
+	 * 
+	 * @param name
+	 * 			
+	 * @param priority
+	 * 
+	 * @param statement
+	 * 
+	 * @param cube
+	 * 
+	 * @post	The new tasks name is equal to the given name.
+	 * 			| new.getName() == name
+	 * 
+	 * @effect	The new tasks priority is set to the given priority.
+	 * 			| setPriority(priority)
+	 * 
+	 * @post	The new tasks cube field is equal to null.
+	 * 			| new.getCube() == null
+	 * 
+	 * @effect	The new tasks statement is set to the given statement.
+	 * 			| setActions(statement)
+	 * 
+	 * @post	The new tasks executingActivity is set to its statement.
+	 * 			| new.getExecutingActivity() = getActivity()
+	 * 
+	 * @effect	The task of the new tasks statements is set to this task.
+	 * 			| getActions().setTask(this)
+	 * 
+	 * @throws	IllegalNameException
+	 * 			The given name is not a valid name.
+	 * 			| !isValidName(name)
+	 * 
+	 */
+	public Task(String name, int priority, Statement statement ){
+		if (!isValidName(name)) {
+			throw new IllegalNameException(name);
 		}
+		this.name = name;
+		
+		setPriority(priority);
+		setActions(statement);
+		
+		setExecutingActivity(getActions());
+
+		getActions().setTask(this);
 	}
 	
 	
+	/**
+	 * Execute this task.
+	 * 
+	 * @param 	dt
+	 * 			The time interval in which to execute this task. For each 0.001 second,
+	 * 			1 substatement of the tasks statement may be executed.
+	 * 
+	 * 
+	 */
+	public void execute(double dt) {
+	    while (this.executingActivity != null && dt > 0 ) {
+	    	
+	    	this.executingActivity.execute();
+	    	
+	    	if (this.executingActivity.isCompleted()) {
+	    		break;
+	    		
+	    	} else {
+	    		this.executingActivity = this.executingActivity.getNextStatement();
+	    		
+	    		dt -= 0.001d;
+	    		if (this.executingActivity == null)
+	    			setCompleted();
+			}
+	    }
+	    if ( isCompleted()) {
+    		setBeingExecuted(false);
+			setAssignedNit(null);
+			terminate();
+    	}
+	}
+	
+	
+	public void interrupt() {
+		setBeingExecuted(false);
+		setAssignedNit(null);
+		// TODO start over
+		getActions().setNextStatement(null);
+		setPriority(getPriority() - 1);
+	}
+	
+	
+	public Statement getExecutingActivity() {
+		return this.executingActivity;
+	}
+
+	public void setExecutingActivity(Statement executingActivity) {
+		this.executingActivity = executingActivity;
+	}
+
 	@Basic
 	public boolean isCompleted() {
+		//return this.executingActivity == null;
 		return this.isCompleted;
 	}
 	
@@ -263,21 +444,29 @@ public class Task {
 	
 	
 	@Raw
-	public Unit getAssignedUnit() {
+	public Nit getAssignedNit() {
 		return this.unit;
 	}
 	
 	
-	public boolean isValidUnit(Unit unit) {
+	@Raw
+	public Unit getAssignedUnit() {
+		if (getAssignedNit() instanceof Unit)
+			return (Unit) getAssignedNit();
+		return null;
+	}
+	
+	
+	public boolean isValidNit(Nit unit) {
 		if (beingExecuted()) return (unit != null);
 		else return (unit == null);
 	}
 
 	@Raw
-	public void setAssignedUnit(Unit unit) {
-		if (!isValidUnit(unit))
+	public void setAssignedNit(Nit unit) {
+		if (!isValidNit(unit))
 			throw new IllegalArgumentException();
-		if (beingExecuted() && getAssignedUnit() != null) 
+		if (beingExecuted() && getAssignedNit() != null) 
 			throw new RuntimeException();
 		if (unit != null && unit.getAssignedTask() != this )
 			throw new IllegalArgumentException();
@@ -288,7 +477,7 @@ public class Task {
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Unit assigned to task");*/
+		System.out.println("Nit assigned to task");*/
 		//unit.setAssignedTask(this);
 	}
 
@@ -312,7 +501,7 @@ public class Task {
 		
 	}
 
-	
+
 	@Raw
 	public boolean beingExecuted() {
 		return this.beingExecuted;
@@ -329,14 +518,15 @@ public class Task {
 	@Override
 	public String toString() {
 		return getName() + ", priority: " + getPriority() + ", activities: " + 
-					getActions().toString() + ", cube: " + getCube().toString()
+					getActions().toString() + 
+					String.format(", cube: %s", (getCube() == null ? "none" : getCube().toString()))
 					+ ", executing: " + beingExecuted();
 	}
 	
 	
 	
 	public void terminate() {
-		if (getAssignedUnit() == null && !beingExecuted() && isCompleted()) {
+		if (getAssignedNit() == null && !beingExecuted() && isCompleted()) {
 			for (Scheduler scheduler: getSchedulersForTask()) {
 				if (scheduler.getAllTasks().contains(this)) {
 					scheduler.removeTask(this);
@@ -354,6 +544,7 @@ public class Task {
 	}
 	
 	private boolean isTerminated = false;
+
 	
 	
 }

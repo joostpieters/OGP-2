@@ -1,9 +1,4 @@
 name: "goto"
 priority : 8
 activities:
-	if carries_item(this) then
-		moveTo (10, 10, 10);
-	fi
-	if is_solid(selected) then
-		moveTo (10, 10, 10);
-	fi
+	moveTo (10, 10, 10);

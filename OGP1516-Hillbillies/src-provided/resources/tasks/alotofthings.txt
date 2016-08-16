@@ -1,0 +1,8 @@
+name: "alotofthings"
+priority : 10
+activities:
+		moveTo (next_to selected);
+		work selected;
+		moveTo (next_to selected);
+		work selected;
+	

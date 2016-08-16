@@ -53,6 +53,8 @@ public class Tuple {
 		return null;
 	}
 	
+	
+	@Override
 	public String toString() {
 		return "(" + this.cube.toString() + "," + n + "," + isChecked + ")";
 	}

@@ -19,7 +19,8 @@ public class Follow extends Statement {
 		Unit currentUnit = getTask().getAssignedUnit();
 		Unit unitToFollow = this.unit.evaluate();
 		
-		while (! (currentUnit.getCoordinate().equals(unitToFollow.getCoordinate()) 
+		// while
+		if (! (currentUnit.getCoordinate().equals(unitToFollow.getCoordinate()) 
 				|| currentUnit.getWorld().isNeighbouring(currentUnit.getCoordinate(), 
 						unitToFollow.getCoordinate())  
 				|| unitToFollow.isTerminated()  ) )

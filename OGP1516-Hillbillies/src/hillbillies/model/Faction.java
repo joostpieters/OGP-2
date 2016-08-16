@@ -234,8 +234,8 @@ public class Faction /*implements Comparable<Faction>*/ {
 	public void addNit(Nit nit)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsNit(nit))
 			throw new IllegalArgumentException();
-		if (nit.getFaction() != this)
-			throw new IllegalArgumentException();
+		//if (nit.getFaction() != this)
+		//	throw new IllegalArgumentException();
 		if (getNbNits() >= getMaxNbNits())
 			try {
 				throw new IllegalNbException();
@@ -250,7 +250,7 @@ public class Faction /*implements Comparable<Faction>*/ {
 			}
 		
 		this.nits.add(nit);
-		//nit.setFaction(this);
+		nit.setFaction(this);
 	}
 	
 	

@@ -19,9 +19,11 @@ public class NextToPosition extends Expression<Coordinate> {
 		
 		Coordinate cube;
 		Unit currentUnit = getTask().getAssignedUnit();
+		int i = 0;
 		do {
 			cube = currentUnit.getWorld().getRandomNeighbouringCube(this.position.evaluate());
-		} while (!currentUnit.canHaveAsPosition(cube));
+			i++;
+		} while ((!currentUnit.canHaveAsPosition(cube) || currentUnit.wouldFall(cube)) && i < 30);
 		return cube;
 	}
 	

@@ -8,6 +8,7 @@ public class LiteralPosition extends Expression<Coordinate> {
 
 	public LiteralPosition(int x, int y, int z) {
 		this.coordinate = new Coordinate(x, y, z);
+		//System.out.println("literal constructing " + this.coordinate.toString());
 	}
 
 	

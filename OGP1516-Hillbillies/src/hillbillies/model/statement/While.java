@@ -2,7 +2,7 @@ package hillbillies.model.statement;
 
 import hillbillies.model.expression.Expression;
 
-public class While extends Statement {
+public class While extends ComposedStatement {
 	
 	
 	private final Expression<Boolean> condition;
@@ -16,12 +16,29 @@ public class While extends Statement {
 	
 	@Override
 	public void execute() {
+		
 		this.condition.setTask(getTask());
 		this.body.setTask(getTask());
 		
-		while (this.condition.evaluate()) {
-			this.body.execute();
-		}
+		
 	}
+	
+	@Override
+	public Statement getNextStatement()
+	{
+		if (!this.condition.evaluate())
+			return this.getNextStatement();
+		return this.body;
+	}
+	
+	
+	@Override
+	public void setNextToExecStatement(Statement nextToExecStatement) {
+		
+		super.setNextToExecStatement(this.body);
+		
+		this.body.setNextToExecStatement(nextToExecStatement);
+	}
+
 
 }

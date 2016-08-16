@@ -1,12 +1,24 @@
 package hillbillies.model.statement;
 
+
 import hillbillies.model.Task;
 
 public abstract class Statement {
 	
+	private Statement nextStatement = null;
 	
+	private Statement nextToExecStatement = null;
+	
+	private ComposedStatement enclosingStatement = null;
 	private Task task;
-	private Statement nextStatement;
+	
+	private boolean isCompleted = false;
+	
+	
+	public boolean isCompleted() {
+		return this.isCompleted;
+	}
+	
 	
 	protected Task getTask() {
 		return this.task;
@@ -14,35 +26,42 @@ public abstract class Statement {
 	
 	public void setTask(Task task) {
 		this.task = task;
-//		try {
-//			throw new IllegalArgumentException();
-//		} catch (RuntimeException e ){
-//			e.printStackTrace();
-//		}
-//		System.out.println("set task");
 	}
 	
 	
-	public void setNextStatement(Statement nextStatement) {
-		this.nextStatement = nextStatement;
+	public Statement getNextToExecStatement() {
+		return this.nextToExecStatement;
+	}
+	
+	public void setNextToExecStatement(Statement nextToExecStatement) {
+		this.nextToExecStatement = nextToExecStatement;
 	}
 	
 	public Statement getNextStatement() {
 		return this.nextStatement;
 	}
 	
+	public void setNextStatement(Statement stmt) {
+		this.nextStatement = stmt;
+	}
+	
+	public ComposedStatement getEnclosingStatement() {
+		return this.enclosingStatement;
+	}
+	
+	public void setEnclosingStatement(ComposedStatement enclosingStatement) {
+		this.enclosingStatement = enclosingStatement;
+	}
+	
+	
 	public abstract void execute();
 	
 
-	/*public int size() {
-		// TODO Auto-generated method stub
-		return 0;
-	}*/
-	
 	
 	@Override
 	public String toString() {
 		return this.getClass().getName();
 	}
-
+	
+	
 }

@@ -56,11 +56,11 @@ public class Scheduler {
 		this.tasks.add(task);
 		task.addScheduler(this);
 		sortTasks();
-		try {
+		/*try {
 			throw new IllegalArgumentException();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	
@@ -75,10 +75,10 @@ public class Scheduler {
 	public void replace(Task original, Task replacement) {
 		if (this.tasks.contains(original)) {
 			if (original.beingExecuted()) {
-				original.getAssignedUnit().stopExecutingTask();
-				//original.getAssignedUnit().deleteTask();
+				original.getAssignedNit().stopExecutingTask();
+				//original.getAssignedNit().deleteTask();
 				original.setBeingExecuted(false);
-				original.setAssignedUnit(null);
+				original.setAssignedNit(null);
 			}
 			
 			this.tasks.set(this.tasks.indexOf(original), replacement);
@@ -111,8 +111,8 @@ public class Scheduler {
 
 	
 	/**
-	 * Return the faction to which this unit belongs. Returns a null refererence
-	 * if this unit does not belong to any faction.
+	 * Return the faction to which this nit belongs. Returns a null refererence
+	 * if this nit does not belong to any faction.
 	 */
 	@Basic @Raw
 	public Faction getFaction() {
@@ -121,15 +121,15 @@ public class Scheduler {
 	
 	
 	/**
-	 * Check whether this unit can join a given faction.
+	 * Check whether this nit can join a given faction.
 	 * 
 	 * @param	faction
 	 * 			The faction to check.
 	 * 
 	 * @return	True if and only if the given faction is not effective or if it
-	 * 			can be joined by this unit.
+	 * 			can be joined by this nit.
 	 * 			| result == ( (faction == null)
-	 * 			| 				|| faction.canHaveAsUnit(this) )
+	 * 			| 				|| faction.canHaveAsNit(this) )
 	 */
 	@Raw
 	public boolean canHaveAsFaction(Faction faction) {
@@ -139,23 +139,23 @@ public class Scheduler {
 	
 	
 	/**
-	 * Set the faction this unit belongs to to the given faction.
+	 * Set the faction this nit belongs to to the given faction.
 	 * 
 	 * @param	faction
-	 * 			The faction to add the unit to.
+	 * 			The faction to add the nit to.
 	 * 
-	 * @post	This unit references the given world as the world
+	 * @post	This nit references the given world as the world
 	 * 			it belongs to.
 	 * 			| new.getFaction() == faction
 	 * 
 	 * @throws	IllegalArgumentException
-	 * 			If the given faction is not effective and this unit references an
-	 * 			effective faction, that faction may not contain this unit.
+	 * 			If the given faction is not effective and this nit references an
+	 * 			effective faction, that faction may not contain this nit.
 	 * 			| (faction == null) && (getFaction() != null) 
-	 * 			|					&& (getFaction().hasAsUnit(this))
+	 * 			|					&& (getFaction().hasAsNit(this))
 	 */
 	public void setFaction(Faction faction) throws IllegalArgumentException {
-		//if ( (faction != null) && !faction.hasAsUnit(this) )
+		//if ( (faction != null) && !faction.hasAsNit(this) )
 		//	throw new IllegalArgumentException();
 		if ( (faction == null) && (getFaction() != null) && (getFaction().getScheduler() == this) )
 			throw new IllegalArgumentException();

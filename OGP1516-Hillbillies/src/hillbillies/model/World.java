@@ -102,18 +102,6 @@ public class World {
 	}
 	
 	
-	/*public List<Coordinate> getAllCoordinates() {
-		List<Coordinate> allCoordinates = new ArrayList<Coordinate>();
-		for (int i=0; i<getNbCubesX(); i++) {
-			for (int j=0; j<getNbCubesY(); j++) {
-				for (int z=0; z<getNbCubesZ(); z++) {
-					allCoordinates.add(new Coordinate(i, j , z));
-				}
-			}
-		}
-		return allCoordinates;
-	}*/
-	
 	private int[][][] terrainTypes;
 	
 	
@@ -332,6 +320,42 @@ public class World {
 	}
 	
 	
+	
+	/**
+	 * Returns the distance between two given positions.
+	 * 
+	 * @param	position1
+	 * 			The first position.
+	 * 
+	 * @param	position2
+	 * 			The second position.
+	 * 
+	 * @return	the distance between the positions, which is equal to the square root of 
+	 * 			the square of the differences between the x, y and z coordinates of the
+	 * 			first position and second position.
+	 * 			| result = Math.sqrt(Math.pow(position1[0]-position2[0],2)
+	 * 			|	+ Math.pow(position1[1]-position2[1],2) 
+	 * 			|	+ Math.pow(position1[2]-position2[2],2))
+	 * 
+	 * @throws	IllegalPositionException
+	 * 			One of the given positions is not a valid position.
+	 * 			| !canHaveAsPosition(position)
+	 */
+	public double getDistanceTo(double[] position1, double[] position2) 
+											throws IllegalPositionException {
+		if (!canHaveAsCoordinates(Convert.convertPositionToCoordinate(position1)))
+			throw new IllegalPositionException(position1);
+		
+		if (!canHaveAsCoordinates(Convert.convertPositionToCoordinate(position2)))
+			throw new IllegalPositionException(position2);
+
+		return Math.sqrt(Math.pow(position1[0]-position2[0],2)
+				+ Math.pow(position1[1]-position2[1],2) 
+				+ Math.pow(position1[2]-position2[2],2));
+	}
+	
+	
+	
 	public Coordinate getRandomNeighbouringCube(Coordinate coordinate) {
 		Set<Coordinate> neighbours = getNeighbours(coordinate);
 		int dice = random.nextInt(neighbours.size());
@@ -477,14 +501,20 @@ public class World {
 			throw new IllegalNbException();
 		}
 		
-		sortFactions();
-		Faction faction = this.factions.get(0);
+		Faction faction;
+		if (this.factions.size() < 5) {
+			faction = new Faction();
+			addFaction(faction);
+		} else {
+			sortFactions();
+			faction = this.factions.get(0);
+		}
 		
 		Unit unit;
 		unit = new Unit(this, faction, enableDefaultBehavior);
 		
 		addNit(unit);
-		faction.addNit(unit);
+		//faction.addNit(unit);
 		
 		return unit;
 	}

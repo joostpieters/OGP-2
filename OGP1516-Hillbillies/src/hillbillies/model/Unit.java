@@ -9,32 +9,11 @@ import java.util.*;
 /**
  * A class of units as a kind of nits.
  * 
- * @invar	The position of a unit must always be valid, within the game world.
- * 			| canHaveAsPosition(getCoordinate())
- * 
- * @invar	The unit can have its name as its name.
- * 			| canHaveAsName(getName())
- * 
- * @invar 	The current number of hitpoints must always be valid for this unit.
- * 			| canHaveAsHitPoints(getCurrentHitPoints())
- * 
- * @invar 	The current number of stamina points must always be valid for this unit.
- * 			| canHaveAsStaminaPoints(getCurrentStaminaPoints())
- * 
- * @invar 	The unit can always have its long term destination cube as its position.
- * 			| canHaveAsPosition(getDestCubeLT())
- * 
- * @invar 	The unit can always have its destination cube as its position.
- * 			| canHaveAsPosition(getDestination())
- * 
- * @invar 	The unit can attack the unit it is attacking.
- * 			| canAttack(getDefender())
- * 
+ *
  *@author Ruben Cartuyvels
  *@version	2.2
  *
  */
-// TODO invars houden?
 public class Unit extends Nit {
 	
 	/**
@@ -56,52 +35,14 @@ public class Unit extends Nit {
 	 * @param enableDefaultBehavior
 	 *            Whether the default behavior of the unit is enabled
 	 * 
-	 * @post  the new name of the unit is equal to the given name.
-	 * 		| new.getName() == name
+	 * @effect	the new unit is initialized as a nit with the given name, position, weight,
+	 * 			agility, strength, toughness and default behavior. 
 	 * 
-	 * @post the new position of the unit is equal to the given position.
-	 * 		| new.getPosition() == position
-	 * 
-	 * @post if the given weight is valid, the new weight will be
-	 * 			equal to the given weight.
-	 * 		| if (canHaveAsWeight(weight))
-	 * 		| then new.getWeight() == weight
-	 * 
-	 * @post if the given strength is valid, the new strength will be
-	 * 			equal to the given strength.
-	 * 		| if (isValidStrength(strength))
-	 * 		| then new.getStrength() == strength
-	 * 
-	 * @post if the given agility is valid, the new agility will be
-	 * 			equal to the given agility.
-	 * 		| if (isValidAgility(agility))
-	 * 		| then new.getAgility() == agility
-	 * 
-	 * @post if the given toughness is valid, the new toughness will be
-	 * 			equal to the given toughness.
-	 * 		| if (isValidToughness(toughness))
-	 * 		| then new.getToughness() == toughness
-	 * 
-	 * @post The new orientation of the unit is equal to Pi/2.
-	 * 		| new.getOrientation() == Math.PI/2
-	 * 
-	 * @post The new current number of hitpoints of the unit is equal to the max number
-	 * 			of hitpoints for the unit.
-	 * 		| new.getCurrentHitPoints() == new.getMaxHitPoints()
-	 * 
-	 * @post The new current number of stamina points of the unit is equal to the max number
-	 * 			of stamina points for the unit.
-	 * 		| new.getCurrentStaminaPoints() == new.getMaxStaminaPoints()
-	 * 
-	 * @post The default behavior of the unit is equal to the given value for default behavior.
-	 * 		| new.isDefaultBehaviorEnabled() == enableDefaultBehavior
-	 * 
-	 * 
-	 * @throws IllegalPositionException(position, this)
+	 * @throws 	IllegalPositionException(position, this)
 	 *             The unit cannot have the given position (out of bounds).
 	 *             | ! canHaveAsPosition(position)
 	 *             
-	 * @throws IllegalNameException(name, this)
+	 * @throws 	IllegalNameException(name, this)
 	 *             The unit cannot have the given name.
 	 *             | ! canHaveAsName(name)            
 	 */
@@ -128,42 +69,10 @@ public class Unit extends Nit {
 	 * @param	faction
 	 * 			The faction for this new unit.
 	 * 
-	 * @effect	The units world is set to the given world
-	 * 			| setWorld(world)
-	 * 
-	 * @effect	The units position is set to a random position in its world.
-	 * 			| setPosition(getWorld().getRandomNeighbouringSolidCube())
-	 * 
-	 * @effect	The units name is set to a random name.
-	 * 			| setName(generateName())
-	 * 
-	 * @effect	The units agility is set to a random initial agility.
-	 * 			| setAgility(generateInitialSkill())
-	 * 
-	 * @effect	The units strength is set to a random initial strength.
-	 * 			| setStrength(generateInitialSkill())
-	 * 
-	 * @effect	The units toughness is set to a random initial toughness.
-	 * 			| setToughness(generateInitialSkill())
-	 * 
-	 * @effect	The units weight is set to a random initial weight.
-	 * 			| setWeight(generateInitialWeight())
-	 * 
-	 * @effect	The units HP are set to the current maximum.
-	 * 			| updateCurrentHitPoints(getMaxHitPoints())
-	 * 
-	 * @effect	The units stamina points are set to the current maximum.
-	 * 			| updateCurrentStaminaPoints(getMaxStaminaPoints())
-	 * 
-	 * @effect	The units orientation is set to an initial value.
-	 * 			| setOrientation((Math.PI/2.0))
-	 * 
-	 * @effect	The units state is set to empty.
-	 * 			| setState(State.EMPTY)
-	 * 
-	 * @effect	The default behavior of the unit is set to the given
-	 * 			default behavior.
-	 * 			| setDefaultBehavior(enableDefaultBehavior)
+	 * @effect	the unit is initialized as a nit with the given world, faction and 
+	 * 			default behavior, with random attributes 
+	 * 			and a random name, with an orientation and an empty state, not carrying an item.
+	 * 			| super(world, faction, enableDefaultBehavior)
 	 * 
 	 * @throws	IllegalPositionException(position, this)
 	 *         	The unit cannot have the given position.
@@ -179,7 +88,6 @@ public class Unit extends Nit {
 		
 		super(world, faction, enableDefaultBehavior);
 
-		
 	}
 	
 	
@@ -192,35 +100,42 @@ public class Unit extends Nit {
 	
 	
 	/**
-	 * Check whether the unit can have the given position as its position in the game world.
+	 * Check whether the unit would fall if its position were the given position.
 	 * 
 	 * @param	position
 	 * 			The position to be checked.
 	 * 
-	 * @return	
+	 * @return	true if and only if the given position is not neighbouring a solid cube
+	 * 			and is not above a solid cube.
+	 * 			|	result == ! (   getWorld().isNeighbouringSolid(position) 
+	 * 			|			|| getWorld().isAboveSolid(position)   )
+	 * 
+	 * @throws	IllegalPositionException()
+	 * 			the unit can not have the given position as its position.
+	 * 			| !canHaveAsPosition(position)
 	 */
-	@Override @Raw @Model
-	public boolean canHaveAsPosition(Coordinate position) {
-		boolean value = super.canHaveAsPosition(position);
-		return (value /*&& getWorld().isNeighbouringSolid(position)*/);
+	@Model
+	public boolean wouldFall(Coordinate position) {
+		if (!canHaveAsPosition(position))
+			throw new IllegalPositionException(position);
+		return ( !(getWorld().isNeighbouringSolid(position) || getWorld().isAboveSolid(position)));
 	}
 	
-
 
 	
 	/**
 	 * Check whether the given name is a valid name for a unit.
 	 * 
-	 * @param name
+	 * @param 	name
 	 * 			The name to be checked.
 	 * 
-	 * @return True if and only if the name is effective, if its
+	 * @return 	True if and only if the name is effective, if its
 	 * 			length is larger than 1, if the first character is an uppercase
 	 * 			letter and if it only exists of lowercase or uppercase
 	 * 			letters, single or double quotes and spaces.
-	 * 		| result == ( (name != null)
-	 * 		|		&& (name.length() > 1)
-	 * 		| 		&& (name.matches("[a-zA-Z\\s\'\"]+"))
+	 * 			| result == ( (name != null)
+	 * 			|		&& (name.length() > 1)
+	 * 			| 		&& (name.matches("[a-zA-Z\\s\'\"]+"))
 	 */
 	@Override @Raw
 	public boolean canHaveAsName(String name) {
@@ -233,9 +148,10 @@ public class Unit extends Nit {
 	/**
 	 * Return a name.
 	 * 
-	 * @return	a String to give to a unit as name.
+	 * @return 	The unit can have the generated name as its name.
+	 * 			| canHaveAsName(result)
 	 */
-	@Override
+	@Override @Model
 	protected String generateName() {
 		return "Tom Hagen";
 	}
@@ -329,6 +245,7 @@ public class Unit extends Nit {
 	}
 	
 	
+	
 	/**
 	 * Make the unit fall, if it's not already falling.
 	 * 
@@ -336,7 +253,8 @@ public class Unit extends Nit {
 	 * 			where the unit started falling is set to its current cube,
 	 * 			| if (!isFalling())
 	 * 			| 	then setStartFallingCube(getCoordinate())
-	 * 			
+	 * 			its position is set to the center of the cube it is currently occupying,
+	 * 			|		setPosition(getCoordinate());
 	 * 			and the units state is set to falling.
 	 * 			| 		setState(State.FALLING)
 	 */
@@ -388,13 +306,7 @@ public class Unit extends Nit {
 		}
 		else {
 			updatePosition(dt);
-			/*double[] newPosition = new double[3];
-			for (int i=0; i<3; i++) {
-				newPosition[i] = getPosition()[i] + getVelocity()[i]*dt;
-			}
-			this.position[0] = position[0];
-			this.position[1] = position[1];
-			this.position[2] = position[2];*/
+			
 		}
 	}
 	
@@ -415,7 +327,7 @@ public class Unit extends Nit {
 	 * @param 	coordinate
 	 * 			The cube where the unit starts falling.
 	 * 
-	 * @post	| getStartFallingCube() == coordinate
+	 * @post	| new.getStartFallingCube() == coordinate
 	 */
 	@Raw
 	protected void setStartFallingCube(Coordinate coordinate) {
@@ -426,7 +338,7 @@ public class Unit extends Nit {
 	/**
 	 * Set the cube where the unit starts falling to null.
 	 * 
-	 * @post	| getStartFallingCube() == null
+	 * @post	| new.getStartFallingCube() == null
 	 */
 	protected void setStartFallingCube() {
 		this.startFallingCube = null;
@@ -446,9 +358,7 @@ public class Unit extends Nit {
 	 * Get a random cube that is reachable from the units current position.
 	 *  
 	 * @return	A random reachable cube coordinate.
-	 * 			| do ( cube = getWorld().getRandomNeighbouringSolidCube() )
-	 * 			| while (!isReachable(cube)
-	 * 			| result == cube
+	 * 			| isReachable(result)
 	 */
 	@Override
 	protected Coordinate getRandomReachableCube() {
@@ -505,22 +415,15 @@ public class Unit extends Nit {
 	
 	
 	/**
-	 * Manage the moving of the unit, i.e. when the state of the unit is equal to moving.
+	 * Check if the unit can currently move.
 	 * 
-	 * TODO Documentation
+	 * @return	true if and only if the unit is not attacked, not in its initial
+	 * 			resting state, and not falling.
+	 * 			|	result == (!isAttacked() && getState() != State.RESTING_1 && !isFalling() )
 	 */
-	@Override
-	protected void controlMoving(double dt) throws IllegalPositionException, 
-				ArithmeticException {
-		
-		if (!isNeighbouringSolid(getCoordinate()))
-			fall();
-		
-		else  {
-			super.controlMoving(dt);
-
-		}
-
+	@Override @Model
+	protected boolean canMove() {
+		return (!isAttacked() && getState() != State.RESTING_1 && !isFalling());
 	}
 	
 
@@ -548,23 +451,19 @@ public class Unit extends Nit {
 			return super.getVelocity();
 	}
 
-
 	
 	/**
-	 * Makes the unit start sprinting.
+	 * Check if the unit can currently start sprinting.
 	 * 
-	 * @post	If the unit is moving, if it has enough stamina points and if it
-	 * 			is not falling, its sprinting field is set to true.
-	 * 			| if (isMoving() && getCurrentStaminaPoints() > 0 && !isFalling())
-	 * 			| 	then new.isSprinting() == true
+	 * @return	true if and only if the unit is moving, its stamina points
+	 * 			are above the minimum level and if it is not falling.
+	 * 			| result == (isMoving() && getCurrentStaminaPoints() > 0 && !isFalling())
 	 */
-	@Override
-	public void startSprinting() {
-		if (!isFalling()) {
-			super.startSprinting();
-		}
+	@Override @Model
+	protected boolean canSprint() {
+		return (isMoving() && getCurrentStaminaPoints() > 0 && !isFalling());
 	}
-
+	
 
 	
 	/**
@@ -584,121 +483,66 @@ public class Unit extends Nit {
 	
 	
 	/**
-	 * Makes the unit work at a given target cube.
+	 * Check if the unit can currently work.
 	 * 
-	 * @effect	if the unit is not moving or falling and not in its initial
-	 * 			resting state, the units target cube will be set to the given
-	 * 			target cube.
-	 * 			| if (!isMoving() && getState() != State.RESTING_1 && !isFalling())
-	 * 			| 	then setTargetCube(targetCube)
-	 * 
-	 * @effect	if the unit is not moving or falling and not in its initial
-	 * 			resting state, the unit will start working
-	 * 			| if (!isMoving() && getState() != State.RESTING_1 && !isFalling())
-	 * 			| 	then startWorking()
-	 * 
-	 * @effect	if the unit is not moving or falling and not in its initial
-	 * 			resting state, its orientation is set towards the target cube.
-	 * 			| if (!isMoving() && getState() != State.RESTING_1 && !isFalling())
-	 * 			| 	then setOrientation( (float) Math.atan2(getPosition()[1] 
-	 * 			|					- World.getCubeCenter(getTargetCube())[1],
-	 *			|		targetPosition[0] - World.getCubeCenter(getTargetCube())()[0]))
-	 * 
-	 * @throws	IllegalTargetException
-	 * 			the unit can not have the given target cube as its target.
-	 * 			| !canHaveAsTargetCube(targetCube)
+	 * @return	true if and only if the unit is not attacked, not in its initial
+	 * 			resting state, not moving and not falling.
+	 * 			|	result == (!isAttacked() && !isMoving() && getState() != State.RESTING_1
+	 * 			|			 && !isFalling() )
 	 */
-	// TODO all documentation necessary?
-	@Override
-	public void workAt(Coordinate targetCube) throws IllegalTargetException {
-		
-		if ( !isFalling()) {
-			super.workAt(targetCube);
-		}
-	}
-
-	
-	
-	/**
-	 * Attack the given nit.
-	 * 
-	 * @param 	defender
-	 * 			The nit to attack.
-	 * 
-	 * @effect	If the unit is not currently moving or falling, it starts attacking.
-	 * 			| startAttacking()
-	 * 
-	 * @post	If the unit is not currently moving or falling, this units defender field 
-	 * 			is set to the given other nit.
-	 * 			| new.getDefender() == defender
-	 * 
-	 * @effect	If the unit is not currently moving or falling, the nit this unit is attacking
-	 * 			its is attacked field is set to true.
-	 * 			| getDefender().setAttacked(true)
-	 * 
-	 * @post	If the unit is not currently moving or falling, its orientation is set towards
-	 * 			the attacked nit.
-	 * 			| new.getOrientation() == arctangent(defender.getPosition()[1]-this.getPosition()[1],
-	 * 			|	defender.getPosition()[0]-this.getPosition()[0]))
-	 * 
-	 * @post	If the unit is not currently moving or falling, the attacked nits orientation is set
-	 * 			towards this unit, i.e. the attacking unit.
-	 * 			| (new defender).getOrientation() == arctangent(this.getPosition()[1]-
-	 * 			|	defender.getPosition()[1], this.getPosition()[0]-defender.getPosition()[0]))
-	 *  
-	 * @throws 	IllegalVictimException
-	 * 			The unit cannot attack the given other nit.
-	 * 			| !canAttack(defender)
-	 */
-	@Override
-	public void attack(Nit defender) throws IllegalTimeException, IllegalVictimException {
-		if (!canAttack(defender))
-			throw new IllegalVictimException(this, defender);
-
-		if (!isFalling() ) {
-			super.attack(defender);
-		}
+	@Override @Model
+	protected boolean canWork() {
+		if (!isAttacked() && !isMoving() && getState() != State.RESTING_1 && !isFalling())
+			return true;
+		return false;
 	}
 	
 	
 	/**
-	 * Returns true if the unit can attack another given nit.
+	 * Check if the unit can currently execute an attack.
 	 * 
-	 * @param	victim
-	 * 			The nit to check.
-	 * 
-	 * @return	True if and only if the given nit occupies the same
-	 * 			or a neighboring cube of the game world, and if the given
-	 * 			nit is not falling and it does not belong to the same faction as this
-	 * 			unit.
-	 * 			| result == (  ( getWorld().isNeighbouring(getCoordinate(), victim.getCoordinate())
-	 * 			|		|| getCoordinate().equals(victim.getCoordinate())  )
-	 * 			|		&& !victim.isFalling() && getFaction() != victim.getFaction()  )
+	 * @return true if and only if the unit is not attacked, not in its initial
+	 * 			resting state, not moving and not falling and not already attacking.
+	 * 			|	result == (!isAttacked() && !isMoving() && getState() != State.RESTING_1
+	 * 			|			 && !isFalling() && !isAttacking() )
 	 */
-	// TODO formal documentation return tag
-	@Model @Override
-	protected boolean canAttack(Nit victim) {
-		if (victim instanceof Unit && ((Unit) victim).isFalling())
-			return false;
-		return super.canAttack(victim);
+	@Override @Model
+	protected boolean canExecuteAttack() {
+		if (!isMoving() && !isAttacked() && !isAttacking() && getState() != State.RESTING_1 && !isFalling())
+			return true;
+		return false;
 	}
-	
 	
 	
 	/**
-	 * Make the unit rest, if it's not currently moving, falling or being attacked.
+	 * Check if the unit can currently rest.
 	 * 
-	 * @effect	If the unit is not currently moving, falling or being attacked, it starts
-	 * 			resting.
-	 * 			| if ( !isMoving && !isFalling() && !isAttacked() )
-	 * 			| 	then startResting()
+	 * @return true if and only if the unit is not attacked, not in its initial
+	 * 			resting state, not moving and not falling.
+	 * 			|	result == (!isAttacked() && !isMoving() && getState() != State.RESTING_1
+	 * 			|			 && !isFalling() )
 	 */
-	@Override
-	public void rest() throws IllegalTimeException {
-		if (!isFalling()) {
-			super.rest();
-		}
+	@Override @Model
+	protected boolean canRest() {
+		if (!isMoving() && !isAttacked() && getState() != State.RESTING_1 && !isFalling())
+			return true;
+		return false;
 	}
-
+	
+	
+	/**
+	 * Checks if the given state is a valid state for this unit.
+	 * 
+	 * @param 	State
+	 * 			The state to check.
+	 * 
+	 * @return	True if and only if the value class of states 
+	 * 			contains the given state.
+	 * 			| result == (State.contains(state))
+	 */
+	@Override @Model
+	public boolean canHaveAsState(State state) {
+		return State.contains(state);
+	}
 	
 }
