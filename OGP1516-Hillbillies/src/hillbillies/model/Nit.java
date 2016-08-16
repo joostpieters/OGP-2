@@ -1617,10 +1617,26 @@ public abstract class Nit extends GameObject {
 	 * 			|		 addXP(10)
 	 * 
 	 * @effect	if the time before completion of the work order is equal to or
+	 * 			smaller than zero, if the nit is not carrying an item and the above is
+	 * 			not true, and if the target cube is of type water, the target cube
+	 * 			collapses and 10 experience points are added to the XP of all nits in this cube.
+	 * 			| if ( getTimeToCompletion() <= 0.0 && !isCarryingItem()
+	 * 			|		&& ! ( getWorld().getCubeTypeAt(getTargetCube())==TerrainType.WORKSHOP
+	 * 			|		&& getWorld().containsLog(getWorld().getObjectsAt(getTargetCube()))
+	 * 			|		&& getWorld().containsBoulder(getWorld().getObjectsAt(getTargetCube())) )
+	 * 			|		&& ! getWorld().containsBoulder(getWorld().getObjectsAt(getTargetCube())) 
+	 * 			|		&& ! getWorld().containsLog(getWorld().getObjectsAt(getTargetCube()))  
+	 * 			|		&& (getWorld().getCubeTypeAt(getTargetCube()) == TerrainType.TREE
+	 * 			|				|| getWorld().getCubeTypeAt(getTargetCube()) == TerrainType.ROCK)  )
+	 * 			| 	then getWorld().collapse(getTargetCube(), 1.00)
+	 * 			|		 addXP(10)
+	 * 
+	 * @effect	if the time before completion of the work order is equal to or
 	 * 			smaller than zero, the nits state is set to empty
 	 * 			| if (getTimeToCompletion() <= 0.0)
 	 * 			| 		then setState(State.EMPTY)
 	 */
+	// TODO documentation
 	private void controlWorking(double dt) throws IllegalTimeException, 
 							ArithmeticException, IllegalArgumentException {
 		if (getTimeToCompletion() > 0.0) {
@@ -1656,12 +1672,16 @@ public abstract class Nit extends GameObject {
 								|| getWorld().getCubeTypeAt(getTargetCube()) == TerrainType.ROCK) {
 					getWorld().collapse(getTargetCube(), 1.00);
 					addXP(10);
+				} else if (getWorld().getCubeTypeAt(getTargetCube()) == TerrainType.WATER) {
+					getWorld().collapse(getTargetCube(), 1.00);
+					for (Nit nit: getWorld().getNitsAt(getTargetCube())) {
+						nit.addXP(10);
+					}
 				}
 			}
 			setState(State.EMPTY);
 		}
 	}
-	
 	
 	
 

@@ -577,6 +577,18 @@ public class World {
 	}
 	
 	
+	public List<Nit> getNitsAt(Coordinate cubeCoordinates) {
+		List<Nit> nits = new ArrayList<Nit>();
+		
+		for (Nit nit: this.nits) {
+			if (nit != null && (nit.getCoordinate().equals(cubeCoordinates)) ) {
+				nits.add(nit);
+			}
+		}
+		return nits;
+	}
+	
+	
 	/**
 	 * Add the given nit to the set of nits that this world contains.
 	 * 
@@ -1218,17 +1230,23 @@ public class World {
 	
 	public void collapse(Coordinate coordinate, double diceTreshold) {
 		double dice = random.nextDouble();
-		if (dice < diceTreshold) {
-			if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
-				setCubeTypeAt(coordinate, TerrainType.AIR);
+		
+		if (getCubeTypeAt(coordinate) == TerrainType.ROCK) {
+			setCubeTypeAt(coordinate, TerrainType.AIR);
+			if (dice < diceTreshold) {
 				Boulder boulder = new Boulder(coordinate, this);
 				addBoulder(boulder);
 			}
-			else if (getCubeTypeAt(coordinate) == TerrainType.TREE) {
-				setCubeTypeAt(coordinate, TerrainType.AIR);
+		}
+		else if (getCubeTypeAt(coordinate) == TerrainType.TREE) {
+			setCubeTypeAt(coordinate, TerrainType.AIR);
+			if (dice < diceTreshold) {
 				Log log = new Log(coordinate, this);
 				addLog(log);
 			}
+		}
+		else if (getCubeTypeAt(coordinate) == TerrainType.WATER) {
+			setCubeTypeAt(coordinate, TerrainType.AIR);
 		}
 	}
 	
@@ -1276,7 +1294,8 @@ public class World {
 		AIR(true, 0),
 		ROCK(false, 1),
 		TREE(false, 2),
-		WORKSHOP(true, 3);
+		WORKSHOP(true, 3),
+		WATER(false, 4);
 		
 		private TerrainType(boolean passable, int number) {
 			this.passable = passable;
