@@ -1,17 +1,26 @@
-package hillbillies.part2.facade;
+package hillbillies.part3.facade;
 
-import hillbillies.model.*;
-import hillbillies.model.World.TerrainType;
-import hillbillies.part2.listener.TerrainChangeListener;
-
-//import java.util.List;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
 
+import hillbillies.model.Boulder;
+import hillbillies.model.Coordinate;
+import hillbillies.model.Faction;
+import hillbillies.model.Log;
+import hillbillies.model.Scheduler;
+import hillbillies.model.Task;
+import hillbillies.model.TaskFactory;
+import hillbillies.model.Unit;
+import hillbillies.model.World;
+import hillbillies.model.World.TerrainType;
+import hillbillies.part2.listener.TerrainChangeListener;
+import hillbillies.part3.programs.ITaskFactory;
 import ogp.framework.util.ModelException;
 
-public class Facade implements hillbillies.part2.facade.IFacade, hillbillies.part1.facade.IFacade {
-	
-	
+public class Facade implements hillbillies.part3.facade.IFacade, 
+			hillbillies.part1.facade.IFacade, hillbillies.part2.facade.IFacade {
+
 	/* ********************************************
 	 * 					WORLD 
 	 **********************************************/
@@ -87,7 +96,7 @@ public class Facade implements hillbillies.part2.facade.IFacade, hillbillies.par
 	@Override
 	public void addUnit(Unit unit, World world) throws ModelException {
 		try {
-			world.addNit(unit);
+			world.addUnit(unit);
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw new ModelException();
@@ -96,7 +105,7 @@ public class Facade implements hillbillies.part2.facade.IFacade, hillbillies.par
 	
 	@Override
 	public Set<Unit> getUnits(World world) throws ModelException {
-		return world.getAllUnits();
+		return world.getAllUnitsSet();
 	}
 	
 	
@@ -139,11 +148,12 @@ public class Facade implements hillbillies.part2.facade.IFacade, hillbillies.par
 		return unit.getExperiencePoints();
 	}
 	
-	@Deprecated @Override
+	
+	@Override @Deprecated
 	public Unit createUnit(String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) throws ModelException {
 		try {
-			Unit unit = new Unit(name, new Coordinate(initialPosition), weight, agility, strength, toughness,
+			Unit unit = new Unit(name, initialPosition, weight, agility, strength, toughness,
 					enableDefaultBehavior);
 			return unit;
 		}
@@ -398,6 +408,69 @@ public class Facade implements hillbillies.part2.facade.IFacade, hillbillies.par
 	
 	
 	
-	
-	
+	/* ********************************************
+	 * 					TASKS 
+	 **********************************************/
+	// TODO wrap exceptions
+
+	@Override
+	public ITaskFactory<?, ?, Task> createTaskFactory() {
+		return new TaskFactory();
+	}
+
+	@Override
+	public boolean isWellFormed(Task task) throws ModelException {
+		return task.isWellFormed();
+	}
+
+	@Override
+	public Scheduler getScheduler(Faction faction) throws ModelException {
+		return faction.getScheduler();
+	}
+
+	@Override
+	public void schedule(Scheduler scheduler, Task task) throws ModelException {
+		scheduler.addTask(task);
+	}
+
+	@Override
+	public void replace(Scheduler scheduler, Task original, Task replacement) throws ModelException {
+		scheduler.replace(original, replacement);
+	}
+
+	@Override
+	public boolean areTasksPartOf(Scheduler scheduler, Collection<Task> tasks) throws ModelException {
+		return scheduler.areTasksPartOf(tasks);
+	}
+
+	@Override
+	public Iterator<Task> getAllTasksIterator(Scheduler scheduler) throws ModelException {
+		return scheduler.getIterator();
+	}
+
+	@Override
+	public Set<Scheduler> getSchedulersForTask(Task task) throws ModelException {
+		return task.getSchedulersForTask();
+	}
+
+	@Override
+	public Unit getAssignedUnit(Task task) throws ModelException {
+		return task.getAssignedUnit();
+	}
+
+	@Override
+	public Task getAssignedTask(Unit unit) throws ModelException {
+		return unit.getAssignedTask();
+	}
+
+	@Override
+	public String getName(Task task) throws ModelException {
+		return task.getName();
+	}
+
+	@Override
+	public int getPriority(Task task) throws ModelException {
+		return task.getPriority();
+	}
+
 }

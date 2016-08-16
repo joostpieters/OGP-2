@@ -109,7 +109,7 @@ public class Unit extends Nit {
 	public Unit (String name, Coordinate initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) 
 					throws IllegalPositionException, IllegalNameException {
-		
+
 		super(name, initialPosition, weight, agility, strength, toughness, enableDefaultBehavior);
 	}
 	
@@ -178,6 +178,7 @@ public class Unit extends Nit {
 					throws IllegalPositionException, IllegalNameException {
 		
 		super(world, faction, enableDefaultBehavior);
+
 		
 	}
 	
@@ -204,6 +205,7 @@ public class Unit extends Nit {
 		return (value /*&& getWorld().isNeighbouringSolid(position)*/);
 	}
 	
+
 
 	
 	/**
@@ -458,7 +460,6 @@ public class Unit extends Nit {
 	}
 	
 	
-	
 	/**
 	 * Adds neighbours of a given cube in the given queue to the queue, with an
 	 * incremented weight, if they feature a passable terraintype, if they 
@@ -698,8 +699,6 @@ public class Unit extends Nit {
 			super.rest();
 		}
 	}
-	
-	
+
 	
 }
-

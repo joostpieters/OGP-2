@@ -59,11 +59,11 @@ public class World {
 		
 		this.caveInAll();
 		
-		for (int i=0; i<getMaxNbFactions(); i++) {
+		/*for (int i=0; i<getMaxNbFactions(); i++) {
 			Faction faction = new Faction();
 			addFaction(faction);
 		}
-		
+		*/		
 	}
 	
 	
@@ -100,6 +100,19 @@ public class World {
 	public int[][][] getTerrainTypes() {
 		return this.terrainTypes;
 	}
+	
+	
+	/*public List<Coordinate> getAllCoordinates() {
+		List<Coordinate> allCoordinates = new ArrayList<Coordinate>();
+		for (int i=0; i<getNbCubesX(); i++) {
+			for (int j=0; j<getNbCubesY(); j++) {
+				for (int z=0; z<getNbCubesZ(); z++) {
+					allCoordinates.add(new Coordinate(i, j , z));
+				}
+			}
+		}
+		return allCoordinates;
+	}*/
 	
 	private int[][][] terrainTypes;
 	
@@ -438,8 +451,14 @@ public class World {
 			throw new IllegalNbException();
 		}
 		
-		sortFactions();
-		Faction faction = this.factions.get(0);
+		Faction faction;
+		if (this.factions.size() < 5) {
+			faction = new Faction();
+			addFaction(faction);
+		} else {
+			sortFactions();
+			faction = this.factions.get(0);
+		}
 		
 		Nit nit;
 		double dice = random.nextDouble();

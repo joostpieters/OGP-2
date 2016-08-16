@@ -1,4 +1,5 @@
-name: "dig tunnel from (11, 10, 10) to (14, 10, 10)" priority : 1000
+name: "dig tunnel from (11, 10, 10) to (14, 10, 10)" 
+priority : 1000
 activities:
 	if (carries_item(this)) then
 		work here;
