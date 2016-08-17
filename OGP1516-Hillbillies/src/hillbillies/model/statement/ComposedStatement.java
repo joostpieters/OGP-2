@@ -9,17 +9,6 @@ public abstract class ComposedStatement extends Statement /*implements Iterable<
 	
 	private Statement nextStatement = this;
 	
-	//private List<Statement> nextStatements = null;
-	
-	
-	/*public void setNextStatements(List<Statement> nextStatements) {
-		this.nextStatements = nextStatements;
-	}
-	
-	public List<Statement> getNextStatements() {
-		return this.nextStatements;
-	}*/
-	
 	
 	public void setNextStatement(Statement nextStatement) {
 		this.nextStatement = nextStatement;

@@ -234,8 +234,7 @@ public class Faction /*implements Comparable<Faction>*/ {
 	public void addNit(Nit nit)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsNit(nit))
 			throw new IllegalArgumentException();
-		//if (nit.getFaction() != this)
-		//	throw new IllegalArgumentException();
+		
 		if (getNbNits() >= getMaxNbNits())
 			try {
 				throw new IllegalNbException();
@@ -374,7 +373,7 @@ public class Faction /*implements Comparable<Faction>*/ {
 	}
 	
 	
-	private final Scheduler scheduler = new Scheduler(this);
+	private final Scheduler scheduler = new Scheduler();
 	
 	
 	
@@ -391,7 +390,7 @@ public class Faction /*implements Comparable<Faction>*/ {
 	 */
 	@Raw
 	public boolean canHaveAsScheduler(Scheduler scheduler) {
-		return ( (scheduler == null) || scheduler.canHaveAsFaction(this) );
+		return ( (scheduler != null) /*|| scheduler.canHaveAsFaction(this)*/ );
 	}
 	
 	

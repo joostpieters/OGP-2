@@ -8,6 +8,7 @@ import hillbillies.model.Boulder;
 import hillbillies.model.Coordinate;
 import hillbillies.model.Faction;
 import hillbillies.model.Log;
+import hillbillies.model.Nit;
 import hillbillies.model.Scheduler;
 import hillbillies.model.Task;
 import hillbillies.model.TaskFactory;
@@ -92,6 +93,16 @@ public class Facade implements hillbillies.part3.facade.IFacade,
 			throw new ModelException();
 		}
 	}
+	
+	public Nit spawnNit(World world, boolean enableDefaultBehavior) throws ModelException {
+		try {
+			return world.spawnNit(enableDefaultBehavior);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw new ModelException();
+		}
+	}
+
 	
 	@Override
 	public void addUnit(Unit unit, World world) throws ModelException {

@@ -158,7 +158,9 @@ public abstract class Nit extends GameObject {
 			boolean enableDefaultBehavior) 
 					throws IllegalPositionException, IllegalNameException {
 		
-		setPosition(World.getCubeCenter(initialPosition));
+		
+		
+		//setPosition(World.getCubeCenter(initialPosition));
 
 		setName(name);
 		

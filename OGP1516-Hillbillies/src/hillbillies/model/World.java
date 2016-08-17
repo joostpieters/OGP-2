@@ -600,11 +600,6 @@ public class World {
 	}
 
 	
-	/*public Set<Nit> getAllNitsSet() {
-		return new HashSet<Nit>(this.nits);
-	}*/
-	
-	
 	/**
 	 * Return a set collecting all units this world contains.
 	 * 
@@ -662,11 +657,12 @@ public class World {
 	public void addNit(Nit nit)  throws IllegalArgumentException, IllegalNbException {
 		if (!canHaveAsNit(nit))
 			throw new IllegalArgumentException();
-		if (nit.getWorld() != this)
-			throw new IllegalArgumentException();
+		/*if (nit.getWorld() != this)
+			throw new IllegalArgumentException();*/
 		if (getNbNits() >= getMaxNbNits())
 			throw new IllegalNbException();
 		
+		nit.setWorld(this);
 		this.nits.add(nit);
 		this.toAddToGameObjects.add(nit);
 	}
@@ -830,7 +826,7 @@ public class World {
 		if (faction.getWorld() != null)
 			throw new IllegalArgumentException();
 		if (getNbFactions() >= getMaxNbFactions())
-			throw new IllegalNbException(); // ILLEGAL SIZE EXCEPTION??????
+			throw new IllegalNbException(); 
 		
 		this.factions.add(faction);
 		faction.setWorld(this);
@@ -892,7 +888,6 @@ public class World {
 	
 	
 	public boolean containsItem(Set<Item> items) {
-		//Set<Item> items = getObjectsAt(cubeCoordinates);
 		if (!items.isEmpty()) {
 			return true;
 		}
@@ -958,27 +953,6 @@ public class World {
 	
 	//		LOGS
 	
-	
-	/**
-	 * Check whether this world can contain the given log.
-	 * 
-	 * @param 	log
-	 * 			The log to check.
-	 * 
-	 * @return	False if the given log is not effective.
-	 * 			| if (log == null)
-	 * 			| 	then result = false
-	 * 			True if this world is not terminated or the given log is
-	 * 			also terminated
-	 * 			| else result == ( (!this.isTerminated())
-	 * 			|		|| log.isTerminated())
-	 */
-	/*@Raw
-	public boolean canHaveAsLog(Log log) {
-		return ( (log != null) && 
-						( !this.isTerminated() || log.isTerminated()) );
-	}
-	*/
 	/**
 	 * Check whether this world contains proper logs.
 	 * 
@@ -1144,7 +1118,6 @@ public class World {
 	
 	
 	public boolean containsBoulder(Set<Item> items) {
-		//Set<Item> items = getObjectsAt(cubeCoordinates);
 		for (Item item: items) {
 			if (item instanceof Boulder)
 				return true;

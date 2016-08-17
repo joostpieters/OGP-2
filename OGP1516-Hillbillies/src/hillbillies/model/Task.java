@@ -193,7 +193,7 @@ public class Task {
 	 * 
 	 */
 	public void execute(double dt) {
-	    while (this.executingActivity != null && dt > 0 ) {
+	    while (!isCompleted() && dt > 0 ) {
 	    	
 	    	this.executingActivity.execute();
 	    	
@@ -235,7 +235,6 @@ public class Task {
 
 	@Basic
 	public boolean isCompleted() {
-		//return this.executingActivity == null;
 		return this.isCompleted;
 	}
 	
@@ -290,7 +289,6 @@ public class Task {
 	@Raw
 	private boolean canHaveAsCube(Coordinate coordinate) {
 		return true;
-				//this.getSchedulerForTask().getFaction().getWorld().canHaveAsCoordinates(coordinate);
 	}
 
 	

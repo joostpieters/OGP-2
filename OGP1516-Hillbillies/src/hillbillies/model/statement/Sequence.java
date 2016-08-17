@@ -14,9 +14,11 @@ public class Sequence extends ComposedStatement implements Iterable<Statement> {
 		
 	
 		for (int i=0; i+1<this.statements.size(); i++) {
-			//System.out.println(this.statements.get(i).toString());
+			this.statements.get(i).setNextToExecStatement(this.statements.get(i+1));
+
 			this.statements.get(i).setNextStatement(this.statements.get(i+1));
 		}
+		
 	}
 	
 	
@@ -24,7 +26,6 @@ public class Sequence extends ComposedStatement implements Iterable<Statement> {
 	public void execute() {
 		for (Statement statement: this.statements) {
 			statement.setTask(getTask());
-			//statement.execute();
 			
 		}
 		
@@ -34,9 +35,8 @@ public class Sequence extends ComposedStatement implements Iterable<Statement> {
 	@Override
 	public void setNextToExecStatement(Statement nextToExecStatement) {
 		super.setNextToExecStatement(this.statements.get(0));
-		for (int i=0; i+1<this.statements.size(); i++) {
-			this.statements.get(i).setNextToExecStatement(this.statements.get(i+1));
-		}
+		
+		
 		this.statements.get(this.statements.size()-1).setNextToExecStatement(nextToExecStatement);
 	}
 	

@@ -77,7 +77,6 @@ public abstract class GameObject {
 		this.position[1] = position[1];
 		this.position[2] = position[2];
 	}
-	//TODO parameteriseren ipv 0 1 en 2 apart
 	
 	protected void setPosition(Coordinate position) throws IllegalPositionException {
 		if (! canHaveAsPosition(position) ) {

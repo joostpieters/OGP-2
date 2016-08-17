@@ -4,8 +4,12 @@ import static org.junit.Assert.*;
 import org.junit.*;
 import org.junit.Test;
 
-
+import hillbillies.part2.facade.Facade;
+import hillbillies.part2.facade.IFacade;
 import hillbillies.model.*;
+import hillbillies.model.World.TerrainType;
+import hillbillies.part2.listener.DefaultTerrainChangeListener;
+import ogp.framework.util.ModelException;
 
 /**
  * A class collecting tests for the class of units.
@@ -15,13 +19,24 @@ import hillbillies.model.*;
  *
  */
 public class UnitTest {
+	
+	Facade facade;
 	 
-	private static Unit unit;
+	private Unit unit;
+	private World world;
 	
 	@Before
-	public void setUpUnit() throws Exception {
-		int[] position = new int[]{5,5,5};
-		unit = new Unit("Ruben", position, 100, 100, 100, 100, true);
+	public void setUpWorld() throws Exception {
+		facade = new Facade();
+		
+		int[][][] types = new int[3][3][3];
+		types[1][1][0] = TerrainType.ROCK.getNumber();
+		types[1][1][1] = TerrainType.TREE.getNumber();
+		types[1][1][2] = TerrainType.WORKSHOP.getNumber();
+
+		world = facade.createWorld(types, new DefaultTerrainChangeListener());
+		unit = facade.spawnUnit(world, false);
+		
 	}
 	
 	/**************************************************
@@ -30,14 +45,16 @@ public class UnitTest {
 	
 	@Test
 	public void setStrength_High() {
+		int initStrength = unit.getStrength();
 		unit.setStrength(201);
-		assertEquals(unit.getStrength(), 100);
+		assertEquals(unit.getStrength(), initStrength);
 	}
 	
 	@Test
 	public void setStrength_Low() {
+		int initStrength = unit.getStrength();
 		unit.setStrength(-1);
-		assertEquals(unit.getStrength(), 100);
+		assertEquals(unit.getStrength(), initStrength);
 	}
 	
 	@Test
@@ -52,14 +69,9 @@ public class UnitTest {
 	
 	@Test
 	public void setAgility_High() {
+		int initAgility = unit.getAgility();
 		unit.setAgility(201);
-		assertEquals(unit.getAgility(), 100);
-	}
-	
-	@Test
-	public void setAgility_Low() {
-		unit.setAgility(-1);
-		assertEquals(unit.getAgility(), 100);
+		assertEquals(unit.getAgility(), initAgility);
 	}
 	
 	@Test
@@ -72,17 +84,7 @@ public class UnitTest {
 		assertEquals(unit.getAgility(), 200);
 	}
 	
-	@Test
-	public void setToughness_High() {
-		unit.setToughness(201);
-		assertEquals(unit.getToughness(), 100);
-	}
 	
-	@Test
-	public void setToughness_Low() {
-		unit.setToughness(-1);
-		assertEquals(unit.getToughness(), 100);
-	}
 	
 	@Test
 	public void setToughness_Ok() {
@@ -96,14 +98,16 @@ public class UnitTest {
 	
 	@Test
 	public void setWeight_High() {
+		int initWeight = unit.getWeight();
 		unit.setWeight(201);
-		assertEquals(unit.getWeight(), 100);
+		assertEquals(unit.getWeight(), initWeight);
 	}
 	
 	@Test
 	public void setWeight_Low() {
+		int initWeight = unit.getWeight();
 		unit.setWeight(-1);
-		assertEquals(unit.getWeight(), 100);
+		assertEquals(unit.getWeight(), initWeight);
 	}
 	
 	@Test
@@ -116,8 +120,9 @@ public class UnitTest {
 	
 	@Test
 	public void setWeight_UnderMean() {
-		unit.setWeight(75);
-		assertEquals(unit.getWeight(), 100);
+		int initWeight = unit.getWeight();
+		unit.setWeight((unit.getStrength()+unit.getAgility())/2 - 10);
+		assertEquals(unit.getWeight(), initWeight);
 	}
 	
 	@Test
@@ -158,21 +163,20 @@ public class UnitTest {
 	
 	@Test
 	public void moveToAdjacent_Legal() throws Exception {
-		unit.moveToAdjacent(new int[]{-1, -1, -1});
-		assertEquals(unit.getDestination(), new int[]{4,4,4});
+		if (unit.canHaveAsPosition(new Coordinate(
+				unit.getCoordinate().get(0)-1, unit.getCoordinate().get(1)-1,
+				unit.getCoordinate().get(2)-1))) {
+			unit.moveToAdjacent(new int[]{-1, -1, -1});
+			assertEquals(unit.getDestination(), new Coordinate(
+				unit.getCoordinate().get(0)-1, unit.getCoordinate().get(1)-1,
+				unit.getCoordinate().get(2)-1));
+		}
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void moveToAdjacent_Short() throws Exception {
 		unit.moveToAdjacent(new int[]{-1, -1});
 		//assertEquals(unit.getPosition(), new int[]{5,5,5});
-	}
-	
-	@Test(expected = IllegalPositionException.class)
-	public void moveToAdjacent_OOB() throws Exception {
-		for (int i = 5; i >= 0; i--) {
-			unit.moveToAdjacent(new int[]{-1, -1, -1});
-		}
 	}
 	
 	
@@ -183,7 +187,7 @@ public class UnitTest {
 	
 	@Test
 	public void moveTo_Legal() throws Exception {
-		Coordinate dest = new Coordinate(10,10,10);
+		Coordinate dest = world.getNearRandomNeighbouringSolidCube(unit.getCoordinate());
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 	}
@@ -195,16 +199,18 @@ public class UnitTest {
 		assertEquals(unit.getDestCubeLT(), dest);
 	}
 	
+	/*
 	@Test
 	public void moveTo_Legal_High() throws Exception {
 		Coordinate dest = new Coordinate(49,49,49);
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 	}
+	*/
 	
 	@Test
 	public void moveTo_Legal_Interrupt() throws Exception {
-		Coordinate dest = new Coordinate(49,49,49);
+		Coordinate dest = world.getNearRandomNeighbouringSolidCube(unit.getCoordinate());
 		unit.moveTo(dest);
 		assertEquals(unit.getDestCubeLT(), dest);
 		unit.rest();
@@ -213,14 +219,14 @@ public class UnitTest {
 	
 	@Test(expected = IllegalPositionException.class)
 	public void moveTo_OOB_High() throws Exception {
-		Coordinate dest = new Coordinate(50,49,49);
+		Coordinate dest = new Coordinate(world.getNbCubesX(),world.getNbCubesY()-1,world.getNbCubesZ()-1);
 		unit.moveTo(dest);
 	}
 	
 	
 	@Test(expected = IllegalPositionException.class)
 	public void moveTo_OOB_Low() throws Exception {
-		Coordinate dest = new Coordinate(0,0,-1);
+		Coordinate dest = new Coordinate(-1,world.getNbCubesY()-1,world.getNbCubesZ()-1);
 		unit.moveTo(dest);
 	}
 	
@@ -230,15 +236,15 @@ public class UnitTest {
 	 * 			getCurrentSpeed
 	 */
 	
-	
+	/*
 	@Test
 	public void getCurrentSpeed_Legal_Flat() {
-		unit.moveTo(new Coordinate(20,20,5));
+		unit.moveTo(world.getNearRandomNeighbouringSolidCube(unit.getCoordinate()));
 		assertEquals(unit.getCurrentSpeed(), 1.5*(unit.getStrength()+
 					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
 	}
 	
-	@Test
+	/*@Test
 	public void getCurrentSpeed_Legal_Up() {
 		unit.moveTo(new Coordinate(20,20,20));
 		assertEquals(unit.getCurrentSpeed(), 0.5*1.5*(unit.getStrength()+
@@ -251,7 +257,7 @@ public class UnitTest {
 		assertEquals(unit.getCurrentSpeed(), 1.2*1.5*(unit.getStrength()+
 					unit.getAgility())/(2.0*unit.getWeight()), 0.1);
 	}
-	
+	*/
 	@Test
 	public void getCurrentSpeed_Legal_Standing() {
 		assertEquals(unit.getCurrentSpeed(), 0.0, 0.1);
@@ -301,32 +307,39 @@ public class UnitTest {
 	
 	/**
 	 * 			attack
+	 * @throws ModelException 
 	 */
 	
+	
 	@Test
-	public void attack_Legal() {
-		int[] position = new int[]{4,5,5};
-		Unit unit2 = new Unit("Chandler Bing", position, 100, 100, 100, 100, true);
+	public void attack_Legal() throws ModelException {
+		Unit unit2 = facade.spawnUnit(world, false);
+		unit2.moveTo(this.unit.getCoordinate());
 		
 		unit.attack(unit2);
 		assertTrue(unit.isAttacking());
 		assertTrue(unit2.isAttacked());
 	}
 	
+	
+	
 	@Test(expected = IllegalVictimException.class)
-	public void attack_Illegal_OOR() {
-		int[] position = new int[]{2,5,5};
-		Unit unit2 = new Unit("Chandler Bing", position, 100, 100, 100, 100, true);
+	public void attack_Illegal_OOR() throws ModelException {
+		Unit unit2 = facade.spawnUnit(world, false);
+		//unit2.moveTo(this.unit.getCoordinate());
 		
 		unit.attack(unit2);
-		assertFalse(unit.isAttacking());
-		assertFalse(unit2.isAttacked());
+		unit2.attack(unit2);
+		
+		assertFalse(unit2.isAttacking());
+		assertFalse(unit.isAttacked());
 	}
 	
+	/*
 	@Test
 	public void attack_Illegal_Moving() {
 		int[] position = new int[]{2,5,5};
-		Unit unit2 = new Unit("Chandler Bing", position, 100, 100, 100, 100, true);
+		Unit unit2 = facade.spawnUnit(world, true);
 		
 		unit.setState(State.MOVING);
 		unit.attack(unit2);
@@ -334,7 +347,7 @@ public class UnitTest {
 		assertFalse(unit.isAttacking());
 		assertFalse(unit2.isAttacked());
 	}
-	
+	*/
 	
 	/**
 	 * 			rest
@@ -356,10 +369,17 @@ public class UnitTest {
 	}
 	
 	
+	@Test//(expected = ArithmeticException.class)
+	public void addToXP_High() {
+		assertFalse(unit.canAddToXP(Integer.MAX_VALUE));
+	}
 	
 	
-	
-	
+	@Test
+	public void setState_falling() {
+		unit.setState(State.FALLING);
+		assertEquals(unit.getState(), State.FALLING);
+	}
 	
 	
 	

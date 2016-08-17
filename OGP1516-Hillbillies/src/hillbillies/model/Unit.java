@@ -52,6 +52,7 @@ public class Unit extends Nit {
 					throws IllegalPositionException, IllegalNameException {
 
 		super(name, initialPosition, weight, agility, strength, toughness, enableDefaultBehavior);
+		
 	}
 	
 	
